@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "377037389094",
+    "project_id": "financa-ffd88",
+    "storage_bucket": "financa-ffd88.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:377037389094:android:c12e6317c690a40848d5e7",
+        "android_client_info": {
+          "package_name": "com.financaappbeta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "377037389094-i52f406t99btui5ftqc7id41g65pclfm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.financaappbeta",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "377037389094-e8chug14tlt5sprn25rk5uci1l47kd4d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYcDZr2nqeRafyIwms0FYiX_--O2AMrzQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "377037389094-e8chug14tlt5sprn25rk5uci1l47kd4d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
