@@ -1,8 +1,9 @@
 import React from 'react';
 import { TextInputProps } from 'react-native';
+import { MaskInputProps } from 'react-native-mask-input';
 import * as S from './styles';
 
-interface ButtonProps extends TextInputProps {
+interface ButtonProps extends MaskInputProps {
   icon?: React.FC;
   background: string;
   border?: string;

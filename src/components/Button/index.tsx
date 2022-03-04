@@ -1,5 +1,11 @@
 import React from 'react';
 import { PressableProps } from 'react-native';
+import {
+  useSharedValue,
+  useAnimatedStyle,
+  interpolate,
+  withTiming,
+} from 'react-native-reanimated';
 import * as S from './styles';
 
 interface ButtonProps extends PressableProps {
@@ -21,15 +27,32 @@ export default function Button({
   colors,
   ...rest
 }: ButtonProps) {
-  return (
-    <S.Container {...rest}>
-      <S.Main backgroundColor={colors.PRIMARY_BACKGROUND}>
-        <S.MainText color={colors.TEXT}>{title}</S.MainText>
-      </S.Main>
+  const buttonAnimate = useSharedValue(0);
 
-      <S.Icon backgroundColor={colors.SECOND_BACKGROUND}>
-        <Icon />
-      </S.Icon>
-    </S.Container>
+  const buttonAnimated = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: interpolate(buttonAnimate.value, [0, 1], [1, 0.8]),
+        },
+      ],
+    };
+  });
+
+  return (
+    <S.Pressable
+      onPressIn={() => (buttonAnimate.value = withTiming(1))}
+      onPressOut={() => (buttonAnimate.value = withTiming(0))}
+      {...rest}>
+      <S.Container style={buttonAnimated}>
+        <S.Main backgroundColor={colors.PRIMARY_BACKGROUND}>
+          <S.MainText color={colors.TEXT}>{title}</S.MainText>
+        </S.Main>
+
+        <S.Icon backgroundColor={colors.SECOND_BACKGROUND}>
+          <Icon />
+        </S.Icon>
+      </S.Container>
+    </S.Pressable>
   );
 }

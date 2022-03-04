@@ -6,25 +6,17 @@ interface ColorsProps {
   background?: string;
 }
 
-export const Container = styled.View<ColorsProps>`
-  flex:1;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  width: 100%;
-  background-color: ${(props) => props.background ?  props.background : '#fff'};
-`;
-
-export const ScrollView = styled.ScrollView.attrs({
+export const Container = styled.ScrollView.attrs({
   showsVerticalScrollIndicator: false,
   contentContainerStyle: {
     flex:1,
     alignItems: 'center',
     justifyContent: 'space-between',
   }
-})`
-  flex:1;
+})<ColorsProps>`
+  position: relative;
   width: 100%;
+  background-color: ${(props) => props.background ?  props.background : '#fff'};
 `;
 
 export const KeyboardAvoidingView = styled.KeyboardAvoidingView`
@@ -65,6 +57,7 @@ export const HeaderContent = styled.View`
   flex-direction: row;
   align-items: center;
   padding: ${RFPercentage(4)}px 0;
+  padding-bottom: ${RFPercentage(2)}px;
 `;
 
 export const Title = styled.Text`

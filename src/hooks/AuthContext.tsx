@@ -10,6 +10,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import GoogleSignin from '../config/GoogleSignIn';
 import api from '../services/api';
 import { HeadersDefaults } from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 interface CommonHeaderProperties extends HeadersDefaults {
   authorization: string;
@@ -28,7 +29,7 @@ interface AuthContextData {
   loading: boolean;
   signInGoogle: () => Promise<void>;
   confirmCode: (code: any) => Promise<void>;
-  signInWithPhone: () => Promise<void>;
+  signInWithPhone: (phoneNumber: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -37,6 +38,7 @@ export const AuthContext = createContext<AuthContextData>(
 );
 
 export const AuthProvider: React.FC = ({ children }) => {
+  const navigation = useNavigation();
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirm, setConfirm] =
@@ -138,12 +140,13 @@ export const AuthProvider: React.FC = ({ children }) => {
     [confirm],
   );
 
-  const signInWithPhone = useCallback(async () => {
+  const signInWithPhone = useCallback(async (phoneNumber: string) => {
     try {
-      const confirmation = await auth().signInWithPhoneNumber(
-        '+55 (61) 9 8224-2660',
-      );
+      console.log(phoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
       setConfirm(confirmation);
+
+      navigation.navigate('Confirm');
     } catch (error) {
       console.log(error);
     }

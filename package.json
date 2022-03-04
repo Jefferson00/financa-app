@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@react-native-community/async-storage": "^1.12.1",
+    "@react-native-community/masked-view": "^0.1.11",
     "@react-native-firebase/app": "^14.5.0",
     "@react-native-firebase/auth": "^14.5.0",
     "@react-native-google-signin/google-signin": "^7.1.0",
@@ -20,9 +21,14 @@
     "axios": "^0.26.0",
     "react": "17.0.2",
     "react-native": "0.65.1",
+    "react-native-confirmation-code-field": "^7.3.0",
     "react-native-gesture-handler": "^1.10.3",
+    "react-native-mask-input": "^1.2.0",
+    "react-native-pin-view": "^3.0.2",
+    "react-native-reanimated": "^2.4.1",
     "react-native-responsive-fontsize": "^0.5.1",
     "react-native-safe-area-context": "^3.3.2",
+    "react-native-screens": "^3.13.1",
     "react-native-vector-icons": "^8.1.0",
     "styled-components": "^5.3.1"
   },

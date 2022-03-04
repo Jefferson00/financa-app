@@ -48,7 +48,7 @@ export default function Login() {
             SECOND_BACKGROUND: 'transparent',
             TEXT: '#fff',
           }}
-          onPress={() => navigation.navigate('Phone')}
+          onPressOut={() => navigation.navigate('Phone')}
         />
       </S.ButtonContainer>
     </S.Container>
