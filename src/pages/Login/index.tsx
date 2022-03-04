@@ -7,9 +7,10 @@ import Button from '../../components/Button';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/core';
 import { useAuth } from '../../hooks/AuthContext';
+import { Nav } from '../../routes';
 
 export default function Login() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
   const { signInGoogle } = useAuth();
 
   const GmailIcon = () => {
@@ -48,7 +49,7 @@ export default function Login() {
             SECOND_BACKGROUND: 'transparent',
             TEXT: '#fff',
           }}
-          onPressOut={() => navigation.navigate('Phone')}
+          onPress={() => navigation.navigate('Phone')}
         />
       </S.ButtonContainer>
     </S.Container>

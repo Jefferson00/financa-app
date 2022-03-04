@@ -11,6 +11,7 @@ import GoogleSignin from '../config/GoogleSignIn';
 import api from '../services/api';
 import { HeadersDefaults } from 'axios';
 import { useNavigation } from '@react-navigation/native';
+import { Nav } from '../routes';
 
 interface CommonHeaderProperties extends HeadersDefaults {
   authorization: string;
@@ -27,6 +28,7 @@ interface IUser {
 interface AuthContextData {
   user: IUser | null;
   loading: boolean;
+  isSubmitting: boolean;
   signInGoogle: () => Promise<void>;
   confirmCode: (code: any) => Promise<void>;
   signInWithPhone: (phoneNumber: string) => Promise<void>;
@@ -38,21 +40,17 @@ export const AuthContext = createContext<AuthContextData>(
 );
 
 export const AuthProvider: React.FC = ({ children }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
-  const [code, setCode] = useState('');
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(async user => {
       if (user) {
         const { displayName, photoURL, email, phoneNumber, uid } = user;
-
-        /* if (!displayName) {
-          throw new Error('Missing information from Google Account.');
-        } */
 
         const token = await user.getIdToken();
 
@@ -122,8 +120,6 @@ export const AuthProvider: React.FC = ({ children }) => {
 
           const token = await user.getIdToken();
 
-          console.log(token);
-
           await AsyncStorage.setItem('@FinancaAppBeta:token', token);
           setUser({
             id: user.uid,
@@ -135,20 +131,26 @@ export const AuthProvider: React.FC = ({ children }) => {
         }
       } catch (error) {
         console.log(error);
+      } finally {
       }
     },
     [confirm],
   );
 
   const signInWithPhone = useCallback(async (phoneNumber: string) => {
+    setIsSubmitting(true);
     try {
-      console.log(phoneNumber);
-      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      /* const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
       setConfirm(confirmation);
 
-      navigation.navigate('Confirm');
+      navigation.navigate('Confirm'); */
+      setTimeout(() => {
+        setIsSubmitting(false);
+        return;
+      }, 2000);
     } catch (error) {
       console.log(error);
+    } finally {
     }
   }, []);
 
@@ -166,6 +168,7 @@ export const AuthProvider: React.FC = ({ children }) => {
         signInWithPhone,
         confirmCode,
         loading,
+        isSubmitting,
         user,
       }}>
       {children}

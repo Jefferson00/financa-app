@@ -9,10 +9,10 @@ import { useAuth } from '../../../hooks/AuthContext';
 import Input from '../../../components/Input';
 import { Platform } from 'react-native';
 import { Mask } from 'react-native-mask-input';
-import { useNavigation } from '@react-navigation/native';
+import Loading from '../../../components/Loading';
 
 export default function PhoneLogin() {
-  const { signInGoogle, signInWithPhone } = useAuth();
+  const { signInGoogle, signInWithPhone, isSubmitting } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const GmailIcon = () => {
@@ -58,6 +58,7 @@ export default function PhoneLogin() {
 
   return (
     <S.Container>
+      <Loading isLoading={isSubmitting} />
       <S.KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <S.ScrollView keyboardShouldPersistTaps="handled">
