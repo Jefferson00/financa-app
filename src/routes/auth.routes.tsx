@@ -13,7 +13,7 @@ export default function AuthRoutes() {
           backgroundColor: '#ffffff',
         },
       }}>
-      <App.Screen name="Login" component={Home} />
+      <App.Screen name="Home" component={Home} />
     </App.Navigator>
   );
 }

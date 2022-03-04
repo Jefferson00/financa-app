@@ -1,4 +1,5 @@
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import MaskInput from 'react-native-mask-input';
 import styled from 'styled-components/native';
 
 interface ContainerProps {
@@ -32,7 +33,7 @@ export const Icon = styled.View<IconContainer>`
   border-bottom-right-radius: 8px;
 `
 
-export const InputText = styled.TextInput<TextColor>`
+export const InputText = styled(MaskInput)<TextColor>`
   flex: 1;
   margin-left: 8px;
   color:${(props) => props.color};
