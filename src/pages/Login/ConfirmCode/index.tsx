@@ -8,12 +8,13 @@ import Icons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../../hooks/AuthContext';
 import { Platform } from 'react-native';
 import ReactNativePinView from 'react-native-pin-view';
+import ModalComponent from '../../../components/Modal';
 
 export default function ConfirmCodeLogin() {
   const pinView = useRef<any>(null);
   const [showCompletedButton, setShowCompletedButton] = useState(false);
   const [showRemoveButton, setShowRemoveButton] = useState(false);
-  const { confirmCode } = useAuth();
+  const { confirmCode, isSubmitting, authError, closeErrorModal } = useAuth();
   const [code, setCode] = useState('');
 
   const SignInIcon = () => {
@@ -88,7 +89,7 @@ export default function ConfirmCodeLogin() {
                   pinView.current.clear();
                 }
                 if (key === 'custom_right') {
-                  console.log(code);
+                  () => confirmCode(code);
                 }
               }}
               //@ts-ignore
@@ -121,6 +122,23 @@ export default function ConfirmCodeLogin() {
             onPress={() => confirmCode(code)}
           />
         </S.MainContainer>
+        <ModalComponent
+          type="loading"
+          visible={isSubmitting}
+          transparent
+          title="Validando..."
+          animationType="slide"
+        />
+        <ModalComponent
+          type="error"
+          visible={!!authError}
+          handleCancel={closeErrorModal}
+          onRequestClose={closeErrorModal}
+          transparent
+          title="Erro ao validar código"
+          subtitle="Verfique o código e tente novamente"
+          animationType="slide"
+        />
       </S.KeyboardAvoidingView>
     </S.Container>
   );

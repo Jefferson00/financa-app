@@ -17,7 +17,7 @@ interface TextColor {
 export const Pressable = styled.Pressable`
   width: 100%;
 
-  opacity: ${(props) => props.disabled ? 0.8 : 1};
+  opacity: ${(props) => props.disabled ? 0.6 : 1};
 `
 export const Container = styled(Animated.View)`
   height: 56px;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as S from './styles';
 import { Colors } from '../../../styles/global';
 
@@ -7,12 +7,18 @@ import Button from '../../../components/Button';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { useAuth } from '../../../hooks/AuthContext';
 import Input from '../../../components/Input';
-import { Platform } from 'react-native';
+import { Platform, TextInput } from 'react-native';
 import { Mask } from 'react-native-mask-input';
-import Loading from '../../../components/Loading';
+import ModalComponent from '../../../components/Modal';
 
 export default function PhoneLogin() {
-  const { signInGoogle, signInWithPhone, isSubmitting } = useAuth();
+  const {
+    signInGoogle,
+    signInWithPhone,
+    isSubmitting,
+    authError,
+    closeErrorModal,
+  } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
 
   const GmailIcon = () => {
@@ -57,52 +63,69 @@ export default function PhoneLogin() {
   ];
 
   return (
-    <S.Container>
-      <Loading isLoading={isSubmitting} />
-      <S.KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <S.ScrollView keyboardShouldPersistTaps="handled">
-          <S.Header background={Colors.BLUE_PRIMARY_LIGHTER}>
-            <S.Logo source={LogoImg} />
-          </S.Header>
+    <>
+      <S.Container>
+        <S.KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <S.ScrollView keyboardShouldPersistTaps="handled">
+            <S.Header background={Colors.BLUE_PRIMARY_LIGHTER}>
+              <S.Logo source={LogoImg} />
+            </S.Header>
 
-          <S.MainContainer>
-            <S.HeaderContent>
-              <S.Title>Informe seu número</S.Title>
-              <S.Title>
-                <Icons name="log-in-outline" size={24} />
-              </S.Title>
-            </S.HeaderContent>
+            <S.MainContainer>
+              <S.HeaderContent>
+                <S.Title>Informe seu número</S.Title>
+                <S.Title>
+                  <Icons name="log-in-outline" size={24} />
+                </S.Title>
+              </S.HeaderContent>
 
-            <S.Form>
-              <Input
-                background={inputBackground}
-                textColor={textColor}
-                placeholder="(99) 9 9999-9999"
-                keyboardType="phone-pad"
-                onChangeText={e => setPhoneNumber(e)}
-                value={phoneNumber}
-                mask={phoneMask}
-              />
+              <S.Form>
+                <Input
+                  background={inputBackground}
+                  textColor={textColor}
+                  placeholder="(99) 9 9999-9999"
+                  keyboardType="phone-pad"
+                  onChangeText={e => setPhoneNumber(e)}
+                  value={phoneNumber}
+                  mask={phoneMask}
+                />
+                <Button
+                  title="Enviar SMS"
+                  colors={phoneButtonColors}
+                  icon={SignInIcon}
+                  disabled={phoneNumber.length < 16}
+                  onPress={() => signInWithPhone(`+55 ${phoneNumber}`)}
+                  style={{ marginTop: 16 }}
+                />
+              </S.Form>
+
               <Button
-                title="Enviar SMS"
-                colors={phoneButtonColors}
-                icon={SignInIcon}
-                disabled={phoneNumber.length < 16}
-                onPress={() => signInWithPhone(`+55 ${phoneNumber}`)}
-                style={{ marginTop: 16 }}
+                title="Entrar com Gmail"
+                colors={googleButtonColors}
+                icon={GmailIcon}
+                onPress={() => signInGoogle()}
               />
-            </S.Form>
-
-            <Button
-              title="Entrar com Gmail"
-              colors={googleButtonColors}
-              icon={GmailIcon}
-              onPress={() => signInGoogle()}
+            </S.MainContainer>
+            <ModalComponent
+              type="loading"
+              visible={isSubmitting}
+              transparent
+              title="Enviando..."
             />
-          </S.MainContainer>
-        </S.ScrollView>
-      </S.KeyboardAvoidingView>
-    </S.Container>
+            <ModalComponent
+              type="error"
+              visible={!!authError}
+              handleCancel={closeErrorModal}
+              onRequestClose={closeErrorModal}
+              transparent
+              title="Erro ao enviar SMS."
+              subtitle="Verfique se o número informado está correto"
+              animationType="slide"
+            />
+          </S.ScrollView>
+        </S.KeyboardAvoidingView>
+      </S.Container>
+    </>
   );
 }

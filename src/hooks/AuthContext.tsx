@@ -29,10 +29,12 @@ interface AuthContextData {
   user: IUser | null;
   loading: boolean;
   isSubmitting: boolean;
+  authError: any;
   signInGoogle: () => Promise<void>;
   confirmCode: (code: any) => Promise<void>;
   signInWithPhone: (phoneNumber: string) => Promise<void>;
   signOut: () => Promise<void>;
+  closeErrorModal: () => void;
 }
 
 export const AuthContext = createContext<AuthContextData>(
@@ -43,6 +45,7 @@ export const AuthProvider: React.FC = ({ children }) => {
   const navigation = useNavigation<Nav>();
   const [user, setUser] = useState<IUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirm, setConfirm] =
     useState<FirebaseAuthTypes.ConfirmationResult | null>(null);
@@ -76,7 +79,12 @@ export const AuthProvider: React.FC = ({ children }) => {
     };
   }, []);
 
+  const closeErrorModal = useCallback(() => {
+    setAuthError(null);
+  }, []);
+
   const signInGoogle = useCallback(async () => {
+    setIsSubmitting(true);
     try {
       await GoogleSignin.hasPlayServices();
       const { idToken } = await GoogleSignin.signIn();
@@ -101,12 +109,15 @@ export const AuthProvider: React.FC = ({ children }) => {
         });
       }
     } catch (error) {
-      console.log(error);
+      setAuthError(error as any);
+    } finally {
+      setIsSubmitting(false);
     }
   }, []);
 
   const confirmCode = useCallback(
     async (code: any) => {
+      setIsSubmitting(true);
       try {
         if (confirm) {
           const credential = auth.PhoneAuthProvider.credential(
@@ -130,8 +141,9 @@ export const AuthProvider: React.FC = ({ children }) => {
           });
         }
       } catch (error) {
-        console.log(error);
+        setAuthError(error as any);
       } finally {
+        setIsSubmitting(false);
       }
     },
     [confirm],
@@ -140,17 +152,14 @@ export const AuthProvider: React.FC = ({ children }) => {
   const signInWithPhone = useCallback(async (phoneNumber: string) => {
     setIsSubmitting(true);
     try {
-      /* const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
       setConfirm(confirmation);
 
-      navigation.navigate('Confirm'); */
-      setTimeout(() => {
-        setIsSubmitting(false);
-        return;
-      }, 2000);
+      navigation.navigate('Confirm');
     } catch (error) {
-      console.log(error);
+      setAuthError(error as any);
     } finally {
+      setIsSubmitting(false);
     }
   }, []);
 
@@ -163,10 +172,12 @@ export const AuthProvider: React.FC = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        closeErrorModal,
         signInGoogle,
         signOut,
         signInWithPhone,
         confirmCode,
+        authError,
         loading,
         isSubmitting,
         user,
