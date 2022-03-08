@@ -3,6 +3,7 @@ import { Text, TouchableOpacity } from 'react-native';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/AuthContext';
 import * as S from './styles';
+import Header from '../../components/Header';
 
 export default function Home() {
   const { user, signOut } = useAuth();
@@ -28,21 +29,7 @@ export default function Home() {
 
   return (
     <S.Container>
-      <Text
-        style={{
-          color: '#000',
-        }}>
-        {user?.name}
-      </Text>
-      {users.map(uss => (
-        <Text
-          key={uss.id}
-          style={{
-            color: '#000',
-          }}>
-          {uss?.name}
-        </Text>
-      ))}
+      <Header />
 
       <TouchableOpacity onPress={() => signOut()}>
         <Text>SAIR</Text>
