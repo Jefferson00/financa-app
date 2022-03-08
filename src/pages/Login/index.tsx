@@ -7,9 +7,10 @@ import Button from '../../components/Button';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/core';
 import { useAuth } from '../../hooks/AuthContext';
+import { Nav } from '../../routes';
 
 export default function Login() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<Nav>();
   const { signInGoogle } = useAuth();
 
   const GmailIcon = () => {

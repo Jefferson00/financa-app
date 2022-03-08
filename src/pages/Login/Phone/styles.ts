@@ -1,21 +1,30 @@
 import styled from 'styled-components/native';
 import { RFPercentage } from "react-native-responsive-fontsize";
+import { Dimensions } from 'react-native';
 
 interface ColorsProps {
   background?: string;
 }
 
-export const Container = styled.ScrollView.attrs({
+export const Container = styled.View<ColorsProps>`
+  flex:1;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  background-color: ${(props) => props.background ?  props.background : '#fff'};
+`;
+
+export const ScrollView = styled.ScrollView.attrs({
   showsVerticalScrollIndicator: false,
   contentContainerStyle: {
     flex:1,
     alignItems: 'center',
     justifyContent: 'space-between',
   }
-})<ColorsProps>`
-  position: relative;
+})`
+  flex:1;
   width: 100%;
-  background-color: ${(props) => props.background ?  props.background : '#fff'};
 `;
 
 export const KeyboardAvoidingView = styled.KeyboardAvoidingView`
@@ -43,12 +52,12 @@ export const MainContainer = styled.View<ColorsProps>`
   width: 90%;
   border-top-right-radius: 20px;
   border-top-left-radius: 20px;
-  height: ${RFPercentage(60)}px;
+  height: ${Dimensions.get('screen').height - RFPercentage(45)}px;
   padding: 0 ${RFPercentage(2)}px ${RFPercentage(4)}px;
   margin: 0 auto;
   position: absolute;
   elevation: 10;
-  top: 40%;
+  top: 35%;
   background-color: ${(props) => props.background ?  props.background : '#fff'};
 `;
 

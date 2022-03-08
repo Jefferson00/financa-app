@@ -1,4 +1,5 @@
 import styled from 'styled-components/native';
+import Animated from 'react-native-reanimated';
 
 interface MainContainer {
   backgroundColor: string,
@@ -13,7 +14,12 @@ interface TextColor {
   color: string,
 }
 
-export const Container = styled.Pressable`
+export const Pressable = styled.Pressable`
+  width: 100%;
+
+  opacity: ${(props) => props.disabled ? 0.6 : 1};
+`
+export const Container = styled(Animated.View)`
   height: 56px;
   width: 100%;
   flex-direction: row;
