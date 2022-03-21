@@ -92,7 +92,8 @@ export default function Home() {
       <ScrollView
         style={{
           flex: 1,
-        }}>
+        }}
+        showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
           <ScrollView
@@ -122,7 +123,12 @@ export default function Home() {
             ))}
             <S.AccountCardWrapper>
               <S.Card backgroundColor="#FF981E">
-                <Text>add</Text>
+                <S.AddCardContainer>
+                  <S.CardTitle>Adicionar uma nova conta</S.CardTitle>
+                  <S.AddButton>
+                    <Icon name="add-circle" size={52} color="#fff" />
+                  </S.AddButton>
+                </S.AddCardContainer>
               </S.Card>
             </S.AccountCardWrapper>
           </ScrollView>
@@ -180,14 +186,30 @@ export default function Home() {
               Últimas Transações
             </S.BalanceText>
 
-            <S.LastTransactionsView
-              backgroundColor={secondaryColor}></S.LastTransactionsView>
-            <S.LastTransactionsView
-              backgroundColor={secondaryColor}></S.LastTransactionsView>
+            <S.LastTransactionsView backgroundColor={secondaryColor}>
+              <S.TransactionText>
+                Nenhuma transação por enquanto
+              </S.TransactionText>
+            </S.LastTransactionsView>
+            <S.LastTransactionsView backgroundColor={secondaryColor}>
+              <Icon name="business" size={32} color="#2673CE" />
+              <S.TitleContainer>
+                <S.TransactionTitle>
+                  {'Compras do mês'.substring(0, 16)}
+                </S.TransactionTitle>
+              </S.TitleContainer>
+
+              <S.DetailsContainer>
+                <S.TransactionValue color="#CC3728">
+                  R$ 585,90
+                </S.TransactionValue>
+                <S.TransactionDate>07 Jan</S.TransactionDate>
+              </S.DetailsContainer>
+            </S.LastTransactionsView>
           </S.LastTransactions>
-          {/* <TouchableOpacity onPress={() => signOut()}>
-          <Text>SAIR</Text>
-        </TouchableOpacity> */}
+          {/*   <TouchableOpacity onPress={() => signOut()}>
+            <Text>SAIR</Text>
+          </TouchableOpacity> */}
         </S.Container>
       </ScrollView>
       <Menu />

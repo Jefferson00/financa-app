@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import React from 'react';
-import { useColorScheme } from 'react-native';
+import { StatusBar, useColorScheme } from 'react-native';
 
 import Routes from './routes';
 import { NavigationContainer } from '@react-navigation/native';
@@ -11,6 +11,11 @@ const App = () => {
 
   return (
     <NavigationContainer>
+      <StatusBar
+        barStyle="dark-content"
+        translucent
+        backgroundColor="transparent"
+      />
       <AppProvider>
         <Routes />
       </AppProvider>

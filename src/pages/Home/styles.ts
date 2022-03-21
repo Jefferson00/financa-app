@@ -21,6 +21,7 @@ interface EstimatesProps {
 
 interface LastTransactionsProps {
   backgroundColor?: string;
+  color?: string;
 }
 
 interface DotProps {
@@ -61,7 +62,7 @@ export const CardInfo = styled.View<CardProps>`
 export const CardTitle = styled.Text<CardProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;
-
+  text-align: center;
   color: #fff;
 `;
 
@@ -80,6 +81,14 @@ export const CardSubBalance = styled.Text<CardProps>`
   line-height: 16px;
   opacity: 0.8;
   color: #fff;
+`;
+
+export const AddButton = styled.TouchableOpacity``;
+
+export const AddCardContainer = styled.View`
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 export const IconContainer = styled.View`
@@ -124,7 +133,7 @@ export const BalanceContainer = styled.View`
   justify-content: space-between;
 
   padding: 0 16px;
-  margin-top: 32px;
+  margin-top: ${RFPercentage(2.5)}px;
 `;
 export const Balance = styled.View`
   justify-content: center;
@@ -138,7 +147,7 @@ export const BalanceText = styled.Text<BalanceProps>`
 `;
 export const BalanceValue = styled.Text`
   font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2)}px;
+  font-size: ${RFPercentage(2.2)}px;
 
   margin-top: 16px;
 `;
@@ -199,4 +208,56 @@ export const LastTransactionsView = styled.View<LastTransactionsProps>`
 
   border-radius: 10px;
   margin-top: 8px;
+
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: ${RFPercentage(2.4)}px;
+
+  overflow: hidden;
+`;
+
+export const TransactionText = styled.Text`
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2)}px;
+  flex: 1;
+  text-align: center;
+`;
+
+export const TitleContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+
+  max-width: 50%;
+  overflow: hidden;
+`;
+
+export const TransactionTitle = styled.Text`
+  margin: 0 ${RFPercentage(1.5)}px;
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2.1)}px;
+  max-width: 80%;
+  overflow: hidden;
+  flex: 1;
+`;
+
+export const DetailsContainer = styled.View`
+  flex-direction: row;
+  align-items: center;
+
+  max-width: 50%;
+`;
+
+export const TransactionValue = styled.Text<LastTransactionsProps>`
+  margin: 0 ${RFPercentage(2)}px;
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(2.2)}px;
+
+  color: ${props => (props.color ? props.color : '#000')};
+`;
+
+export const TransactionDate = styled.Text`
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(2)}px;
 `;
