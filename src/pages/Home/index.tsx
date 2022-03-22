@@ -7,6 +7,7 @@ import Header from '../../components/Header';
 import { Colors } from '../../styles/global';
 import Menu from '../../components/Menu';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Card from '../../components/Card';
 
 export default function Home() {
   const { user, signOut } = useAuth();
@@ -106,30 +107,32 @@ export default function Home() {
             }}>
             {cards.map(card => (
               <S.AccountCardWrapper key={card.id}>
-                <S.Card backgroundColor="#FF981E">
-                  <S.CardInfo>
-                    <S.CardTitle>{card.title}</S.CardTitle>
-                    <S.CardBalance>R$ {card.current_balance}</S.CardBalance>
-                    <S.CardSubBalance>
-                      Previsto R$ {card.estimate_balance}
-                    </S.CardSubBalance>
-                  </S.CardInfo>
-
-                  <S.IconContainer>
+                <Card
+                  colors={{
+                    PRIMARY_BACKGROUND: '#F9C33C',
+                    SECOND_BACKGROUND: '#FF981E',
+                  }}
+                  icon={() => (
                     <Icon name="business" size={32} color="#FF981E" />
-                  </S.IconContainer>
-                </S.Card>
+                  )}
+                  title={card.title}
+                  values={{
+                    current: card.current_balance,
+                    estimate: card.estimate_balance,
+                  }}
+                />
               </S.AccountCardWrapper>
             ))}
             <S.AccountCardWrapper>
-              <S.Card backgroundColor="#FF981E">
-                <S.AddCardContainer>
-                  <S.CardTitle>Adicionar uma nova conta</S.CardTitle>
-                  <S.AddButton>
-                    <Icon name="add-circle" size={52} color="#fff" />
-                  </S.AddButton>
-                </S.AddCardContainer>
-              </S.Card>
+              <Card
+                colors={{
+                  PRIMARY_BACKGROUND: '#F9C33C',
+                  SECOND_BACKGROUND: '#FF981E',
+                }}
+                icon={() => <Icon name="add-circle" size={52} color="#fff" />}
+                title="Adicionar uma nova conta"
+                type="ADD"
+              />
             </S.AccountCardWrapper>
           </ScrollView>
 

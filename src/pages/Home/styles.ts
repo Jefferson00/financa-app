@@ -42,66 +42,6 @@ export const AccountCardWrapper = styled.View`
   height: 149px;
 `;
 
-export const Card = styled.View<CardProps>`
-  width: 269px;
-  height: 149px;
-  margin: 0 auto;
-  border-radius: 10px;
-
-  padding: 24px;
-
-  flex-direction: row;
-`;
-
-export const CardInfo = styled.View<CardProps>`
-  width: 80%;
-  height: 100%;
-  justify-content: flex-start;
-`;
-
-export const CardTitle = styled.Text<CardProps>`
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.5)}px;
-  text-align: center;
-  color: #fff;
-`;
-
-export const CardBalance = styled.Text<CardProps>`
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(3)}px;
-
-  margin-top: 16px;
-  color: #fff;
-`;
-
-export const CardSubBalance = styled.Text<CardProps>`
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(1.8)}px;
-
-  line-height: 16px;
-  opacity: 0.8;
-  color: #fff;
-`;
-
-export const AddButton = styled.TouchableOpacity``;
-
-export const AddCardContainer = styled.View`
-  flex: 1;
-  justify-content: space-between;
-  align-items: center;
-`;
-
-export const IconContainer = styled.View`
-  width: 50px;
-  height: 50px;
-  border-radius: 25px;
-
-  align-items: center;
-  justify-content: center;
-
-  background-color: #fff;
-`;
-
 export const AccountDots = styled.View`
   flex-direction: row;
   justify-content: center;
