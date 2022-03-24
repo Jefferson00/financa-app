@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
+import LinearGradient from 'react-native-linear-gradient';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import * as S from './styles';
 
 interface IColors {
@@ -17,26 +19,30 @@ interface CradsProps {
   colors: IColors;
   values?: IValues;
   type?: 'ADD' | null;
+  id: string;
 }
 
-export default function Card({
-  colors,
-  icon: Icon,
-  title,
-  values,
-  type,
-}: CradsProps) {
-  return (
+const Card = forwardRef(
+  (
+    { colors, icon: Icon, title, type, values, id }: CradsProps,
+    ref: React.Ref<LinearGradient> | undefined,
+  ) => (
     <S.Container
+      ref={ref}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 0 }}
-      colors={[colors.PRIMARY_BACKGROUND, colors.SECOND_BACKGROUND]}>
+      colors={[colors.PRIMARY_BACKGROUND, colors.SECOND_BACKGROUND]}
+      id={id}>
       {!type && (
         <>
           <S.CardInfo>
             <S.CardTitle>{title}</S.CardTitle>
-            <S.CardBalance>R$ {values?.current}</S.CardBalance>
-            <S.CardSubBalance>Previsto R$ {values?.estimate}</S.CardSubBalance>
+            <S.CardBalance>
+              {getCurrencyFormat(values?.current || 0)}
+            </S.CardBalance>
+            <S.CardSubBalance>
+              Previsto {getCurrencyFormat(values?.estimate || 0)}
+            </S.CardSubBalance>
           </S.CardInfo>
 
           <S.IconContainer>
@@ -53,5 +59,7 @@ export default function Card({
         </S.AddCardContainer>
       )}
     </S.Container>
-  );
-}
+  ),
+);
+
+export default Card;
