@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { ScrollView, Dimensions } from 'react-native';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/AuthContext';
 import * as S from './styles';
@@ -8,6 +8,12 @@ import { Colors } from '../../styles/global';
 import Menu from '../../components/Menu';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Card from '../../components/Card';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import { getDayOfTheMounth } from '../../utils/dateFormats';
+import Carousel, { Pagination } from 'react-native-snap-carousel';
+import ContentLoader, { Rect } from 'react-content-loader/native';
+import Estimates from './components/Estimates';
+import LastTransactions from './components/LastTransactions';
 
 export default function Home() {
   const { user, signOut } = useAuth();
@@ -17,11 +23,8 @@ export default function Home() {
   const primaryColor = Colors.BLUE_PRIMARY_LIGHTER;
   const secondaryColor = Colors.BLUE_SOFT_LIGHTER;
 
-  const estimateColors = {
-    month: Colors.MAIN_TEXT_LIGHTER,
-    value: Colors.BLUE_SECONDARY_LIGHTER,
-    indicator: Colors.ORANGE_SECONDARY_LIGHTER,
-  };
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getApiUsersExample = useCallback(async () => {
     try {
@@ -34,6 +37,10 @@ export default function Home() {
 
   useEffect(() => {
     getApiUsersExample();
+
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
 
     return () => {
       controller.abort();
@@ -53,38 +60,12 @@ export default function Home() {
       current_balance: 100000,
       estimate_balance: 80000,
     },
-  ];
-
-  const estimates = [
-    {
-      id: 1,
-      month: 'Nov 20',
-      value: 100000,
-      indicator: 0,
-    },
-    {
-      id: 2,
-      month: 'Dez 20',
-      value: 1000000,
-      indicator: 20,
-    },
     {
       id: 3,
-      month: 'Jan 21',
-      value: 1000000,
-      indicator: 20,
-    },
-    {
-      id: 4,
-      month: 'Fev 21',
-      value: 1000000,
-      indicator: 20,
-    },
-    {
-      id: 5,
-      month: 'Mar 21',
-      value: 2000000,
-      indicator: 40,
+      title: 'Adicionar uma nova conta',
+      type: 'ADD',
+      current_balance: 0,
+      estimate_balance: 0,
     },
   ];
 
@@ -97,118 +78,153 @@ export default function Home() {
         showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
-          <ScrollView
-            horizontal
-            snapToInterval={width}
-            decelerationRate="fast"
-            showsHorizontalScrollIndicator={false}
-            style={{
-              height: 149,
-            }}>
-            {cards.map(card => (
-              <S.AccountCardWrapper key={card.id}>
-                <Card
-                  colors={{
-                    PRIMARY_BACKGROUND: '#F9C33C',
-                    SECOND_BACKGROUND: '#FF981E',
-                  }}
-                  icon={() => (
-                    <Icon name="business" size={32} color="#FF981E" />
-                  )}
-                  title={card.title}
-                  values={{
-                    current: card.current_balance,
-                    estimate: card.estimate_balance,
-                  }}
-                />
-              </S.AccountCardWrapper>
-            ))}
-            <S.AccountCardWrapper>
-              <Card
-                colors={{
-                  PRIMARY_BACKGROUND: '#F9C33C',
-                  SECOND_BACKGROUND: '#FF981E',
-                }}
-                icon={() => <Icon name="add-circle" size={52} color="#fff" />}
-                title="Adicionar uma nova conta"
-                type="ADD"
+          {isLoading && (
+            <ContentLoader
+              viewBox="0 0 269 140"
+              height={140}
+              style={{
+                marginBottom: 32,
+              }}
+              backgroundColor="#ff981e"
+              foregroundColor="rgb(255, 255, 255)">
+              <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
+            </ContentLoader>
+          )}
+          {!isLoading && (
+            <>
+              <Carousel
+                data={cards}
+                onSnapToItem={index => setActiveSlide(index)}
+                sliderWidth={width}
+                itemWidth={width}
+                itemHeight={149}
+                renderItem={({ item }) => (
+                  <Card
+                    id={String(item.id)}
+                    colors={{
+                      PRIMARY_BACKGROUND: '#F9C33C',
+                      SECOND_BACKGROUND: '#FF981E',
+                    }}
+                    icon={() => {
+                      if (item.type === 'ADD') {
+                        return (
+                          <Icon name="add-circle" size={52} color="#fff" />
+                        );
+                      } else {
+                        return (
+                          <Icon name="business" size={32} color="#FF981E" />
+                        );
+                      }
+                    }}
+                    title={item.title}
+                    values={{
+                      current: item.current_balance,
+                      estimate: item.estimate_balance,
+                    }}
+                    type={(item.type as 'ADD') || null}
+                  />
+                )}
               />
-            </S.AccountCardWrapper>
-          </ScrollView>
 
-          <S.AccountDots>
-            {cards.map(card => (
-              <S.Dot key={card.id} active={card.id === 1} />
-            ))}
-          </S.AccountDots>
+              <Pagination
+                dotsLength={cards.length}
+                activeDotIndex={activeSlide}
+                dotContainerStyle={{
+                  height: 0,
+                }}
+                containerStyle={{
+                  height: 0,
+                  position: 'relative',
+                  top: -10,
+                }}
+                dotStyle={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: 7.5,
+                  marginHorizontal: 4,
+                  backgroundColor: '#ff981e',
+                }}
+                inactiveDotStyle={{
+                  width: 15,
+                  height: 15,
+                  borderRadius: 5,
+                  marginHorizontal: 4,
+                  backgroundColor: '#f9c33c',
+                }}
+                inactiveDotOpacity={0.4}
+                inactiveDotScale={0.8}
+              />
+            </>
+          )}
 
           <S.BalanceContainer>
             <S.Balance>
               <S.BalanceText color={primaryColor}>Saldo atual</S.BalanceText>
-              <S.BalanceValue>R$ 0</S.BalanceValue>
+              {isLoading ? (
+                <ContentLoader
+                  viewBox={`0 0 116 32`}
+                  height={32}
+                  width={116}
+                  style={{ marginTop: 16 }}
+                  backgroundColor={secondaryColor}
+                  foregroundColor="rgb(255, 255, 255)">
+                  <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
+                </ContentLoader>
+              ) : (
+                <S.BalanceValue>{getCurrencyFormat(0)}</S.BalanceValue>
+              )}
             </S.Balance>
 
             <S.Balance>
               <S.BalanceText color={primaryColor}>Saldo previsto</S.BalanceText>
-              <S.BalanceValue>R$ 0</S.BalanceValue>
+              {isLoading ? (
+                <ContentLoader
+                  viewBox={`0 0 116 32`}
+                  height={32}
+                  width={116}
+                  style={{ marginTop: 16 }}
+                  backgroundColor={secondaryColor}
+                  foregroundColor="rgb(255, 255, 255)">
+                  <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
+                </ContentLoader>
+              ) : (
+                <S.BalanceValue>{getCurrencyFormat(0)}</S.BalanceValue>
+              )}
             </S.Balance>
           </S.BalanceContainer>
 
           <S.Estimates>
             <S.BalanceText color={primaryColor}>Estimativas</S.BalanceText>
-            <S.EstimateView backgroundColor={secondaryColor}>
-              <ScrollView
-                horizontal
-                contentContainerStyle={{
-                  minWidth: '100%',
-                  alignItems: 'flex-end',
-                  justifyContent: 'center',
-                }}
-                showsHorizontalScrollIndicator={false}>
-                {estimates.map(estimate => (
-                  <S.EstimateInMonth key={estimate.id}>
-                    <S.EstimateMonthText monthTextColor={estimateColors.month}>
-                      {estimate.month}
-                    </S.EstimateMonthText>
-                    <S.EstimateMonthValue valueTextColor={estimateColors.value}>
-                      R$ {estimate.value}
-                    </S.EstimateMonthValue>
-
-                    <S.EstimateIndicator
-                      indicatorVelue={estimate.indicator}
-                      indicatorColor={estimateColors.indicator}
-                    />
-                  </S.EstimateInMonth>
-                ))}
-              </ScrollView>
-            </S.EstimateView>
+            {isLoading ? (
+              <ContentLoader
+                viewBox={`0 0 ${width} 150`}
+                height={150}
+                width={'100%'}
+                backgroundColor={secondaryColor}
+                foregroundColor="rgb(255, 255, 255)">
+                <Rect x="0" y="0" rx="20" ry="20" width={width} height="150" />
+              </ContentLoader>
+            ) : (
+              <Estimates />
+            )}
           </S.Estimates>
 
           <S.LastTransactions>
             <S.BalanceText color={primaryColor}>
               Últimas Transações
             </S.BalanceText>
-
-            <S.LastTransactionsView backgroundColor={secondaryColor}>
-              <S.TransactionText>
-                Nenhuma transação por enquanto
-              </S.TransactionText>
-            </S.LastTransactionsView>
-            <S.LastTransactionsView backgroundColor={secondaryColor}>
-              <Icon name="business" size={32} color="#2673CE" />
-              <S.TitleContainer>
-                <S.TransactionTitle>
-                  {'Compras do mês'.substring(0, 16)}
-                </S.TransactionTitle>
-              </S.TitleContainer>
-
-              <S.DetailsContainer>
-                <S.TransactionValue color="#CC3728">
-                  R$ 585,90
-                </S.TransactionValue>
-                <S.TransactionDate>07 Jan</S.TransactionDate>
-              </S.DetailsContainer>
-            </S.LastTransactionsView>
+            {isLoading ? (
+              <ContentLoader
+                viewBox={`0 0 ${width} 80`}
+                height={80}
+                width={'100%'}
+                backgroundColor={secondaryColor}
+                foregroundColor="rgb(255, 255, 255)">
+                <Rect x="0" y="0" rx="20" ry="20" width={width} height="80" />
+              </ContentLoader>
+            ) : (
+              <LastTransactions />
+            )}
           </S.LastTransactions>
           {/*   <TouchableOpacity onPress={() => signOut()}>
             <Text>SAIR</Text>
