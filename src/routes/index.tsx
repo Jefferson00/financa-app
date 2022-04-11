@@ -5,7 +5,7 @@ import AppRoutes from './app.routes';
 import { ActivityIndicator, View } from 'react-native';
 
 export type Nav = {
-  navigate: (value: string) => void;
+  navigate: (value: string, props?: any) => void;
 };
 
 export default function Routes() {

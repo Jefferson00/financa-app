@@ -9,7 +9,6 @@ import Menu from '../../components/Menu';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Card from '../../components/Card';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
-import { getDayOfTheMounth } from '../../utils/dateFormats';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import Estimates from './components/Estimates';

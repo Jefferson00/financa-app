@@ -12,8 +12,13 @@ import {
   withSpring,
   withSequence,
 } from 'react-native-reanimated';
+import { Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Nav } from '../../routes';
+import { SharedElement } from 'react-navigation-shared-element';
 
 export default function Header() {
+  const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const backgroundColor = Colors.BLUE_PRIMARY_LIGHTER;
 
@@ -38,6 +43,22 @@ export default function Header() {
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [disableButton, setDisableButton] = useState(false);
 
+  function changeMonth(order: 'PREV' | 'NEXT') {
+    return new Promise((resolve, reject) => {
+      const currentMonth = selectedDate.getMonth();
+      setTimeout(() => {
+        setSelectedDate(
+          new Date(
+            selectedDate.setMonth(
+              order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
+            ),
+          ),
+        );
+        resolve(true);
+      }, 500);
+    });
+  }
+
   const handleChangeMonth = useCallback(
     async (order: 'PREV' | 'NEXT') => {
       setDisableButton(true);
@@ -51,17 +72,8 @@ export default function Header() {
         withTiming(1),
         withTiming(0, { duration: 50 }),
       );
-      const currentMonth = selectedDate.getMonth();
-      setTimeout(() => {
-        setSelectedDate(
-          new Date(
-            selectedDate.setMonth(
-              order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
-            ),
-          ),
-        );
-        setDisableButton(false);
-      }, 500);
+      await changeMonth(order);
+      setDisableButton(false);
     },
     [selectedDate],
   );
@@ -96,11 +108,20 @@ export default function Header() {
           <Icons name="chevron-forward" size={32} color={selectorColor} />
         </S.NextButton>
       </S.MonthSelector>
-      {user?.avatar ? (
-        <S.Avatar source={{ uri: user.avatar }} />
-      ) : (
-        <S.EmptyAvatar />
-      )}
+      <Pressable
+        onPress={() => navigation.navigate('Profile', { id: 'teste' })}>
+        {user?.avatar ? (
+          <SharedElement id="teste">
+            <S.Avatar
+              source={{ uri: user.avatar }}
+              style={{ borderRadius: 25, width: 50, height: 50 }}
+              resizeMode="cover"
+            />
+          </SharedElement>
+        ) : (
+          <S.EmptyAvatar />
+        )}
+      </Pressable>
     </S.Container>
   );
 }

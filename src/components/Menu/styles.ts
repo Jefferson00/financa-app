@@ -1,6 +1,7 @@
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import MaskInput from 'react-native-mask-input';
 import styled from 'styled-components/native';
+import Animated from 'react-native-reanimated';
 
 interface ContainerProps {
   backgroundColor: string;
@@ -36,3 +37,5 @@ export const MenuButton = styled.Pressable<ButtonProps>`
 
   opacity: ${props => (props.isActive ? 1 : 0.5)};
 `;
+
+export const AnimatedView = styled(Animated.View)``;
