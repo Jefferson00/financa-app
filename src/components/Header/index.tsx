@@ -17,7 +17,15 @@ import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { SharedElement } from 'react-navigation-shared-element';
 
-export default function Header() {
+interface HeaderProps {
+  reduced?: boolean;
+  showMonthSelector?: boolean;
+}
+
+export default function Header({
+  reduced = false,
+  showMonthSelector = true,
+}: HeaderProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const backgroundColor = Colors.BLUE_PRIMARY_LIGHTER;
@@ -90,24 +98,33 @@ export default function Header() {
   }, [selectedDate]);
 
   return (
-    <S.Container backgroundColor={backgroundColor}>
-      <S.MonthSelector>
-        <S.PrevButton
-          onPress={() => handleChangeMonth('PREV')}
-          disabled={disableButton}>
-          <Icons name="chevron-back" size={32} color={selectorColor} />
-        </S.PrevButton>
-        <S.MonthContainer>
-          <S.Month color={selectorColor} style={textAnimated}>
-            {getMounthAndYear(selectedDate)}
-          </S.Month>
-        </S.MonthContainer>
-        <S.NextButton
-          onPress={() => handleChangeMonth('NEXT')}
-          disabled={disableButton}>
-          <Icons name="chevron-forward" size={32} color={selectorColor} />
-        </S.NextButton>
-      </S.MonthSelector>
+    <S.Container backgroundColor={backgroundColor} reduced={reduced}>
+      {showMonthSelector ? (
+        <S.MonthSelector>
+          <S.PrevButton
+            onPress={() => handleChangeMonth('PREV')}
+            disabled={disableButton}>
+            <Icons name="chevron-back" size={32} color={selectorColor} />
+          </S.PrevButton>
+          <S.MonthContainer>
+            <S.Month color={selectorColor} style={textAnimated}>
+              {getMounthAndYear(selectedDate)}
+            </S.Month>
+          </S.MonthContainer>
+          <S.NextButton
+            onPress={() => handleChangeMonth('NEXT')}
+            disabled={disableButton}>
+            <Icons name="chevron-forward" size={32} color={selectorColor} />
+          </S.NextButton>
+        </S.MonthSelector>
+      ) : (
+        <Pressable onPress={() => navigation.goBack()}>
+          <S.GoBack>
+            <Icons name="arrow-back" size={32} color="#fff" />
+          </S.GoBack>
+        </Pressable>
+      )}
+
       <Pressable
         onPress={() => navigation.navigate('Profile', { id: 'teste' })}>
         {user?.avatar ? (

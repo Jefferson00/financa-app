@@ -3,10 +3,11 @@ import { useAuth } from '../../hooks/AuthContext';
 import Menu from '../../components/Menu';
 import { Colors } from '../../styles/global';
 import * as S from './styles';
-import { useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { SharedElement } from 'react-navigation-shared-element';
 import { ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { Nav } from '../../routes';
 
 interface ProfileProps {
   id: string;
@@ -15,6 +16,7 @@ interface ProfileProps {
 export default function Profile({ id }: ProfileProps) {
   const { user } = useAuth();
   const routes = useRoute();
+  const navigation = useNavigation<Nav>();
   const backgroundColor = Colors.BLUE_PRIMARY_LIGHTER;
   const btnBackgroundColor = '#fff';
   const btnColor = '#09192D';
@@ -45,7 +47,10 @@ export default function Profile({ id }: ProfileProps) {
           paddingBottom: 96,
         }}>
         <S.MainButtonContainer>
-          <S.Button backgroundColor={btnBackgroundColor} color={btnColor}>
+          <S.Button
+            backgroundColor={btnBackgroundColor}
+            color={btnColor}
+            onPress={() => navigation.navigate('EditProfile')}>
             <Icon
               name="create"
               size={30}

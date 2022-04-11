@@ -1,9 +1,10 @@
-import styled from 'styled-components/native';
+import styled, { css } from 'styled-components/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import Animated from 'react-native-reanimated';
 
 interface ContainerProps {
   backgroundColor: string;
+  reduced?: boolean;
 }
 
 interface MonthProps {
@@ -16,6 +17,13 @@ export const Container = styled.View<ContainerProps>`
   justify-content: space-between;
   padding: ${RFPercentage(6)}px ${RFPercentage(3.2)}px ${RFPercentage(9.5)}px
     ${RFPercentage(2.5)}px;
+
+  ${props =>
+    props.reduced &&
+    css`
+      padding: ${RFPercentage(4.5)}px ${RFPercentage(3.2)}px
+        ${RFPercentage(3.5)}px ${RFPercentage(2.5)}px;
+    `}
 `;
 export const Avatar = styled.Image`
   height: ${RFPercentage(6.5)}px;
@@ -46,3 +54,5 @@ export const Month = styled(Animated.Text)<MonthProps>`
   font-size: ${RFPercentage(3.2)}px;
   margin: 0 ${RFPercentage(1)}px; ;
 `;
+
+export const GoBack = styled(Animated.View)``;

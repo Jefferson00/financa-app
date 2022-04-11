@@ -6,6 +6,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 export type Nav = {
   navigate: (value: string, props?: any) => void;
+  goBack: () => void;
 };
 
 export default function Routes() {

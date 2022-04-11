@@ -1,7 +1,7 @@
 import React from 'react';
-import { createStackNavigator } from '@react-navigation/stack';
 import Home from '../pages/Home';
 import Profile from '../pages/Profile';
+import EditProfile from '../pages/EditProfile';
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 
 const App = createSharedElementStackNavigator();
@@ -24,6 +24,7 @@ export default function AuthRoutes() {
           return [{ id: route.params.id, animation: 'fade', resize: 'clip' }];
         }}
       />
+      <App.Screen name="EditProfile" component={EditProfile} />
     </App.Navigator>
   );
 }

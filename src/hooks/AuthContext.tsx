@@ -35,6 +35,7 @@ interface AuthContextData {
   signInWithPhone: (phoneNumber: string) => Promise<void>;
   signOut: () => Promise<void>;
   closeErrorModal: () => void;
+  updateUser: (user: any) => void;
 }
 
 export const AuthContext = createContext<AuthContextData>(
@@ -59,19 +60,36 @@ export const AuthProvider: React.FC = ({ children }) => {
 
         await AsyncStorage.setItem('@FinancaAppBeta:token', token);
 
-        api.defaults.headers = {
-          authorization: `Bearer ${token}`,
-        } as CommonHeaderProperties;
-
-        setUser({
-          id: uid,
+        const userInput = {
           avatar: photoURL,
           email: email,
           name: displayName,
           phone: phoneNumber,
-        });
+        };
+
+        api.defaults.headers = {
+          authorization: `Bearer ${token}`,
+        } as CommonHeaderProperties;
+
+        api
+          .get('users')
+          .then(({ data }) => {
+            const user = data.find((u: IUser) => u.email === email);
+            if (!user) {
+              api
+                .post('users', userInput)
+                .then(({ data }) => {
+                  setUser(data);
+                  return;
+                })
+                .catch(err => console.log(err))
+                .finally(() => setLoading(false));
+            }
+            setUser(user);
+          })
+          .catch(err => console.log(err))
+          .finally(() => setLoading(false));
       }
-      setLoading(false);
     });
 
     return () => {
@@ -81,6 +99,10 @@ export const AuthProvider: React.FC = ({ children }) => {
 
   const closeErrorModal = useCallback(() => {
     setAuthError(null);
+  }, []);
+
+  const updateUser = useCallback(user => {
+    setUser(user);
   }, []);
 
   const signInGoogle = useCallback(async () => {
@@ -177,6 +199,7 @@ export const AuthProvider: React.FC = ({ children }) => {
         signOut,
         signInWithPhone,
         confirmCode,
+        updateUser,
         authError,
         loading,
         isSubmitting,
