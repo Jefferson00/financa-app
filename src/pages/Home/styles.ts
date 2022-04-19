@@ -73,21 +73,22 @@ export const BalanceText = styled.Text<BalanceProps>`
 
   color: ${props => props.color};
 `;
-export const BalanceValue = styled.Text`
+export const BalanceValue = styled.Text<BalanceProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.2)}px;
 
   margin-top: 16px;
+  color: ${props => props.color};
 `;
 
 export const Estimates = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
-  margin-top: 16px;
+  margin-top: 32px;
 `;
 
 export const LastTransactions = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
-  margin-top: 16px;
+  margin-top: 32px;
 `;
 
 export const LastTransactionsView = styled.View<LastTransactionsProps>`

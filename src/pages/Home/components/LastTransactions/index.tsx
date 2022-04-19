@@ -4,9 +4,25 @@ import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
 import { getDayOfTheMounth } from '../../../../utils/dateFormats';
 import { Colors } from '../../../../styles/global';
 import * as S from './styles';
+import { useTheme } from '../../../../hooks/ThemeContext';
 
 const LastTransactions = () => {
-  const backgroundColor = Colors.BLUE_SOFT_LIGHTER;
+  const { theme } = useTheme();
+
+  const iconColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const backgroundColor =
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
+  const expanseColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const incomeColor =
+    theme === 'dark'
+      ? Colors.INCOME_PRIMARY_DARKER
+      : Colors.INCOME_PRIMARY_LIGTHER;
 
   const lastTransactions = [
     {
@@ -46,9 +62,9 @@ const LastTransactions = () => {
           <S.LastTransactionsView
             key={transaction.id}
             backgroundColor={backgroundColor}>
-            <Icon name="business" size={32} color="#2673CE" />
+            <Icon name="business" size={32} color={iconColor} />
             <S.TitleContainer>
-              <S.TransactionTitle>
+              <S.TransactionTitle color={textColor}>
                 {transaction.title.length > 15
                   ? `${transaction.title.substring(0, 16)}...`
                   : transaction.title}
@@ -57,10 +73,12 @@ const LastTransactions = () => {
 
             <S.DetailsContainer>
               <S.TransactionValue
-                color={transaction.type === 'expanse' ? '#CC3728' : '#28cc3e'}>
+                color={
+                  transaction.type === 'expanse' ? expanseColor : incomeColor
+                }>
                 {getCurrencyFormat(transaction.value)}
               </S.TransactionValue>
-              <S.TransactionDate>
+              <S.TransactionDate color={textColor}>
                 {getDayOfTheMounth(transaction.created_at)}
               </S.TransactionDate>
             </S.DetailsContainer>

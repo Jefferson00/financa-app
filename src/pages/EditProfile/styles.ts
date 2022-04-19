@@ -17,10 +17,9 @@ interface ButtonProps {
   backgroundColor?: string;
 }
 
-export const Container = styled.View<ContainerProps>`
+export const Container = styled.View`
   flex: 1;
   align-items: center;
-  background-color: ${props => props.backgroundColor};
   padding: 16px 24px;
   padding-bottom: 96px;
 `;
@@ -30,7 +29,7 @@ export const EmptyAvatar = styled.View`
   width: ${RFPercentage(16)}px;
   border-radius: ${RFPercentage(8)}px;
   background-color: #d2d2d2;
-  margin-top: 64px;
+  margin-top: 32px;
   margin-bottom: 32px;
 `;
 

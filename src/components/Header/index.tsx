@@ -16,6 +16,7 @@ import { Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { SharedElement } from 'react-navigation-shared-element';
+import { useTheme } from '../../hooks/ThemeContext';
 
 interface HeaderProps {
   reduced?: boolean;
@@ -28,7 +29,14 @@ export default function Header({
 }: HeaderProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const backgroundColor = Colors.BLUE_PRIMARY_LIGHTER;
+  const { theme } = useTheme();
+  const backgroundColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const currentMonthColor =
+    theme === 'dark'
+      ? Colors.ORANGE_PRIMARY_DARKER
+      : Colors.ORANGE_PRIMARY_LIGHTER;
+  const monthColor = theme === 'dark' ? '#C5C5C5' : '#ffffff';
 
   const textAnimate = useSharedValue(0);
   const textOpacity = useSharedValue(0);
@@ -44,9 +52,7 @@ export default function Header({
     };
   });
 
-  const [selectorColor, setSelectorColor] = useState(
-    Colors.ORANGE_PRIMARY_LIGHTER,
-  );
+  const [selectorColor, setSelectorColor] = useState(currentMonthColor);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(currentDate);
   const [disableButton, setDisableButton] = useState(false);
@@ -91,9 +97,9 @@ export default function Header({
       selectedDate.getMonth() + 1 === new Date().getMonth() + 1 &&
       selectedDate.getFullYear() === new Date().getFullYear()
     ) {
-      setSelectorColor(Colors.ORANGE_PRIMARY_LIGHTER);
+      setSelectorColor(currentMonthColor);
     } else {
-      setSelectorColor('#fff');
+      setSelectorColor(monthColor);
     }
   }, [selectedDate]);
 
@@ -120,7 +126,7 @@ export default function Header({
       ) : (
         <Pressable onPress={() => navigation.goBack()}>
           <S.GoBack>
-            <Icons name="arrow-back" size={32} color="#fff" />
+            <Icons name="arrow-back" size={32} color={monthColor} />
           </S.GoBack>
         </Pressable>
       )}
@@ -136,7 +142,16 @@ export default function Header({
             />
           </SharedElement>
         ) : (
-          <S.EmptyAvatar />
+          <SharedElement id="teste">
+            <S.EmptyAvatar
+              style={{
+                borderRadius: 25,
+                width: 50,
+                height: 50,
+                backgroundColor: '#d2d2d2',
+              }}
+            />
+          </SharedElement>
         )}
       </Pressable>
     </S.Container>

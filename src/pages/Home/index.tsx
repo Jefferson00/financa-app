@@ -13,14 +13,28 @@ import Carousel, { Pagination } from 'react-native-snap-carousel';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import Estimates from './components/Estimates';
 import LastTransactions from './components/LastTransactions';
+import { useTheme } from '../../hooks/ThemeContext';
 
 export default function Home() {
   const { user, signOut } = useAuth();
+  const { theme } = useTheme();
   const [users, setUsers] = useState<any[]>([]);
   const controller = new AbortController();
   const width = Dimensions.get('screen').width;
-  const primaryColor = Colors.BLUE_PRIMARY_LIGHTER;
-  const secondaryColor = Colors.BLUE_SOFT_LIGHTER;
+  const primaryColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const secondaryColor =
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const primaryCardColor =
+    theme === 'dark'
+      ? Colors.ORANGE_PRIMARY_DARKER
+      : Colors.ORANGE_PRIMARY_LIGHTER;
+  const secondaryCardColor =
+    theme === 'dark'
+      ? Colors.ORANGE_SECONDARY_DARKER
+      : Colors.ORANGE_SECONDARY_LIGHTER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
 
   const [activeSlide, setActiveSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -84,7 +98,7 @@ export default function Home() {
               style={{
                 marginBottom: 32,
               }}
-              backgroundColor="#ff981e"
+              backgroundColor={secondaryCardColor}
               foregroundColor="rgb(255, 255, 255)">
               <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
             </ContentLoader>
@@ -101,8 +115,8 @@ export default function Home() {
                   <Card
                     id={String(item.id)}
                     colors={{
-                      PRIMARY_BACKGROUND: '#F9C33C',
-                      SECOND_BACKGROUND: '#FF981E',
+                      PRIMARY_BACKGROUND: primaryCardColor,
+                      SECOND_BACKGROUND: secondaryCardColor,
                     }}
                     icon={() => {
                       if (item.type === 'ADD') {
@@ -111,7 +125,11 @@ export default function Home() {
                         );
                       } else {
                         return (
-                          <Icon name="business" size={32} color="#FF981E" />
+                          <Icon
+                            name="business"
+                            size={32}
+                            color={secondaryCardColor}
+                          />
                         );
                       }
                     }}
@@ -141,7 +159,7 @@ export default function Home() {
                   height: 15,
                   borderRadius: 7.5,
                   marginHorizontal: 4,
-                  backgroundColor: '#ff981e',
+                  backgroundColor: primaryCardColor,
                 }}
                 inactiveDotStyle={{
                   width: 15,
@@ -170,7 +188,9 @@ export default function Home() {
                   <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
                 </ContentLoader>
               ) : (
-                <S.BalanceValue>{getCurrencyFormat(0)}</S.BalanceValue>
+                <S.BalanceValue color={textColor}>
+                  {getCurrencyFormat(0)}
+                </S.BalanceValue>
               )}
             </S.Balance>
 
@@ -187,7 +207,9 @@ export default function Home() {
                   <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
                 </ContentLoader>
               ) : (
-                <S.BalanceValue>{getCurrencyFormat(0)}</S.BalanceValue>
+                <S.BalanceValue color={textColor}>
+                  {getCurrencyFormat(0)}
+                </S.BalanceValue>
               )}
             </S.Balance>
           </S.BalanceContainer>
@@ -225,9 +247,6 @@ export default function Home() {
               <LastTransactions />
             )}
           </S.LastTransactions>
-          {/*   <TouchableOpacity onPress={() => signOut()}>
-            <Text>SAIR</Text>
-          </TouchableOpacity> */}
         </S.Container>
       </ScrollView>
       <Menu />

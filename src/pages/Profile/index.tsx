@@ -8,20 +8,30 @@ import { SharedElement } from 'react-navigation-shared-element';
 import { ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Nav } from '../../routes';
+import { maskPhone } from '../../utils/masks';
+import { useTheme } from '../../hooks/ThemeContext';
 
 interface ProfileProps {
   id: string;
 }
 
 export default function Profile({ id }: ProfileProps) {
-  const { user } = useAuth();
-  const routes = useRoute();
+  const { user, signOut } = useAuth();
+  const { theme } = useTheme();
   const navigation = useNavigation<Nav>();
-  const backgroundColor = Colors.BLUE_PRIMARY_LIGHTER;
-  const btnBackgroundColor = '#fff';
-  const btnColor = '#09192D';
-  const btnIconColor = Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor = '#fff';
+  const backgroundColor =
+    theme === 'dark' ? Colors.BACKGROUND_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const btnBackgroundColor =
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : '#fff';
+  const btnColor = theme === 'dark' ? '#c5c5c5' : '#09192D';
+  const btnIconColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const textColor = theme === 'dark' ? '#c5c5c5' : '#fff';
+  const signOutBtnColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const alertColor = '#ffaea7';
 
   return (
     <S.Container backgroundColor={backgroundColor}>
@@ -34,11 +44,28 @@ export default function Profile({ id }: ProfileProps) {
           />
         </SharedElement>
       ) : (
-        <S.EmptyAvatar />
+        <SharedElement id="teste">
+          <S.EmptyAvatar
+            style={{
+              borderRadius: 60,
+              width: 120,
+              height: 120,
+              backgroundColor: '#d2d2d2',
+            }}
+          />
+        </SharedElement>
       )}
 
-      <S.Title color={textColor}>Olá, {user?.name}</S.Title>
+      {(!user?.name || !user?.email) && (
+        <S.Alert color={alertColor}>Atualize seus dados</S.Alert>
+      )}
+
+      {user?.name && <S.Title color={textColor}>Olá, {user?.name}</S.Title>}
+
       <S.Subtitle color={textColor}>{user?.email}</S.Subtitle>
+      {user?.phone && (
+        <S.Subtitle color={textColor}>{maskPhone(user.phone)}</S.Subtitle>
+      )}
 
       <ScrollView
         style={{ width: '100%', padding: 24 }}
@@ -60,7 +87,10 @@ export default function Profile({ id }: ProfileProps) {
             <S.ButtonText color={btnColor}>Editar Perfil</S.ButtonText>
           </S.Button>
 
-          <S.Button backgroundColor={btnBackgroundColor} color={btnColor}>
+          <S.Button
+            backgroundColor={btnBackgroundColor}
+            color={btnColor}
+            onPress={() => navigation.navigate('ThemeScreen')}>
             <Icon
               name="contrast"
               size={30}
@@ -82,7 +112,7 @@ export default function Profile({ id }: ProfileProps) {
         </S.MainButtonContainer>
 
         <S.LogoutContainer>
-          <S.Button backgroundColor="#CC3728">
+          <S.Button backgroundColor={signOutBtnColor} onPress={() => signOut()}>
             <Icon
               name="log-out"
               size={30}

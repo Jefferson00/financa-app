@@ -11,11 +11,10 @@ interface ButtonProps {
   isActive: boolean;
 }
 
-export const Container = styled.View<ContainerProps>`
+export const Container = styled(Animated.View)`
   flex-direction: row;
   width: 100%;
   height: 86px;
-  background-color: ${props => props.backgroundColor};
   align-items: flex-start;
   justify-content: center;
 

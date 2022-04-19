@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/AuthContext';
 import Menu from '../../components/Menu';
 import { Colors } from '../../styles/global';
 import * as S from './styles';
 import { useRoute } from '@react-navigation/native';
-import Icons from 'react-native-vector-icons/Ionicons';
+import Icons from 'react-native-vector-icons/Feather';
 import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
@@ -13,6 +13,8 @@ import Button from '../../components/Button';
 import { phoneMask } from '../../utils/masks';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import api from '../../services/api';
+import ModalComponent from '../../components/Modal';
+import { useTheme } from '../../hooks/ThemeContext';
 
 interface ProfileProps {
   id: string;
@@ -20,6 +22,13 @@ interface ProfileProps {
 
 export default function EditProfile({ id }: ProfileProps) {
   const { user, updateUser } = useAuth();
+  const { theme } = useTheme();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [editSucessfully, setEditSucessfully] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(
+    'Erro ao atualizar informações',
+  );
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
       name: user?.name || '',
@@ -27,15 +36,22 @@ export default function EditProfile({ id }: ProfileProps) {
       phone: user?.phone || '',
     },
   });
-  const routes = useRoute();
-  const backgroundColor = '#fff';
 
-  const titleColor = Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor = Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground = Colors.BLUE_SOFT_LIGHTER;
+  const titleColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
+  const inputBackground =
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
 
   const SaveIcon = () => {
-    return <Icons name="chevron-forward-outline" size={24} color="#fff" />;
+    return (
+      <Icons
+        name="save"
+        size={24}
+        color={theme === 'dark' ? '#d8d8d8' : '#fff'}
+      />
+    );
   };
 
   type FormData = {
@@ -45,27 +61,45 @@ export default function EditProfile({ id }: ProfileProps) {
   };
 
   const saveButtonColors = {
-    PRIMARY_BACKGROUND: Colors.BLUE_PRIMARY_LIGHTER,
-    SECOND_BACKGROUND: Colors.BLUE_SECONDARY_LIGHTER,
-    TEXT: '#fff',
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_PRIMARY_DARKER
+        : Colors.BLUE_PRIMARY_LIGHTER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_SECONDARY_DARKER
+        : Colors.BLUE_SECONDARY_LIGHTER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
   const handleUpdateProfile = async (data: FormData) => {
+    setIsSubmitting(true);
+    const userInput = {
+      email: data.email ? data.email : null,
+      name: data.name ? data.name : null,
+      phone: data.phone ? `+55${data.phone}` : null,
+    };
     try {
-      const userUpdated = await api.put(`users/${user?.id}`, {
-        ...data,
-        phone: data.phone ? `+55 ${data.phone}` : null,
+      const userUpdated = await api.put(`users/${user?.id}`, userInput);
+      updateUser({
+        ...userUpdated.data,
+        phone: userUpdated.data.phone.replace('+55', ''),
       });
-      updateUser(userUpdated.data);
-    } catch (error) {
-      console.log(error);
+      setEditSucessfully(true);
+    } catch (error: any) {
+      if (error?.response?.data?.message)
+        setErrorMessage(error?.response?.data?.message);
+      console.log(error?.response?.data);
+      setHasError(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <>
       <Header reduced showMonthSelector={false} />
-      <S.Container backgroundColor={backgroundColor}>
+      <S.Container>
         <KeyboardAwareScrollView
           resetScrollToCoords={{ x: 0, y: 0 }}
           scrollEnabled
@@ -129,6 +163,31 @@ export default function EditProfile({ id }: ProfileProps) {
             onPress={handleSubmit(handleUpdateProfile)}
           />
         </KeyboardAwareScrollView>
+        <ModalComponent
+          type="loading"
+          visible={isSubmitting}
+          transparent
+          title="Atualizando..."
+          animationType="slide"
+        />
+        <ModalComponent
+          type="error"
+          visible={hasError}
+          handleCancel={() => setHasError(false)}
+          onRequestClose={() => setHasError(false)}
+          transparent
+          title={errorMessage}
+          subtitle="Tente novamente mais tarde"
+          animationType="slide"
+        />
+        <ModalComponent
+          type="success"
+          visible={editSucessfully}
+          transparent
+          title="Perfil atualizado com sucesso!"
+          animationType="slide"
+          handleCancel={() => setEditSucessfully(false)}
+        />
       </S.Container>
       <Menu />
     </>

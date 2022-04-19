@@ -28,12 +28,8 @@ export const Container = styled.View<ContainerProps>`
 export const Avatar = styled.Image`
   height: ${RFPercentage(6.5)}px;
   width: ${RFPercentage(6.5)}px;
-  // border-radius: ${RFPercentage(3.25)}px;
 `;
 export const EmptyAvatar = styled.View`
-  height: ${RFPercentage(6.5)}px;
-  width: ${RFPercentage(6.5)}px;
-  border-radius: ${RFPercentage(3.25)}px;
   background-color: #d2d2d2;
 `;
 export const MonthSelector = styled.View`

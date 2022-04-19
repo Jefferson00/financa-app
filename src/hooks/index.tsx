@@ -1,9 +1,12 @@
 import React from 'react';
 
 import { AuthProvider } from './AuthContext';
+import { ThemeProvider } from './ThemeContext';
 
 const AppProvider: React.FC = ({ children }) => (
-  <AuthProvider>{children}</AuthProvider>
+  <ThemeProvider>
+    <AuthProvider>{children}</AuthProvider>
+  </ThemeProvider>
 );
 
 export default AppProvider;

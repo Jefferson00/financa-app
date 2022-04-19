@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/AuthContext';
 import AuthRoutes from './auth.routes';
 import AppRoutes from './app.routes';
 import { ActivityIndicator, View } from 'react-native';
+import { useTheme } from '../hooks/ThemeContext';
 
 export type Nav = {
   navigate: (value: string, props?: any) => void;
@@ -11,7 +12,8 @@ export type Nav = {
 
 export default function Routes() {
   const { user, loading } = useAuth();
-  if (loading) {
+  const { theme } = useTheme();
+  if (loading || !theme) {
     return (
       <View
         style={{

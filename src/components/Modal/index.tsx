@@ -41,10 +41,13 @@ export default function ModalComponent({
             {type === 'error' && (
               <Icons name="alert-circle" size={36} color={errorColor} />
             )}
+            {type === 'success' && (
+              <Icons name="checkmark-circle" size={36} color={successColor} />
+            )}
             {title && <S.Title>{title}</S.Title>}
             {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
 
-            {type === 'error' && handleCancel && (
+            {(type === 'error' || type === 'success') && handleCancel && (
               <S.OkButton>
                 <S.ButtonText
                   color={primaryColor}

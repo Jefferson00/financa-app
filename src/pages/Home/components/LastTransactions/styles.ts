@@ -41,13 +41,15 @@ export const TitleContainer = styled.View`
   overflow: hidden;
 `;
 
-export const TransactionTitle = styled.Text`
+export const TransactionTitle = styled.Text<LastTransactionsProps>`
   margin: 0 ${RFPercentage(1.5)}px;
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2)}px;
 
   max-width: 80%;
   overflow: hidden;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
 export const DetailsContainer = styled.View`
@@ -64,8 +66,10 @@ export const TransactionValue = styled.Text<LastTransactionsProps>`
   color: ${props => (props.color ? props.color : '#000')};
 `;
 
-export const TransactionDate = styled.Text`
+export const TransactionDate = styled.Text<LastTransactionsProps>`
   font-family: 'Poppins-Regular';
   font-size: ${RFPercentage(1.5)}px;
   flex: 1;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;

@@ -74,20 +74,31 @@ export const AuthProvider: React.FC = ({ children }) => {
         api
           .get('users')
           .then(({ data }) => {
-            const user = data.find((u: IUser) => u.email === email);
+            const user = data.find(
+              (u: IUser) =>
+                (email && u.email === email) ||
+                (phoneNumber && u.phone === phoneNumber),
+            );
+            // console.log('user: ', user);
             if (!user) {
               api
                 .post('users', userInput)
                 .then(({ data }) => {
-                  setUser(data);
+                  setUser({
+                    ...data,
+                    phone: data.phone.replace('+55', ''),
+                  });
                   return;
                 })
-                .catch(err => console.log(err))
+                .catch(err => console.log('erro ao criar:', err))
                 .finally(() => setLoading(false));
             }
-            setUser(user);
+            setUser({
+              ...user,
+              phone: user.phone.replace('+55', ''),
+            });
           })
-          .catch(err => console.log(err))
+          .catch(err => console.log('erro ao listar: ', err))
           .finally(() => setLoading(false));
       }
     });

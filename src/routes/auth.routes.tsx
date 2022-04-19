@@ -3,17 +3,21 @@ import Home from '../pages/Home';
 import Profile from '../pages/Profile';
 import EditProfile from '../pages/EditProfile';
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
+import ThemeScreen from '../pages/ThemeScreen';
+import { useTheme } from '../hooks/ThemeContext';
 
 const App = createSharedElementStackNavigator();
 
 export default function AuthRoutes() {
+  const { theme } = useTheme();
+
   return (
     <App.Navigator
       initialRouteName="Home"
       screenOptions={{
         headerShown: false,
         cardStyle: {
-          backgroundColor: '#ffffff',
+          backgroundColor: theme === 'dark' ? '#1C1C1C' : '#fff',
         },
       }}>
       <App.Screen name="Home" component={Home} />
@@ -25,6 +29,7 @@ export default function AuthRoutes() {
         }}
       />
       <App.Screen name="EditProfile" component={EditProfile} />
+      <App.Screen name="ThemeScreen" component={ThemeScreen} />
     </App.Navigator>
   );
 }

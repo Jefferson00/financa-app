@@ -25,18 +25,14 @@ export const Container = styled.View<ContainerProps>`
 `;
 
 export const EmptyAvatar = styled.View`
-  height: ${RFPercentage(16)}px;
-  width: ${RFPercentage(16)}px;
-  border-radius: ${RFPercentage(8)}px;
   background-color: #d2d2d2;
   margin-top: 64px;
   margin-bottom: 32px;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const Avatar = styled.Image`
-  //height: ${RFPercentage(16)}px;
-  //width: ${RFPercentage(16)}px;
-  // border-radius: ${RFPercentage(8)}px;
   margin-top: 64px;
   margin-bottom: 32px;
 `;
@@ -45,6 +41,12 @@ export const Title = styled.Text<TextProps>`
   color: ${props => props.color};
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.8)}px;
+`;
+
+export const Alert = styled.Text<TextProps>`
+  color: ${props => props.color};
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2.5)}px;
 `;
 
 export const Subtitle = styled.Text<TextProps>`
