@@ -75,9 +75,7 @@ export default function PhoneLogin() {
             <S.MainContainer>
               <S.HeaderContent>
                 <S.Title>Informe seu número</S.Title>
-                <S.Title>
-                  <Icons name="log-in-outline" size={24} />
-                </S.Title>
+                <Icons name="call" size={24} style={{ marginLeft: 6 }} />
               </S.HeaderContent>
 
               <S.Form>
