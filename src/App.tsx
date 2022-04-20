@@ -7,8 +7,6 @@ import { NavigationContainer } from '@react-navigation/native';
 import AppProvider from './hooks';
 
 const App = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
   return (
     <NavigationContainer>
       <StatusBar

@@ -40,11 +40,10 @@ export const Logo = styled.Image``;
 export const MainContainer = styled.View<ColorsProps>`
   flex: 1;
   align-items: center;
-  justify-content: space-between;
   width: 90%;
   border-top-right-radius: 20px;
   border-top-left-radius: 20px;
-  height: ${Dimensions.get('screen').height - RFPercentage(45)}px;
+  height: ${Dimensions.get('screen').height}px;
   padding: 0 ${RFPercentage(2)}px ${RFPercentage(4)}px;
   margin: 0 auto;
   position: absolute;

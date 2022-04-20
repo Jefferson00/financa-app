@@ -73,7 +73,7 @@ export default function ConfirmCodeLogin() {
                 marginTop: 0,
               }}
               inputAreaStyle={{
-                marginBottom: 0,
+                marginBottom: 16,
               }}
               inputViewEmptyStyle={{
                 backgroundColor: inputBackground,
@@ -113,14 +113,14 @@ export default function ConfirmCodeLogin() {
                 ) : undefined
               }
             />
+            <Button
+              title="Confirmar"
+              colors={phoneButtonColors}
+              icon={SignInIcon}
+              disabled={code.length < 6}
+              onPress={() => confirmCode(code)}
+            />
           </S.Form>
-          <Button
-            title="Confirmar"
-            colors={phoneButtonColors}
-            icon={SignInIcon}
-            disabled={code.length < 6}
-            onPress={() => confirmCode(code)}
-          />
         </S.MainContainer>
         <ModalComponent
           type="loading"

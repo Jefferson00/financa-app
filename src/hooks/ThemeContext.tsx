@@ -50,9 +50,10 @@ export const ThemeProvider: React.FC = ({ children }) => {
       const defaultEnable = await AsyncStorage.getItem(
         '@FinancaAppBeta:defaultDeviceThemeEnable',
       );
-      if (storegedTheme) {
+
+      if (storegedTheme && (defaultEnable === 'false' || !defaultEnable)) {
         setTheme(storegedTheme as ColorSchemeName);
-      } else {
+      } else if (defaultEnable === 'true') {
         setTheme(colorScheme);
       }
       setDefaultDeviceThemeEnable(
@@ -63,12 +64,12 @@ export const ThemeProvider: React.FC = ({ children }) => {
     unsubscribe();
   }, [colorScheme]);
 
-  /*   useEffect(() => {
-    console.log(theme);
+  /* useEffect(() => {
+    console.log('theme', theme);
   }, [theme]);
 
   useEffect(() => {
-    console.log(defaultDeviceThemeEnable);
+    console.log('defaultDeviceThemeEnable', defaultDeviceThemeEnable);
   }, [defaultDeviceThemeEnable]); */
 
   return (
