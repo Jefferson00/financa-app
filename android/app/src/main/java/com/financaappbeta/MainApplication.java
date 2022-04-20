@@ -1,5 +1,6 @@
 package com.financaappbeta;
 
+import com.hieuvp.fingerprint.ReactNativeFingerprintScannerPackage;
 import com.facebook.react.bridge.JSIModulePackage; // <- add
 import com.swmansion.reanimated.ReanimatedJSIModulePackage; // <- add
 import android.app.Application;
@@ -30,6 +31,7 @@ public class MainApplication extends Application implements ReactApplication {
           // Packages that cannot be autolinked yet can be added manually here, for example:
           // packages.add(new MyReactNativePackage());
           packages.add(new LinearGradientPackage());
+          // packages.add(new ReactNativeFingerprintScannerPackage());
           return packages;
         }
 

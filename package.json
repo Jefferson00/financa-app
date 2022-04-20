@@ -25,6 +25,7 @@
     "react-hook-form": "^7.29.0",
     "react-native": "^0.67.3",
     "react-native-confirmation-code-field": "^7.3.0",
+    "react-native-fingerprint-scanner": "^6.0.0",
     "react-native-gesture-handler": "^1.10.3",
     "react-native-intersection-observer": "^0.0.8",
     "react-native-keyboard-aware-scroll-view": "^0.9.5",

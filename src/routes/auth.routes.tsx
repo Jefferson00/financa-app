@@ -5,6 +5,7 @@ import EditProfile from '../pages/EditProfile';
 import { createSharedElementStackNavigator } from 'react-navigation-shared-element';
 import ThemeScreen from '../pages/ThemeScreen';
 import { useTheme } from '../hooks/ThemeContext';
+import SecurityScreen from '../pages/SecurityScreen';
 
 const App = createSharedElementStackNavigator();
 
@@ -30,6 +31,7 @@ export default function AuthRoutes() {
       />
       <App.Screen name="EditProfile" component={EditProfile} />
       <App.Screen name="ThemeScreen" component={ThemeScreen} />
+      <App.Screen name="SecurityScreen" component={SecurityScreen} />
     </App.Navigator>
   );
 }

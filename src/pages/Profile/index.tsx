@@ -100,7 +100,9 @@ export default function Profile({ id }: ProfileProps) {
             <S.ButtonText color={btnColor}>Tema</S.ButtonText>
           </S.Button>
 
-          <S.Button backgroundColor={btnBackgroundColor}>
+          <S.Button
+            backgroundColor={btnBackgroundColor}
+            onPress={() => navigation.navigate('SecurityScreen')}>
             <Icon
               name="lock-closed"
               size={30}

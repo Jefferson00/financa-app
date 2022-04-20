@@ -63,13 +63,13 @@ export const ThemeProvider: React.FC = ({ children }) => {
     unsubscribe();
   }, [colorScheme]);
 
-  useEffect(() => {
+  /*   useEffect(() => {
     console.log(theme);
   }, [theme]);
 
   useEffect(() => {
     console.log(defaultDeviceThemeEnable);
-  }, [defaultDeviceThemeEnable]);
+  }, [defaultDeviceThemeEnable]); */
 
   return (
     <ThemeContext.Provider
