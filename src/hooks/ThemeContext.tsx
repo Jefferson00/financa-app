@@ -55,6 +55,8 @@ export const ThemeProvider: React.FC = ({ children }) => {
         setTheme(storegedTheme as ColorSchemeName);
       } else if (defaultEnable === 'true') {
         setTheme(colorScheme);
+      } else {
+        setTheme('light');
       }
       setDefaultDeviceThemeEnable(
         defaultEnable ? Boolean(defaultEnable) : false,

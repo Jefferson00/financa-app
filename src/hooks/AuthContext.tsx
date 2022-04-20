@@ -100,6 +100,8 @@ export const AuthProvider: React.FC = ({ children }) => {
           })
           .catch(err => console.log('erro ao listar: ', err))
           .finally(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
     });
 

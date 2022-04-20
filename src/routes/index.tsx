@@ -2,10 +2,12 @@ import React from 'react';
 import { useAuth } from '../hooks/AuthContext';
 import AuthRoutes from './auth.routes';
 import AppRoutes from './app.routes';
-import { ActivityIndicator, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { useTheme } from '../hooks/ThemeContext';
 import SecurityAccess from '../pages/SecurityAccess';
 import { useSecurity } from '../hooks/SecurityContext';
+import LottieView from 'lottie-react-native';
+import LogoImg from '../assets/Logos/logoLogin.png';
 
 export type Nav = {
   navigate: (value: string, props?: any) => void;
@@ -25,7 +27,8 @@ export default function Routes() {
           justifyContent: 'center',
           alignItems: 'center',
         }}>
-        <ActivityIndicator size="large" color="#F43434" />
+        <LottieView source={require('../assets/splash.json')} autoPlay loop />
+        <Image source={LogoImg} />
       </View>
     );
   }
