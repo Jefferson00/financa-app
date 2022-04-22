@@ -50,6 +50,8 @@ export default function Login() {
             TEXT: '#fff',
           }}
           onPress={() => navigation.navigate('Phone')}
+          testID="phone-login-button"
+          fontSize="small"
         />
       </S.ButtonContainer>
     </S.Container>

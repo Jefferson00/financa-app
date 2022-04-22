@@ -14,6 +14,7 @@ import ContentLoader, { Rect } from 'react-content-loader/native';
 import Estimates from './components/Estimates';
 import LastTransactions from './components/LastTransactions';
 import { useTheme } from '../../hooks/ThemeContext';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 export default function Home() {
   const { user, signOut } = useAuth();
@@ -121,13 +122,17 @@ export default function Home() {
                     icon={() => {
                       if (item.type === 'ADD') {
                         return (
-                          <Icon name="add-circle" size={52} color="#fff" />
+                          <Icon
+                            name="add-circle"
+                            size={RFPercentage(6)}
+                            color="#fff"
+                          />
                         );
                       } else {
                         return (
                           <Icon
                             name="business"
-                            size={32}
+                            size={RFPercentage(4)}
                             color={secondaryCardColor}
                           />
                         );
@@ -155,16 +160,16 @@ export default function Home() {
                   top: -10,
                 }}
                 dotStyle={{
-                  width: 15,
-                  height: 15,
-                  borderRadius: 7.5,
+                  width: RFPercentage(2),
+                  height: RFPercentage(2),
+                  borderRadius: RFPercentage(1),
                   marginHorizontal: 4,
                   backgroundColor: primaryCardColor,
                 }}
                 inactiveDotStyle={{
-                  width: 15,
-                  height: 15,
-                  borderRadius: 5,
+                  width: RFPercentage(2),
+                  height: RFPercentage(2),
+                  borderRadius: RFPercentage(1),
                   marginHorizontal: 4,
                   backgroundColor: '#f9c33c',
                 }}

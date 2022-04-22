@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { useTheme } from '../../hooks/ThemeContext';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
@@ -81,24 +82,36 @@ export default function Menu() {
             navigation.navigate('Home');
           }}>
           <S.AnimatedView style={buttonAnimated}>
-            <Icon name="home" size={36} color={iconColor} />
+            <Icon name="home" size={RFPercentage(5.2)} color={iconColor} />
           </S.AnimatedView>
         </S.MenuButton>
 
         <S.MenuButton
           isActive={false}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="arrow-up-circle" size={36} color={iconColor} />
+          <Icon
+            name="arrow-up-circle"
+            size={RFPercentage(5.2)}
+            color={iconColor}
+          />
         </S.MenuButton>
         <S.MenuButton
           isActive={false}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="arrow-down-circle" size={36} color={iconColor} />
+          <Icon
+            name="arrow-down-circle"
+            size={RFPercentage(5.2)}
+            color={iconColor}
+          />
         </S.MenuButton>
         <S.MenuButton
           isActive={false}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="notifications" size={36} color={iconColor} />
+          <Icon
+            name="notifications"
+            size={RFPercentage(5.2)}
+            color={iconColor}
+          />
         </S.MenuButton>
       </S.Container>
     </>

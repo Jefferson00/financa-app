@@ -22,7 +22,7 @@ export const EstimateView = styled.View<EstimatesProps>`
   justify-content: space-evenly;
   align-items: flex-end;
 
-  height: 150px;
+  height: ${RFPercentage(25)}px;
   border-radius: 10px;
   margin-top: 8px;
   padding: 16px;
@@ -52,7 +52,7 @@ export const EstimateIndicator = styled.View<EstimatesProps>`
   height: ${props =>
     props.indicatorVelue ? `${props.indicatorVelue}px` : `4px`};
   width: 100%;
-  max-height: 80px;
+  max-height: ${RFPercentage(10)}px;
   border-radius: 10px;
   background-color: ${props => props.indicatorColor};
 `;

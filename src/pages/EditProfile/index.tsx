@@ -15,6 +15,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import api from '../../services/api';
 import ModalComponent from '../../components/Modal';
 import { useTheme } from '../../hooks/ThemeContext';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 interface ProfileProps {
   id: string;
@@ -111,7 +112,11 @@ export default function EditProfile({ id }: ProfileProps) {
             <S.Avatar
               source={{ uri: user.avatar }}
               resizeMode="cover"
-              style={{ borderRadius: 60, width: 120, height: 120 }}
+              style={{
+                borderRadius: RFPercentage(8),
+                width: RFPercentage(16),
+                height: RFPercentage(16),
+              }}
             />
           ) : (
             <S.EmptyAvatar />

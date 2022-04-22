@@ -17,6 +17,7 @@ import {
 import { ScrollView } from 'react-native';
 import { useSecurity } from '../../hooks/SecurityContext';
 import ModalComponent from '../../components/Modal';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 export default function SecurityScreen() {
   const { theme } = useTheme();
@@ -128,7 +129,9 @@ export default function SecurityScreen() {
     <>
       <Header reduced showMonthSelector={false} />
       <S.Container style={[colorAnimated]}>
-        <ScrollView style={{ flex: 1, width: '100%' }}>
+        <ScrollView
+          style={{ flex: 1, width: '100%' }}
+          showsVerticalScrollIndicator={false}>
           <S.MainTitle color={titleColor}>Selecionar tema</S.MainTitle>
 
           <S.ConfigCard color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
@@ -165,11 +168,11 @@ export default function SecurityScreen() {
             )}
             {!hasPinAccess || hasAccess ? (
               <ReactNativePinView
-                inputSize={20}
+                inputSize={RFPercentage(2)}
                 //@ts-ignore
                 ref={defaultPinView}
                 pinLength={6}
-                buttonSize={50}
+                buttonSize={RFPercentage(7)}
                 onValueChange={value => setPin(value)}
                 buttonAreaStyle={{
                   marginTop: 0,
@@ -223,11 +226,11 @@ export default function SecurityScreen() {
               />
             ) : (
               <ReactNativePinView
-                inputSize={20}
+                inputSize={RFPercentage(2)}
                 //@ts-ignore
                 ref={updatePinView}
                 pinLength={6}
-                buttonSize={50}
+                buttonSize={RFPercentage(7)}
                 onValueChange={value => setPinAcess(value)}
                 buttonAreaStyle={{
                   marginTop: 0,

@@ -16,6 +16,7 @@ import {
   useDerivedValue,
   interpolateColor,
 } from 'react-native-reanimated';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 interface ProfileProps {
   id: string;
@@ -162,10 +163,10 @@ export default function ThemeScreen({ id }: ProfileProps) {
         <S.MainTitle color={titleColor}>Selecionar tema</S.MainTitle>
         <S.ThemeMainContainer>
           <S.ThemeIconContainer style={iconAnimated}>
-            <Icon name="sunny" size={152} color="#FF981E" />
+            <Icon name="sunny" size={RFPercentage(20)} color="#FF981E" />
           </S.ThemeIconContainer>
           <S.ThemeIconContainer style={iconMoonAnimated}>
-            <Icon name="moon" size={152} color="#ffffff" />
+            <Icon name="moon" size={RFPercentage(20)} color="#ffffff" />
           </S.ThemeIconContainer>
           <S.ButtonContainer style={[buttonColorAnimated]}>
             {theme === 'dark' ? (

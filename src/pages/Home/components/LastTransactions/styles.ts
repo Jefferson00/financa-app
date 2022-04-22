@@ -10,7 +10,7 @@ interface LastTransactionsProps {
 }
 
 export const LastTransactionsView = styled.View<LastTransactionsProps>`
-  height: 80px;
+  height: ${RFPercentage(11)}px;
   background-color: ${props => props.backgroundColor};
 
   border-radius: 10px;

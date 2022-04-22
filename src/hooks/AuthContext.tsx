@@ -74,12 +74,13 @@ export const AuthProvider: React.FC = ({ children }) => {
         api
           .get('users')
           .then(({ data }) => {
+            console.log('users', data);
             const user = data.find(
               (u: IUser) =>
                 (email && u.email === email) ||
                 (phoneNumber && u.phone === phoneNumber),
             );
-            // console.log('user: ', user);
+            console.log('user found: ', user);
             if (!user) {
               api
                 .post('users', userInput)
@@ -90,15 +91,16 @@ export const AuthProvider: React.FC = ({ children }) => {
                   });
                   return;
                 })
-                .catch(err => console.log('erro ao criar:', err))
+                .catch(err => console.log('erro ao criar usuário:', err))
                 .finally(() => setLoading(false));
+              console.log('user created: ', userInput);
             }
             setUser({
               ...user,
               phone: user.phone.replace('+55', ''),
             });
           })
-          .catch(err => console.log('erro ao listar: ', err))
+          .catch(err => console.log('erro ao listar usuarios: ', err))
           .finally(() => setLoading(false));
       } else {
         setLoading(false);
@@ -153,6 +155,7 @@ export const AuthProvider: React.FC = ({ children }) => {
   const confirmCode = useCallback(
     async (code: any) => {
       setIsSubmitting(true);
+      console.log(code);
       try {
         if (confirm) {
           const credential = auth.PhoneAuthProvider.credential(

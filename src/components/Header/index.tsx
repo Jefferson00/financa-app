@@ -17,6 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { SharedElement } from 'react-navigation-shared-element';
 import { useTheme } from '../../hooks/ThemeContext';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 interface HeaderProps {
   reduced?: boolean;
@@ -137,7 +138,11 @@ export default function Header({
           <SharedElement id="teste">
             <S.Avatar
               source={{ uri: user.avatar }}
-              style={{ borderRadius: 25, width: 50, height: 50 }}
+              style={{
+                borderRadius: RFPercentage(4),
+                width: RFPercentage(8),
+                height: RFPercentage(8),
+              }}
               resizeMode="cover"
             />
           </SharedElement>
@@ -145,9 +150,9 @@ export default function Header({
           <SharedElement id="teste">
             <S.EmptyAvatar
               style={{
-                borderRadius: 25,
-                width: 50,
-                height: 50,
+                borderRadius: RFPercentage(4),
+                width: RFPercentage(8),
+                height: RFPercentage(8),
                 backgroundColor: '#d2d2d2',
               }}
             />

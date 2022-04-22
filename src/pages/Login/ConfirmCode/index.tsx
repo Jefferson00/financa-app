@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as S from './styles';
 import { Colors } from '../../../styles/global';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 
 import LogoImg from '../../../assets/Logos/logoLogin.png';
 import Button from '../../../components/Button';
@@ -60,20 +61,20 @@ export default function ConfirmCodeLogin() {
           <S.Form>
             <ReactNativePinView
               showInputText={true}
-              inputSize={40}
+              inputSize={RFPercentage(4)}
               inputViewStyle={{
                 borderRadius: 0,
               }}
               //@ts-ignore
               ref={pinView}
               pinLength={6}
-              buttonSize={50}
+              buttonSize={RFPercentage(5)}
               onValueChange={value => setCode(value)}
               buttonAreaStyle={{
                 marginTop: 0,
               }}
               inputAreaStyle={{
-                marginBottom: 16,
+                marginBottom: RFPercentage(5),
               }}
               inputViewEmptyStyle={{
                 backgroundColor: inputBackground,
@@ -89,7 +90,7 @@ export default function ConfirmCodeLogin() {
                   pinView.current.clear();
                 }
                 if (key === 'custom_right') {
-                  () => confirmCode(code);
+                  confirmCode(code);
                 }
               }}
               //@ts-ignore

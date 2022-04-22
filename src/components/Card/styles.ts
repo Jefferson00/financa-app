@@ -10,7 +10,7 @@ interface ContainerProps {
 
 export const Container = styled(LinearGradient)<ContainerProps>`
   width: ${RFPercentage(38)}px;
-  height: 149px;
+  height: ${RFPercentage(20)}px;
   margin: 0 auto;
   border-radius: 10px;
 

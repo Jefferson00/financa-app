@@ -26,9 +26,15 @@ export default function Routes() {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
+          width: '100%',
         }}>
-        <LottieView source={require('../assets/splash.json')} autoPlay loop />
-        <Image source={LogoImg} />
+        <LottieView
+          source={require('../assets/splash.json')}
+          autoPlay
+          loop
+          style={{ width: '100%' }}
+        />
+        <Image source={LogoImg} style={{ position: 'absolute' }} />
       </View>
     );
   }
