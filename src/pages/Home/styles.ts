@@ -62,6 +62,7 @@ export const BalanceContainer = styled.View`
   justify-content: space-between;
 
   padding: 0 ${RFPercentage(3.2)}px;
+  margin-top: ${RFPercentage(3.2)}px;
 `;
 export const Balance = styled.View`
   justify-content: center;

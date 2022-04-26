@@ -15,11 +15,15 @@ import Estimates from './components/Estimates';
 import LastTransactions from './components/LastTransactions';
 import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { useNavigation } from '@react-navigation/native';
+import { Nav } from '../../routes';
 
 export default function Home() {
+  const navigation = useNavigation<Nav>();
   const { user, signOut } = useAuth();
   const { theme } = useTheme();
-  const [users, setUsers] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [cards, setCards] = useState<any[]>([]);
   const controller = new AbortController();
   const width = Dimensions.get('screen').width;
   const primaryColor =
@@ -40,48 +44,47 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  const getApiUsersExample = useCallback(async () => {
-    try {
-      const { data } = await api.get('users');
-      setUsers(data);
-    } catch (error) {
-      console.log(error);
+  const getUserAccounts = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await api.get(`accounts/user/${user.id}`);
+        setAccounts(data);
+      } catch (error) {
+        console.log(error);
+      }
     }
   }, []);
 
   useEffect(() => {
-    getApiUsersExample();
-
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+    getUserAccounts().finally(() => setIsLoading(false));
 
     return () => {
       controller.abort();
     };
   }, []);
 
-  const cards = [
-    {
-      id: 1,
-      title: 'Banco do Brasil',
-      current_balance: 100000,
-      estimate_balance: 80000,
-    },
-    {
-      id: 2,
-      title: 'Nubank',
-      current_balance: 100000,
-      estimate_balance: 80000,
-    },
-    {
-      id: 3,
+  useEffect(() => {
+    const cardsArray: any[] = [];
+    accounts.map((account, index) => {
+      cardsArray.push({
+        id: index + 1,
+        title: account.name,
+        type: account.type,
+        current_balance: 0,
+        estimate_balance: 0,
+        account,
+      });
+    });
+    cardsArray.push({
+      id: accounts.length + 1,
       title: 'Adicionar uma nova conta',
       type: 'ADD',
       current_balance: 0,
       estimate_balance: 0,
-    },
-  ];
+    });
+    setCards(cardsArray);
+    console.log('carregou os cartões');
+  }, [accounts]);
 
   return (
     <>
@@ -144,6 +147,11 @@ export default function Home() {
                       estimate: item.estimate_balance,
                     }}
                     type={(item.type as 'ADD') || null}
+                    handleNavigate={() =>
+                      navigation.navigate('Account', {
+                        account: item.type !== 'ADD' ? item.account : null,
+                      })
+                    }
                   />
                 )}
               />

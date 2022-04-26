@@ -25,11 +25,13 @@ export const LastTransactionsView = styled.View<LastTransactionsProps>`
   overflow: hidden;
 `;
 
-export const TransactionText = styled.Text`
+export const TransactionText = styled.Text<LastTransactionsProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2)}px;
   flex: 1;
   text-align: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
 export const TitleContainer = styled.View`

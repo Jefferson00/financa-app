@@ -28,37 +28,39 @@ const Estimates = () => {
     {
       id: 1,
       month: 'Nov 20',
-      value: 100000,
+      value: 0,
       indicator: 0,
     },
     {
       id: 2,
       month: 'Dez 20',
-      value: 1000000,
-      indicator: 30,
+      value: 0,
+      indicator: 0,
     },
     {
       id: 3,
       month: 'Jan 21',
-      value: 1000000,
-      indicator: 30,
+      value: 0,
+      indicator: 0,
     },
     {
       id: 4,
       month: 'Fev 21',
-      value: 1000000,
-      indicator: 30,
+      value: 0,
+      indicator: 0,
     },
     {
       id: 5,
       month: 'Mar 21',
-      value: 2000000,
-      indicator: 60,
+      value: 0,
+      indicator: 0,
     },
   ];
 
   return (
-    <S.EstimateView backgroundColor={backgroundColor}>
+    <S.EstimateView
+      backgroundColor={backgroundColor}
+      isEmpty={!estimates.find(est => est.value > 0)}>
       <ScrollView
         horizontal
         contentContainerStyle={{

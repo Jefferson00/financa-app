@@ -10,6 +10,7 @@ interface EstimatesProps {
   valueTextColor?: string;
   indicatorColor?: string;
   indicatorVelue?: number;
+  isEmpty?: boolean;
 }
 
 export const Estimates = styled.View`
@@ -22,7 +23,8 @@ export const EstimateView = styled.View<EstimatesProps>`
   justify-content: space-evenly;
   align-items: flex-end;
 
-  height: ${RFPercentage(25)}px;
+  height: ${props =>
+    props.isEmpty ? `${RFPercentage(20)}px` : `${RFPercentage(25)}px`};
   border-radius: 10px;
   margin-top: 8px;
   padding: 16px;

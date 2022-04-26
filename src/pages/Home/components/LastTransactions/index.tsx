@@ -24,7 +24,7 @@ const LastTransactions = () => {
       ? Colors.INCOME_PRIMARY_DARKER
       : Colors.INCOME_PRIMARY_LIGTHER;
 
-  const lastTransactions = [
+  /*  const lastTransactions = [
     {
       id: '1',
       title: 'Compras do mês',
@@ -49,13 +49,17 @@ const LastTransactions = () => {
       category: 'others',
       type: 'income',
     },
-  ];
+  ]; */
+
+  const lastTransactions: any[] = [];
 
   return (
     <>
       {lastTransactions.length === 0 ? (
         <S.LastTransactionsView backgroundColor={backgroundColor}>
-          <S.TransactionText>Nenhuma transação por enquanto</S.TransactionText>
+          <S.TransactionText color={textColor}>
+            Nenhuma transação por enquanto
+          </S.TransactionText>
         </S.LastTransactionsView>
       ) : (
         lastTransactions.map(transaction => (

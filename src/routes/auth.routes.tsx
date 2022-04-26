@@ -6,6 +6,7 @@ import { createSharedElementStackNavigator } from 'react-navigation-shared-eleme
 import ThemeScreen from '../pages/ThemeScreen';
 import { useTheme } from '../hooks/ThemeContext';
 import SecurityScreen from '../pages/SecurityScreen';
+import Account from '../pages/Account';
 
 const App = createSharedElementStackNavigator();
 
@@ -22,6 +23,7 @@ export default function AuthRoutes() {
         },
       }}>
       <App.Screen name="Home" component={Home} />
+      <App.Screen name="Account" component={Account} />
       <App.Screen
         name="Profile"
         component={Profile}
