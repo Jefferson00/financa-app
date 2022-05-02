@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, Dimensions } from 'react-native';
-import api from '../../services/api';
-import { useAuth } from '../../hooks/AuthContext';
+import { useAccount } from '../../hooks/AccountContext';
 import * as S from './styles';
 import Header from '../../components/Header';
 import { Colors } from '../../styles/global';
@@ -20,12 +19,13 @@ import { Nav } from '../../routes';
 
 export default function Home() {
   const navigation = useNavigation<Nav>();
-  const { user, signOut } = useAuth();
+  const { isLoadingData, accountCards } = useAccount();
   const { theme } = useTheme();
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [cards, setCards] = useState<any[]>([]);
-  const controller = new AbortController();
   const width = Dimensions.get('screen').width;
+
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [cards, setCards] = useState<any[]>([]);
+
   const primaryColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
   const secondaryColor =
@@ -40,51 +40,10 @@ export default function Home() {
       : Colors.ORANGE_SECONDARY_LIGHTER;
   const textColor =
     theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-
-  const [activeSlide, setActiveSlide] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const getUserAccounts = useCallback(async () => {
-    if (user) {
-      try {
-        const { data } = await api.get(`accounts/user/${user.id}`);
-        setAccounts(data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    getUserAccounts().finally(() => setIsLoading(false));
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const cardsArray: any[] = [];
-    accounts.map((account, index) => {
-      cardsArray.push({
-        id: index + 1,
-        title: account.name,
-        type: account.type,
-        current_balance: 0,
-        estimate_balance: 0,
-        account,
-      });
-    });
-    cardsArray.push({
-      id: accounts.length + 1,
-      title: 'Adicionar uma nova conta',
-      type: 'ADD',
-      current_balance: 0,
-      estimate_balance: 0,
-    });
-    setCards(cardsArray);
-    console.log('carregou os cartões');
-  }, [accounts]);
+  const alertColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
 
   return (
     <>
@@ -95,7 +54,7 @@ export default function Home() {
         showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
-          {isLoading && (
+          {isLoadingData && (
             <ContentLoader
               viewBox="0 0 269 140"
               height={140}
@@ -107,10 +66,10 @@ export default function Home() {
               <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
             </ContentLoader>
           )}
-          {!isLoading && (
+          {!isLoadingData && (
             <>
               <Carousel
-                data={cards}
+                data={accountCards}
                 onSnapToItem={index => setActiveSlide(index)}
                 sliderWidth={width}
                 itemWidth={width}
@@ -157,7 +116,7 @@ export default function Home() {
               />
 
               <Pagination
-                dotsLength={cards.length}
+                dotsLength={accountCards.length}
                 activeDotIndex={activeSlide}
                 dotContainerStyle={{
                   height: 0,
@@ -184,13 +143,20 @@ export default function Home() {
                 inactiveDotOpacity={0.4}
                 inactiveDotScale={0.8}
               />
+
+              {cards.length === 1 && (
+                <S.EmptyAccountAlert color={alertColor}>
+                  Cadastre uma conta para poder começar a organizar suas
+                  finanças
+                </S.EmptyAccountAlert>
+              )}
             </>
           )}
 
           <S.BalanceContainer>
             <S.Balance>
               <S.BalanceText color={primaryColor}>Saldo atual</S.BalanceText>
-              {isLoading ? (
+              {isLoadingData ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
@@ -209,7 +175,7 @@ export default function Home() {
 
             <S.Balance>
               <S.BalanceText color={primaryColor}>Saldo previsto</S.BalanceText>
-              {isLoading ? (
+              {isLoadingData ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
@@ -229,7 +195,7 @@ export default function Home() {
 
           <S.Estimates>
             <S.BalanceText color={primaryColor}>Estimativas</S.BalanceText>
-            {isLoading ? (
+            {isLoadingData ? (
               <ContentLoader
                 viewBox={`0 0 ${width} 150`}
                 height={150}
@@ -247,7 +213,7 @@ export default function Home() {
             <S.BalanceText color={primaryColor}>
               Últimas Transações
             </S.BalanceText>
-            {isLoading ? (
+            {isLoadingData ? (
               <ContentLoader
                 viewBox={`0 0 ${width} 80`}
                 height={80}

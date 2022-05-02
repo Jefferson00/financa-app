@@ -152,3 +152,16 @@ export const TransactionDate = styled.Text`
   font-size: ${RFPercentage(1.5)}px;
   flex: 1;
 `;
+
+export const EmptyAccountAlert = styled.Text<BalanceProps>`
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(2)}px;
+  flex: 1;
+  text-align: center;
+  padding: ${RFPercentage(2)}px;
+  padding-bottom: 0;
+  width: 60%;
+  align-self: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
+`;

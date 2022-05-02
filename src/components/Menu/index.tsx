@@ -27,13 +27,24 @@ export default function Menu() {
       : withTiming(0, { duration: 1000 });
   }, [theme]);
 
-  const buttonAnimate = useSharedValue(0);
+  const buttonHomeAnimate = useSharedValue(0);
+  const buttonIncomeAnimate = useSharedValue(0);
 
-  const buttonAnimated = useAnimatedStyle(() => {
+  const buttonHomeAnimated = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          scale: interpolate(buttonAnimate.value, [0, 1], [1, 0.8]),
+          scale: interpolate(buttonHomeAnimate.value, [0, 1], [1, 0.8]),
+        },
+      ],
+    };
+  });
+
+  const buttonIncomeAnimated = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: interpolate(buttonIncomeAnimate.value, [0, 1], [1, 0.8]),
         },
       ],
     };
@@ -76,24 +87,31 @@ export default function Menu() {
         <S.MenuButton
           isActive
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
-          onPressIn={() => (buttonAnimate.value = withTiming(1))}
+          onPressIn={() => (buttonHomeAnimate.value = withTiming(1))}
           onPressOut={() => {
-            buttonAnimate.value = withTiming(0);
+            buttonHomeAnimate.value = withTiming(0);
             navigation.navigate('Home');
           }}>
-          <S.AnimatedView style={buttonAnimated}>
+          <S.AnimatedView style={buttonHomeAnimated}>
             <Icon name="home" size={RFPercentage(5.2)} color={iconColor} />
           </S.AnimatedView>
         </S.MenuButton>
 
         <S.MenuButton
           isActive={false}
-          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon
-            name="arrow-up-circle"
-            size={RFPercentage(5.2)}
-            color={iconColor}
-          />
+          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
+          onPressIn={() => (buttonIncomeAnimate.value = withTiming(1))}
+          onPressOut={() => {
+            buttonIncomeAnimate.value = withTiming(0);
+            navigation.navigate('Incomes');
+          }}>
+          <S.AnimatedView style={buttonIncomeAnimated}>
+            <Icon
+              name="arrow-up-circle"
+              size={RFPercentage(5.2)}
+              color={iconColor}
+            />
+          </S.AnimatedView>
         </S.MenuButton>
         <S.MenuButton
           isActive={false}

@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/AuthContext';
+import { useDate } from '../../hooks/DateContext';
+import { useTheme } from '../../hooks/ThemeContext';
 import { Colors } from '../../styles/global';
 import Icons from 'react-native-vector-icons/Ionicons';
 import * as S from './styles';
@@ -16,7 +18,6 @@ import { Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { SharedElement } from 'react-navigation-shared-element';
-import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 
 interface HeaderProps {
@@ -31,6 +32,7 @@ export default function Header({
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const { theme } = useTheme();
+  const { changeMonth, selectedDate } = useDate();
   const backgroundColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
   const currentMonthColor =
@@ -54,25 +56,8 @@ export default function Header({
   });
 
   const [selectorColor, setSelectorColor] = useState(currentMonthColor);
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(currentDate);
-  const [disableButton, setDisableButton] = useState(false);
 
-  function changeMonth(order: 'PREV' | 'NEXT') {
-    return new Promise((resolve, reject) => {
-      const currentMonth = selectedDate.getMonth();
-      setTimeout(() => {
-        setSelectedDate(
-          new Date(
-            selectedDate.setMonth(
-              order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
-            ),
-          ),
-        );
-        resolve(true);
-      }, 500);
-    });
-  }
+  const [disableButton, setDisableButton] = useState(false);
 
   const handleChangeMonth = useCallback(
     async (order: 'PREV' | 'NEXT') => {

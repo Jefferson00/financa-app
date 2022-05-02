@@ -7,6 +7,8 @@ interface ContainerProps {
   backgroundColor: string;
   borderColor?: string;
   disabled?: boolean;
+  isFocused?: boolean;
+  isErrored?: boolean;
 }
 
 interface IconContainer {
@@ -28,6 +30,19 @@ export const Container = styled.View<ContainerProps>`
   align-items: center;
   justify-content: flex-end;
   position: relative;
+
+  ${props =>
+    props.isErrored &&
+    css`
+      border-width: 2px;
+      border-color: #cc3728;
+    `}
+  ${props =>
+    props.isFocused &&
+    css`
+      border-width: 2px;
+      border-color: #2673ce;
+    `}
 
   ${props =>
     props.disabled &&
@@ -54,9 +69,28 @@ export const InputText = styled(MaskInput)<TextColor>`
 
 export const Alert = styled.Text<TextColor>`
   color: ${props => props.color};
-  font-size: ${RFPercentage(2)}px;
+  font-size: ${RFPercentage(1.8)}px;
   font-family: 'Poppins-Regular';
+  text-align: left;
+  margin-left: ${RFPercentage(1.5)}px;
 `;
+
 export const InputSelect = styled(Picker)`
   width: 100%;
+`;
+
+export const Label = styled.Text<TextColor>`
+  color: ${props => props.color};
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2.2)}px;
+  align-self: flex-start;
+`;
+
+export const LabelContainer = styled.View`
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+
+  margin: ${RFPercentage(3)}px 0 ${RFPercentage(1.5)}px 0;
 `;

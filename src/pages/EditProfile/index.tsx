@@ -4,9 +4,7 @@ import { useAuth } from '../../hooks/AuthContext';
 import Menu from '../../components/Menu';
 import { Colors } from '../../styles/global';
 import * as S from './styles';
-import { useRoute } from '@react-navigation/native';
 import Icons from 'react-native-vector-icons/Feather';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
@@ -16,10 +14,21 @@ import api from '../../services/api';
 import ModalComponent from '../../components/Modal';
 import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 interface ProfileProps {
   id: string;
 }
+
+const schema = yup.object({
+  name: yup
+    .string()
+    .required('Campo obrigátorio')
+    .min(2, 'deve ter no mínimo 2 caracteres')
+    .max(25, 'deve ter no máximo 25 caracteres'),
+  email: yup.string().required('Campo obrigátorio').email('E-mail inválido'),
+});
 
 export default function EditProfile({ id }: ProfileProps) {
   const { user, updateUser } = useAuth();
@@ -36,6 +45,7 @@ export default function EditProfile({ id }: ProfileProps) {
       email: user?.email || '',
       phone: user?.phone || '',
     },
+    resolver: yupResolver(schema),
   });
 
   const titleColor =
@@ -121,8 +131,9 @@ export default function EditProfile({ id }: ProfileProps) {
           ) : (
             <S.EmptyAvatar />
           )}
-          <S.Label color={textColor}>Nome</S.Label>
+
           <ControlledInput
+            label="Nome"
             background={inputBackground}
             textColor={textColor}
             returnKeyType="next"
@@ -132,10 +143,8 @@ export default function EditProfile({ id }: ProfileProps) {
             value={user?.name ? user.name : ''}
           />
 
-          <S.Label color={textColor} style={{ marginTop: 16 }}>
-            Email
-          </S.Label>
           <ControlledInput
+            label="Email"
             background={inputBackground}
             textColor={textColor}
             returnKeyType="next"
@@ -145,10 +154,8 @@ export default function EditProfile({ id }: ProfileProps) {
             value={user?.email ? user.email : ''}
           />
 
-          <S.Label color={textColor} style={{ marginTop: 16 }}>
-            Celular
-          </S.Label>
           <ControlledInput
+            label="Celular"
             background={inputBackground}
             textColor={textColor}
             name="phone"

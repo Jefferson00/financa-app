@@ -12,9 +12,11 @@ interface TextProps {
   color: string;
 }
 
-interface ButtonProps {
+interface SelectOptionProps {
   color?: string;
   backgroundColor?: string;
+  border?: string;
+  checked?: boolean;
 }
 
 export const Container = styled.View`
@@ -85,4 +87,31 @@ export const ButtonContainer = styled.View`
 export const DeleteButton = styled.TouchableOpacity`
   align-self: center;
   margin: 16px 0;
+`;
+
+export const SelectOption = styled.TouchableOpacity<SelectOptionProps>`
+  background-color: ${props =>
+    props.backgroundColor ? props.backgroundColor : '#E2EDF0'};
+  opacity: ${props => (props.checked ? 1 : 0.6)};
+
+  flex-direction: row;
+  align-items: center;
+
+  padding: ${RFPercentage(1.3)}px;
+  border-radius: 10px;
+
+  ${props =>
+    props.checked &&
+    css`
+      border: 1px solid;
+      border-color: ${props.color ? props.color : '#09192D'};
+    `}
+`;
+
+export const Option = styled.Text<SelectOptionProps>`
+  color: ${props => (props.color ? props.color : '#09192D')};
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(2.3)}px;
+
+  margin-right: ${RFPercentage(0.8)}px;
 `;

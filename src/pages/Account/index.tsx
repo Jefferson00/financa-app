@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/AuthContext';
 import Menu from '../../components/Menu';
@@ -6,6 +6,7 @@ import { Colors } from '../../styles/global';
 import * as S from './styles';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Icons from 'react-native-vector-icons/Feather';
+import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
@@ -17,6 +18,10 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { Nav } from '../../routes';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useAccount } from '../../hooks/AccountContext';
+import { Account as IAccount } from '../../interfaces/Account';
 
 interface ProfileProps {
   route?: {
@@ -29,10 +34,22 @@ interface ProfileProps {
   };
 }
 
+const schema = yup.object({
+  name: yup
+    .string()
+    .required('Campo obrigátorio')
+    .min(2, 'deve ter no mínimo 2 caracteres')
+    .max(25, 'deve ter no máximo 25 caracteres'),
+  type: yup.string().required('Campo obrigátorio'),
+});
+
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
   const { user, updateUser } = useAuth();
+  const { getUserAccounts } = useAccount();
   const { theme } = useTheme();
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
+    useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountState, setAccountState] = useState(
     props?.route?.params?.account,
@@ -52,6 +69,7 @@ export default function Account(props: ProfileProps) {
         ? getCurrencyFormat(accountState?.initialValue)
         : getCurrencyFormat(0),
     },
+    resolver: yupResolver(schema),
   });
 
   const titleColor =
@@ -60,6 +78,10 @@ export default function Account(props: ProfileProps) {
     theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
   const inputBackground =
     theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const deleteButtonColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
 
   const SaveIcon = () => {
     return (
@@ -70,6 +92,25 @@ export default function Account(props: ProfileProps) {
       />
     );
   };
+
+  const accountTypes = [
+    {
+      id: 1,
+      name: 'Conta Corrente',
+    },
+    {
+      id: 2,
+      name: 'Conta Poupança',
+    },
+    {
+      id: 3,
+      name: 'Carteira',
+    },
+    {
+      id: 4,
+      name: 'Outro',
+    },
+  ];
 
   type FormData = {
     name: string;
@@ -100,12 +141,9 @@ export default function Account(props: ProfileProps) {
     };
     try {
       if (accountState) {
-        const accountUpdated = await api.put(
-          `accounts/${accountState.id}`,
-          accountInput,
-        );
+        await api.put(`accounts/${accountState.id}`, accountInput);
       } else {
-        const accountCreated = await api.post(`accounts`, {
+        await api.post(`accounts`, {
           ...accountInput,
           initialValue: data.initialValue
             ? Number(currencyToValue(data.initialValue))
@@ -113,6 +151,7 @@ export default function Account(props: ProfileProps) {
         });
       }
 
+      await getUserAccounts();
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)
@@ -123,6 +162,21 @@ export default function Account(props: ProfileProps) {
       setIsSubmitting(false);
     }
   };
+
+  const handleDelete = useCallback(async () => {
+    if (user && accountState) {
+      setIsSubmitting(true);
+      try {
+        await api.delete(`accounts/${accountState.id}/${user.id}`);
+        await getUserAccounts();
+        navigation.navigate('Home');
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  }, [user, accountState]);
 
   return (
     <>
@@ -138,31 +192,32 @@ export default function Account(props: ProfileProps) {
             {accountState ? `Editar Conta` : `Nova Conta`}
           </S.Title>
 
-          <S.Label color={textColor}>Nome</S.Label>
           <ControlledInput
+            label="Nome"
             background={inputBackground}
             textColor={textColor}
             returnKeyType="next"
-            autoCapitalize="words"
+            autoCapitalize="sentences"
             name="name"
             control={control}
             value={accountState?.name ? accountState.name : ''}
           />
 
-          <S.Label color={textColor}>Tipo de conta</S.Label>
           <ControlledInput
+            label="Tipo de conta"
             type="select"
             background={inputBackground}
             textColor={textColor}
             name="type"
             control={control}
             value={accountState?.type ? accountState.type : ''}
+            selectItems={accountTypes}
           />
 
           <S.Row>
             <S.Col>
-              <S.Label color={textColor}>Saldo inicial</S.Label>
               <ControlledInput
+                label="Saldo Inicial"
                 background={inputBackground}
                 textColor={textColor}
                 returnKeyType="next"
@@ -204,6 +259,16 @@ export default function Account(props: ProfileProps) {
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}
             />
+            {accountState && (
+              <S.DeleteButton
+                onPress={() => setDeleteConfirmationVisible(true)}>
+                <Icon
+                  name="trash"
+                  size={RFPercentage(4)}
+                  color={deleteButtonColor}
+                />
+              </S.DeleteButton>
+            )}
           </S.ButtonContainer>
         </KeyboardAwareScrollView>
         <ModalComponent
@@ -234,6 +299,16 @@ export default function Account(props: ProfileProps) {
           }
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+        />
+        <ModalComponent
+          type="confirmation"
+          visible={deleteConfirmationVisible}
+          handleCancel={() => setDeleteConfirmationVisible(false)}
+          onRequestClose={() => setDeleteConfirmationVisible(false)}
+          transparent
+          title="Deseja mesmo excluir essa conta?"
+          animationType="slide"
+          handleConfirm={handleDelete}
         />
       </S.Container>
       <Menu />

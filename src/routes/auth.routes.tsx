@@ -7,6 +7,8 @@ import ThemeScreen from '../pages/ThemeScreen';
 import { useTheme } from '../hooks/ThemeContext';
 import SecurityScreen from '../pages/SecurityScreen';
 import Account from '../pages/Account';
+import Incomes from '../pages/Incomes';
+import CreateIncome from '../pages/Incomes/CreateIncome';
 
 const App = createSharedElementStackNavigator();
 
@@ -24,6 +26,8 @@ export default function AuthRoutes() {
       }}>
       <App.Screen name="Home" component={Home} />
       <App.Screen name="Account" component={Account} />
+      <App.Screen name="Incomes" component={Incomes} />
+      <App.Screen name="CreateIncome" component={CreateIncome} />
       <App.Screen
         name="Profile"
         component={Profile}

@@ -38,12 +38,13 @@ export default function ModalComponent({
             {type === 'loading' && (
               <ActivityIndicator size="large" color={loadingColor} />
             )}
-            {type === 'error' && (
+            {(type === 'error' || type === 'confirmation') && (
               <Icons name="alert-circle" size={36} color={errorColor} />
             )}
             {type === 'success' && (
               <Icons name="checkmark-circle" size={36} color={successColor} />
             )}
+
             {title && <S.Title>{title}</S.Title>}
             {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
 
@@ -55,6 +56,22 @@ export default function ModalComponent({
                   OK
                 </S.ButtonText>
               </S.OkButton>
+            )}
+
+            {type === 'confirmation' && (
+              <S.ConfirmationButtons>
+                <S.Button backgroundColor={primaryColor} onPress={handleCancel}>
+                  <S.ButtonText size={2} color="#fff">
+                    Cancelar
+                  </S.ButtonText>
+                </S.Button>
+
+                <S.Button backgroundColor={errorColor} onPress={handleConfirm}>
+                  <S.ButtonText size={2} color="#fff">
+                    Sim
+                  </S.ButtonText>
+                </S.Button>
+              </S.ConfirmationButtons>
             )}
           </S.Content>
         </S.Wrapper>
