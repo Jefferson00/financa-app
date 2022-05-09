@@ -1,7 +1,10 @@
 import React from 'react';
-import { Switch } from 'react-native';
+import { Animated, Switch, View } from 'react-native';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import FeatherIcons from 'react-native-vector-icons/Feather';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
+import { RectButton } from 'react-native-gesture-handler';
 
 interface ItemCardProps {
   icon: React.FC;
@@ -11,7 +14,11 @@ interface ItemCardProps {
   borderColor?: string;
   textColor?: string;
   actionBarColor?: string;
+  switchValue?: boolean;
+  received?: boolean;
+  onSwitchChange?: () => void;
   value: number;
+  handleRemove: () => void;
 }
 
 export default function ItemCard({
@@ -20,36 +27,53 @@ export default function ItemCard({
   value,
   mainColor,
   textColor,
+  switchValue,
+  backgroundColor,
+  received,
+  onSwitchChange,
+  handleRemove,
   ...rest
 }: ItemCardProps) {
   return (
-    <S.Container backgroundColor="#C4DCDF">
-      <S.Main>
-        <S.TitleContainer>
-          <Icon />
+    <Swipeable
+      renderRightActions={() => (
+        <Animated.View>
+          <View>
+            <S.DeleteButton onPress={handleRemove}>
+              <FeatherIcons name="trash" size={32} color="#fff" />
+            </S.DeleteButton>
+          </View>
+        </Animated.View>
+      )}>
+      <S.Container backgroundColor={backgroundColor || '#fff'}>
+        <S.Main>
+          <S.TitleContainer>
+            <Icon />
+            <S.TitleText color={textColor ? textColor : '#000'}>
+              {title}
+            </S.TitleText>
+          </S.TitleContainer>
+
+          <S.ValueContainer>
+            <S.ValueText color={mainColor ? mainColor : '#000'}>
+              {getCurrencyFormat(value)}
+            </S.ValueText>
+          </S.ValueContainer>
+        </S.Main>
+
+        <S.ActionContainer backgroundColor="#FF981E">
           <S.TitleText color={textColor ? textColor : '#000'}>
-            {title}
+            {received ? 'Recebido' : 'Receber'}
           </S.TitleText>
-        </S.TitleContainer>
 
-        <S.ValueContainer>
-          <S.ValueText color={mainColor ? mainColor : '#000'}>
-            {getCurrencyFormat(value)}
-          </S.ValueText>
-        </S.ValueContainer>
-      </S.Main>
-
-      <S.ActionContainer backgroundColor="#FF981E">
-        <S.TitleText color={textColor ? textColor : '#000'}>
-          Receber
-        </S.TitleText>
-
-        <Switch
-          trackColor={{ true: textColor, false: textColor }}
-          thumbColor={textColor}
-          value={false}
-        />
-      </S.ActionContainer>
-    </S.Container>
+          <Switch
+            trackColor={{ true: textColor, false: textColor }}
+            thumbColor={textColor}
+            value={received}
+            onChange={onSwitchChange}
+          />
+        </S.ActionContainer>
+      </S.Container>
+    </Swipeable>
   );
 }

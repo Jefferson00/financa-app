@@ -1,4 +1,4 @@
-export interface Income {
+export interface Expanse {
   id: string;
   category: string;
   description?: string;
@@ -10,7 +10,7 @@ export interface Income {
   endDate?: string;
 }
 
-export interface IncomeList {
+export interface ExpanseList {
   id: string;
   category?: string;
   description?: string;
@@ -22,5 +22,5 @@ export interface IncomeList {
   value: number;
   paymentDate?: string;
   recurence?: string;
-  income: Income;
+  expanse: Expanse;
 }

@@ -67,3 +67,13 @@ export function getMonthName(date: Date) {
       break;
   }
 }
+
+export function getPreviousMonth(date: Date) {
+  let previousMonth = date.getMonth() - 1;
+  if (previousMonth < 0) {
+    previousMonth += 12;
+    date.setFullYear(date.getFullYear() - 1);
+  }
+  date.setMonth(previousMonth);
+  return date;
+}

@@ -1,6 +1,7 @@
 import styled from 'styled-components/native';
 import Animated from 'react-native-reanimated';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { RectButton } from 'react-native-gesture-handler';
 
 interface MainContainer {
   backgroundColor: string;
@@ -64,5 +65,23 @@ export const ActionContainer = styled.View<ActionContainer>`
 
   background-color: ${props => props.backgroundColor};
 
-  padding: 0 ${RFPercentage(3)}px; ;
+  padding: 0 ${RFPercentage(3)}px;
+`;
+
+export const DeleteButton = styled(RectButton)`
+  width: ${RFPercentage(20)}px;
+  height: ${RFPercentage(8)}px;
+  background-color: #cc3728;
+
+  justify-content: center;
+  align-items: center;
+
+  position: relative;
+
+  margin-top: ${RFPercentage(6.5)}px;
+  border-radius: 20px;
+
+  padding-left: ${RFPercentage(3)}px;
+
+  right: ${RFPercentage(5)}px;
 `;

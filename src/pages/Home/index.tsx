@@ -1,49 +1,38 @@
 import React, { useState } from 'react';
 import { ScrollView, Dimensions } from 'react-native';
-import { useAccount } from '../../hooks/AccountContext';
-import * as S from './styles';
-import Header from '../../components/Header';
-import { Colors } from '../../styles/global';
-import Menu from '../../components/Menu';
 import Icon from 'react-native-vector-icons/Ionicons';
-import Card from '../../components/Card';
-import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
 import ContentLoader, { Rect } from 'react-content-loader/native';
-import Estimates from './components/Estimates';
-import LastTransactions from './components/LastTransactions';
-import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
+
+import * as S from './styles';
+import Header from '../../components/Header';
+import Menu from '../../components/Menu';
+import Card from '../../components/Card';
+import Estimates from './components/Estimates';
+import LastTransactions from './components/LastTransactions';
+
+import { useAccount } from '../../hooks/AccountContext';
+import { useTheme } from '../../hooks/ThemeContext';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { Nav } from '../../routes';
+import { getHomeColors } from '../../utils/colors/home';
 
 export default function Home() {
   const navigation = useNavigation<Nav>();
-  const { isLoadingData, accountCards } = useAccount();
+  const {
+    isLoadingData,
+    accountCards,
+    totalCurrentBalance,
+    totalEstimateBalance,
+  } = useAccount();
   const { theme } = useTheme();
   const width = Dimensions.get('screen').width;
 
   const [activeSlide, setActiveSlide] = useState(0);
-  const [cards, setCards] = useState<any[]>([]);
 
-  const primaryColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const secondaryColor =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
-  const primaryCardColor =
-    theme === 'dark'
-      ? Colors.ORANGE_PRIMARY_DARKER
-      : Colors.ORANGE_PRIMARY_LIGHTER;
-  const secondaryCardColor =
-    theme === 'dark'
-      ? Colors.ORANGE_SECONDARY_DARKER
-      : Colors.ORANGE_SECONDARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const alertColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const colors = getHomeColors(theme);
 
   return (
     <>
@@ -61,7 +50,7 @@ export default function Home() {
               style={{
                 marginBottom: 32,
               }}
-              backgroundColor={secondaryCardColor}
+              backgroundColor={colors.secondaryCardColor}
               foregroundColor="rgb(255, 255, 255)">
               <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
             </ContentLoader>
@@ -78,8 +67,8 @@ export default function Home() {
                   <Card
                     id={String(item.id)}
                     colors={{
-                      PRIMARY_BACKGROUND: primaryCardColor,
-                      SECOND_BACKGROUND: secondaryCardColor,
+                      PRIMARY_BACKGROUND: colors.primaryCardColor,
+                      SECOND_BACKGROUND: colors.secondaryCardColor,
                     }}
                     icon={() => {
                       if (item.type === 'ADD') {
@@ -95,7 +84,7 @@ export default function Home() {
                           <Icon
                             name="business"
                             size={RFPercentage(4)}
-                            color={secondaryCardColor}
+                            color={colors.secondaryCardColor}
                           />
                         );
                       }
@@ -131,7 +120,7 @@ export default function Home() {
                   height: RFPercentage(2),
                   borderRadius: RFPercentage(1),
                   marginHorizontal: 4,
-                  backgroundColor: primaryCardColor,
+                  backgroundColor: colors.primaryCardColor,
                 }}
                 inactiveDotStyle={{
                   width: RFPercentage(2),
@@ -144,8 +133,8 @@ export default function Home() {
                 inactiveDotScale={0.8}
               />
 
-              {cards.length === 1 && (
-                <S.EmptyAccountAlert color={alertColor}>
+              {accountCards.length === 1 && (
+                <S.EmptyAccountAlert color={colors.alertColor}>
                   Cadastre uma conta para poder começar a organizar suas
                   finanças
                 </S.EmptyAccountAlert>
@@ -155,52 +144,58 @@ export default function Home() {
 
           <S.BalanceContainer>
             <S.Balance>
-              <S.BalanceText color={primaryColor}>Saldo atual</S.BalanceText>
+              <S.BalanceText color={colors.primaryColor}>
+                Saldo atual
+              </S.BalanceText>
               {isLoadingData ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
                   width={116}
                   style={{ marginTop: 16 }}
-                  backgroundColor={secondaryColor}
+                  backgroundColor={colors.secondaryColor}
                   foregroundColor="rgb(255, 255, 255)">
                   <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
                 </ContentLoader>
               ) : (
-                <S.BalanceValue color={textColor}>
-                  {getCurrencyFormat(0)}
+                <S.BalanceValue color={colors.textColor}>
+                  {getCurrencyFormat(totalCurrentBalance)}
                 </S.BalanceValue>
               )}
             </S.Balance>
 
             <S.Balance>
-              <S.BalanceText color={primaryColor}>Saldo previsto</S.BalanceText>
+              <S.BalanceText color={colors.primaryColor}>
+                Saldo previsto
+              </S.BalanceText>
               {isLoadingData ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
                   width={116}
                   style={{ marginTop: 16 }}
-                  backgroundColor={secondaryColor}
+                  backgroundColor={colors.secondaryColor}
                   foregroundColor="rgb(255, 255, 255)">
                   <Rect x="0" y="0" rx="20" ry="20" width={116} height="32" />
                 </ContentLoader>
               ) : (
-                <S.BalanceValue color={textColor}>
-                  {getCurrencyFormat(0)}
+                <S.BalanceValue color={colors.textColor}>
+                  {getCurrencyFormat(totalEstimateBalance)}
                 </S.BalanceValue>
               )}
             </S.Balance>
           </S.BalanceContainer>
 
           <S.Estimates>
-            <S.BalanceText color={primaryColor}>Estimativas</S.BalanceText>
+            <S.BalanceText color={colors.primaryColor}>
+              Estimativas
+            </S.BalanceText>
             {isLoadingData ? (
               <ContentLoader
                 viewBox={`0 0 ${width} 150`}
                 height={150}
                 width={'100%'}
-                backgroundColor={secondaryColor}
+                backgroundColor={colors.secondaryColor}
                 foregroundColor="rgb(255, 255, 255)">
                 <Rect x="0" y="0" rx="20" ry="20" width={width} height="150" />
               </ContentLoader>
@@ -210,7 +205,7 @@ export default function Home() {
           </S.Estimates>
 
           <S.LastTransactions>
-            <S.BalanceText color={primaryColor}>
+            <S.BalanceText color={colors.primaryColor}>
               Últimas Transações
             </S.BalanceText>
             {isLoadingData ? (
@@ -218,7 +213,7 @@ export default function Home() {
                 viewBox={`0 0 ${width} 80`}
                 height={80}
                 width={'100%'}
-                backgroundColor={secondaryColor}
+                backgroundColor={colors.secondaryColor}
                 foregroundColor="rgb(255, 255, 255)">
                 <Rect x="0" y="0" rx="20" ry="20" width={width} height="80" />
               </ContentLoader>

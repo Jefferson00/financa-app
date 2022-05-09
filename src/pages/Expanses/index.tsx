@@ -21,6 +21,7 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { Nav } from '../../routes';
 import { Income, IncomeList } from '../../interfaces/Income';
 import {
+  getCurrentExpanses,
   getCurrentIncomes,
   getEstimateIncomes,
 } from '../../utils/getCurrentBalance';
@@ -29,37 +30,43 @@ import {
   CreateIncomeOnAccount,
   IncomeOnAccount,
 } from '../../interfaces/IncomeOnAccount';
-import { getIncomesColors } from '../../utils/colors/incomes';
-import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
+// import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 import { useAuth } from '../../hooks/AuthContext';
+import { getExpansesColors } from '../../utils/colors/expanses';
+import {
+  CreateExpanseOnAccount,
+  ExpanseOnAccount,
+} from '../../interfaces/ExpanseOnAccount';
+import { Expanse } from '../../interfaces/Expanse';
+import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 
-export default function Incomes() {
+export default function Expanses() {
   const navigation = useNavigation<Nav>();
   const {
-    incomes,
+    expanses,
+    expansesOnAccounts,
     isLoadingData,
-    handleCreateIncomeOnAccount,
+    handleCreateExpanseOnAccount,
     accounts,
-    incomesOnAccounts,
     accountSelected,
     handleUpdateAccountBalance,
   } = useAccount();
   const { user } = useAuth();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
-  const [incomesByDate, setIncomesByDate] = useState<
-    { day: number; incomes: IncomeList[] }[]
+  const [expanseByDate, setExpanseByDate] = useState<
+    { day: number; expanses: IncomeList[] }[]
   >([]);
-  const [incomeSelected, setIncomeSelected] = useState<any>();
-  const [currentIncomes, setCurrentIncomes] = useState<Income[]>();
-  const [currentIncomesOnAccount, setCurrentIncomesOnAccount] =
-    useState<IncomeOnAccount[]>();
+  const [expanseSelected, setExpanseSelected] = useState<any>();
+  const [currentExpanses, setCurrentExpanses] = useState<Expanse[]>();
+  const [currentExpansesOnAccount, setCurrentExpansesOnAccount] =
+    useState<ExpanseOnAccount[]>();
   const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
-  const [currentTotalIncomes, setCurrentTotalIncomes] = useState(0);
-  const [estimateTotalIncomes, setEstimateTotalIncomes] = useState(0);
+  const [currentTotalExpanses, setCurrentTotalExpanses] = useState(0);
+  const [estimateTotalExpanses, setEstimateTotalExpanses] = useState(0);
 
-  const colors = getIncomesColors(theme);
+  const colors = getExpansesColors(theme);
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
@@ -89,21 +96,20 @@ export default function Incomes() {
       );
 
       if (user) {
-        const input: CreateIncomeOnAccount = {
+        const input: CreateExpanseOnAccount = {
           userId: user.id,
           accountId: income.receiptDefault || accountSelected?.id,
-          incomeId: income?.id,
+          expanseId: income?.id,
           month: selectedDate,
           value: income.value,
           recurrence: income.endDate
-            ? `${
-                differenceInMonths(selectedDate, new Date(income.startDate)) + 1
-              }/${
-                differenceInMonths(selectedDate, new Date(income.endDate)) + 1
-              }`
+            ? `${differenceInMonths(
+                selectedDate,
+                new Date(income.startDate),
+              )}/${differenceInMonths(selectedDate, new Date(income.endDate))}`
             : 'mensal',
         };
-        await handleCreateIncomeOnAccount(input);
+        await handleCreateExpanseOnAccount(input);
 
         const account = accounts.find(acc => acc.id === input.accountId);
 
@@ -111,13 +117,13 @@ export default function Incomes() {
           accountLastBalance,
           input.value,
           account,
-          'Income',
+          'Expanse',
         );
       }
     },
     [
       accounts,
-      handleCreateIncomeOnAccount,
+      handleCreateExpanseOnAccount,
       accountSelected,
       selectedDate,
       user,
@@ -125,27 +131,27 @@ export default function Incomes() {
   );
 
   useEffect(() => {
-    const incomesInThisMonth = incomes.filter(i =>
-      i.endDate
-        ? (isBefore(selectedDate, new Date(i.endDate)) ||
-            isSameMonth(new Date(i.endDate), selectedDate)) &&
-          (isAfter(selectedDate, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), selectedDate))
-        : i.endDate === null &&
-          (isAfter(selectedDate, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), selectedDate)),
+    const expansesInThisMonth = expanses.filter(exp =>
+      exp.endDate
+        ? (isBefore(selectedDate, new Date(exp.endDate)) ||
+            isSameMonth(new Date(exp.endDate), selectedDate)) &&
+          (isAfter(selectedDate, new Date(exp.startDate)) ||
+            isSameMonth(new Date(exp.startDate), selectedDate))
+        : exp.endDate === null &&
+          (isAfter(selectedDate, new Date(exp.startDate)) ||
+            isSameMonth(new Date(exp.startDate), selectedDate)),
     );
 
-    setCurrentIncomes(incomesInThisMonth);
+    setCurrentExpanses(expansesInThisMonth);
 
-    const incomesOnAccountInThisMonth = incomesOnAccounts.filter(i =>
+    const expansesOnAccountInThisMonth = expansesOnAccounts.filter(i =>
       isSameMonth(new Date(i.month), selectedDate),
     );
 
-    setCurrentIncomesOnAccount(incomesOnAccountInThisMonth);
+    setCurrentExpansesOnAccount(expansesOnAccountInThisMonth);
 
-    const incomesWithoutAccount = incomesInThisMonth.filter(income => {
-      if (incomesOnAccountInThisMonth.find(i => i.incomeId === income.id)) {
+    const expansesWithoutAccount = expansesInThisMonth.filter(expanse => {
+      if (expansesOnAccountInThisMonth.find(i => i.expanseId === expanse.id)) {
         // console.log('ta pago', income);
         return false;
       } else {
@@ -154,69 +160,69 @@ export default function Incomes() {
       }
     });
 
-    const incomesOrdered = incomesWithoutAccount.sort(
+    const expansesOrdered = expansesWithoutAccount.sort(
       (a, b) =>
         new Date(a.receiptDate).getDate() - new Date(b.receiptDate).getDate(),
     );
-    const incomesOrderedByDay: any[] = [];
+    const expansesOrderedByDay: any[] = [];
 
-    incomesOrdered.filter(entry => {
+    expansesOrdered.filter(entry => {
       if (
-        incomesOrderedByDay.find(
+        expansesOrderedByDay.find(
           item => item.day === new Date(entry.receiptDate).getDate(),
         )
       ) {
         return false;
       }
-      incomesOrderedByDay.push({
+      expansesOrderedByDay.push({
         day: new Date(entry.receiptDate).getDate(),
       });
       return true;
     });
 
-    incomesOnAccountInThisMonth.filter(entry => {
+    expansesOnAccountInThisMonth.filter(entry => {
       if (
-        incomesOrderedByDay.find(
+        expansesOrderedByDay.find(
           item => item.day === new Date(entry.month).getDate(),
         )
       ) {
         return false;
       }
-      incomesOrderedByDay.push({
+      expansesOrderedByDay.push({
         day: new Date(entry.month).getDate(),
       });
       return true;
     });
 
-    incomesOrderedByDay.map(item => {
-      item.incomes = incomesWithoutAccount.filter(
-        income => new Date(income.receiptDate).getDate() === item.day,
+    expansesOrderedByDay.map(item => {
+      item.expanses = expansesWithoutAccount.filter(
+        expanse => new Date(expanse.receiptDate).getDate() === item.day,
       );
-      item.incomes = [
-        ...item.incomes,
-        ...incomesOnAccountInThisMonth.filter(
-          income => new Date(income.month).getDate() === item.day,
+      item.expanses = [
+        ...item.expanses,
+        ...expansesOnAccountInThisMonth.filter(
+          expanse => new Date(expanse.month).getDate() === item.day,
         ),
       ];
     });
 
-    setIncomesByDate(incomesOrderedByDay.sort((a, b) => a.day - b.day));
-  }, [incomes, incomesOnAccounts, selectedDate]);
+    setExpanseByDate(expansesOrderedByDay.sort((a, b) => a.day - b.day));
+  }, [expanses, expansesOnAccounts, selectedDate]);
 
   useEffect(() => {
-    if (currentIncomes && currentIncomesOnAccount) {
-      const currentTotal = getCurrentIncomes(currentIncomesOnAccount);
-      setCurrentTotalIncomes(currentTotal);
+    if (currentExpanses && currentExpansesOnAccount) {
+      const currentTotal = getCurrentExpanses(currentExpansesOnAccount);
+      setCurrentTotalExpanses(currentTotal);
       const currentMonth = new Date();
       currentMonth.setDate(1);
       currentMonth.setUTCHours(0, 0, 0, 0);
       if (isBefore(selectedDate, currentMonth)) {
-        setEstimateTotalIncomes(currentTotal);
+        setEstimateTotalExpanses(currentTotal);
       } else {
-        setEstimateTotalIncomes(getEstimateIncomes(currentIncomes));
+        setEstimateTotalExpanses(getEstimateIncomes(currentExpanses));
       }
     }
-  }, [currentIncomesOnAccount, currentIncomes, selectedDate]);
+  }, [currentExpansesOnAccount, currentExpanses, selectedDate]);
 
   return (
     <>
@@ -249,10 +255,10 @@ export default function Incomes() {
                   color={colors.primaryColor}
                 />
               )}
-              title="Entradas"
+              title="Despesas"
               values={{
-                current: currentTotalIncomes,
-                estimate: estimateTotalIncomes,
+                current: currentTotalExpanses,
+                estimate: estimateTotalExpanses,
               }}
               type={null}
             />
@@ -261,24 +267,33 @@ export default function Incomes() {
       </S.Container>
 
       <S.IncomesTitle>
-        <Icon
-          name="arrow-down-circle"
-          size={RFPercentage(4)}
-          color={colors.titleColor}
-        />
-        <S.IncomesTitleText color={colors.titleColor}>
-          Entradas
-        </S.IncomesTitleText>
+        <S.TitleItem selected>
+          <Icon
+            name="arrow-down-circle"
+            size={RFPercentage(4)}
+            color={colors.titleColor}
+          />
+          <S.IncomesTitleText color={colors.titleColor}>
+            Despesas
+          </S.IncomesTitleText>
+        </S.TitleItem>
+
+        <S.TitleItem selected={false}>
+          <Icon name="card" size={RFPercentage(4)} color={colors.titleColor} />
+          <S.IncomesTitleText color={colors.titleColor}>
+            Cartões
+          </S.IncomesTitleText>
+        </S.TitleItem>
       </S.IncomesTitle>
 
       <S.ButtonContainer>
         <Button
-          title="Nova Entrada"
+          title="Nova Despesa"
           icon={PlusIcon}
           colors={buttonColors}
           onPress={() =>
-            navigation.navigate('CreateIncome', {
-              income: null,
+            navigation.navigate('CreateExpanse', {
+              expanse: null,
             })
           }
         />
@@ -306,24 +321,25 @@ export default function Incomes() {
           contentContainerStyle={{
             paddingBottom: RFPercentage(20),
           }}>
-          {incomesByDate.length > 0 &&
-            incomesByDate.map(item => (
+          {expanseByDate.length > 0 &&
+            expanseByDate.map(item => (
               <S.ItemView key={item.day}>
                 <S.DateTitle color={colors.dateTitleColor}>
                   {item.day} de {getMonthName(selectedDate)}
                 </S.DateTitle>
 
-                {item.incomes.map(income => (
+                {item.expanses.map(expanse => (
                   <ItemCard
-                    key={income.id}
+                    key={expanse.id}
                     icon={MoneyIcon}
-                    title={income?.name || income?.income?.name}
-                    value={income.value}
-                    received={!!income?.paymentDate}
+                    title={expanse?.name || ''}
+                    value={expanse.value}
+                    received={!!expanse?.paymentDate}
                     mainColor={colors.primaryColor}
                     handleRemove={() => console.log('removed')}
+                    backgroundColor={colors.secondaryCardLoader}
                     onSwitchChange={() => {
-                      setIncomeSelected(income);
+                      setExpanseSelected(expanse);
                       setConfirmReceivedVisible(true);
                     }}
                   />
@@ -331,7 +347,7 @@ export default function Incomes() {
               </S.ItemView>
             ))}
 
-          {incomesByDate.length === 0 && (
+          {expanseByDate.length === 0 && (
             <S.Empty>
               <Icon
                 name="close-circle"
@@ -339,7 +355,7 @@ export default function Incomes() {
                 color={colors.primaryColor}
               />
               <S.EmptyText color={colors.textColor}>
-                Nenhuma entrada nesse mês
+                Nenhuma despesa nesse mês
               </S.EmptyText>
             </S.Empty>
           )}
@@ -351,10 +367,10 @@ export default function Incomes() {
         handleCancel={() => setConfirmReceivedVisible(false)}
         onRequestClose={() => setConfirmReceivedVisible(false)}
         transparent
-        title="Em qual conta a entrada será recebida?"
+        title="Em qual conta a despesa será recebida?"
         animationType="slide"
-        defaulAccount={incomeSelected?.receiptDefault}
-        handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
+        defaulAccount={expanseSelected?.receiptDefault}
+        handleConfirm={() => handleToggleIncomeOnAccount(expanseSelected)}
         accounts={accounts}
       />
 

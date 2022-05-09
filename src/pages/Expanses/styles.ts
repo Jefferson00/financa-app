@@ -8,6 +8,10 @@ interface TextProps {
   color: string;
 }
 
+interface TitleItemProps {
+  selected?: boolean;
+}
+
 export const Container = styled.View`
   justify-content: flex-start;
   background-color: transparent;
@@ -22,10 +26,18 @@ export const AccountCardWrapper = styled.View`
 
 export const IncomesTitle = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
+  margin-bottom: ${RFPercentage(3)}px;
 
   flex-direction: row;
   align-items: flex-end;
-  justify-content: flex-start;
+  justify-content: space-between;
+`;
+
+export const TitleItem = styled.TouchableOpacity<TitleItemProps>`
+  flex-direction: row;
+  align-items: flex-end;
+
+  opacity: ${props => (props.selected ? 1 : 0.5)};
 `;
 
 export const IncomesTitleText = styled.Text<TextProps>`
@@ -49,6 +61,7 @@ export const Empty = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
   flex-direction: row;
   align-items: center;
+  justify-content: center;
   flex: 1;
 
   padding-bottom: ${RFPercentage(13)}px;

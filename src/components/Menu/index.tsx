@@ -115,7 +115,8 @@ export default function Menu() {
         </S.MenuButton>
         <S.MenuButton
           isActive={false}
-          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
+          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
+          onPressOut={() => navigation.navigate('Expanses')}>
           <Icon
             name="arrow-down-circle"
             size={RFPercentage(5.2)}

@@ -1,3 +1,4 @@
+import { AccountBalance } from './AccountBalance';
 import { Income } from './Income';
 
 export enum AccountTypes {
@@ -15,10 +16,11 @@ export interface IncomesOnAccount {
 }
 
 export interface Account {
-  id?: string;
+  id: string;
   name: string;
   status: string;
   type: AccountTypes;
   initialValue: number;
   IncomesOnAccounts: IncomesOnAccount[];
+  balances?: AccountBalance[];
 }
