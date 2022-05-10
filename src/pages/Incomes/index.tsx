@@ -373,20 +373,19 @@ export default function Incomes() {
                 ))}
               </S.ItemView>
             ))}
-
-          {incomesByDate.length === 0 && (
-            <S.Empty>
-              <Icon
-                name="close-circle"
-                size={RFPercentage(4)}
-                color={colors.primaryColor}
-              />
-              <S.EmptyText color={colors.textColor}>
-                Nenhuma entrada nesse mês
-              </S.EmptyText>
-            </S.Empty>
-          )}
         </ScrollView>
+      )}
+      {incomesByDate.length === 0 && (
+        <S.Empty>
+          <Icon
+            name="close-circle"
+            size={RFPercentage(4)}
+            color={colors.primaryColor}
+          />
+          <S.EmptyText color={colors.textColor}>
+            Nenhuma entrada nesse mês
+          </S.EmptyText>
+        </S.Empty>
       )}
 
       <ConfirmReceivedModalComponent

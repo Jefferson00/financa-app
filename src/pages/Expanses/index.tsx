@@ -346,20 +346,19 @@ export default function Expanses() {
                 ))}
               </S.ItemView>
             ))}
-
-          {expanseByDate.length === 0 && (
-            <S.Empty>
-              <Icon
-                name="close-circle"
-                size={RFPercentage(4)}
-                color={colors.primaryColor}
-              />
-              <S.EmptyText color={colors.textColor}>
-                Nenhuma despesa nesse mês
-              </S.EmptyText>
-            </S.Empty>
-          )}
         </ScrollView>
+      )}
+      {expanseByDate.length === 0 && (
+        <S.Empty>
+          <Icon
+            name="close-circle"
+            size={RFPercentage(4)}
+            color={colors.primaryColor}
+          />
+          <S.EmptyText color={colors.textColor}>
+            Nenhuma despesa nesse mês
+          </S.EmptyText>
+        </S.Empty>
       )}
 
       <ConfirmReceivedModalComponent

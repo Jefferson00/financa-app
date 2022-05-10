@@ -60,11 +60,9 @@ export const IncomesList = styled.FlatList`
 export const Empty = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
   flex-direction: row;
-  align-items: center;
   justify-content: center;
-  flex: 1;
 
-  padding-bottom: ${RFPercentage(13)}px;
+  height: ${RFPercentage(32)}px;
 `;
 
 export const ItemView = styled.View`
