@@ -22,5 +22,6 @@ export interface IncomeList {
   value: number;
   paymentDate?: string;
   recurence?: string;
+  month?: string;
   income: Income;
 }

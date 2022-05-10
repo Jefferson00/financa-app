@@ -13,6 +13,7 @@ import Menu from '../../components/Menu';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import ItemCard from '../../components/ItemCard';
+import ModalComponent from '../../components/Modal';
 
 import { useAccount } from '../../hooks/AccountContext';
 import { useDate } from '../../hooks/DateContext';
@@ -33,6 +34,7 @@ import { getIncomesColors } from '../../utils/colors/incomes';
 import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 import { useAuth } from '../../hooks/AuthContext';
+import api from '../../services/api';
 
 export default function Incomes() {
   const navigation = useNavigation<Nav>();
@@ -44,6 +46,7 @@ export default function Incomes() {
     incomesOnAccounts,
     accountSelected,
     handleUpdateAccountBalance,
+    getUserIncomesOnAccount,
   } = useAccount();
   const { user } = useAuth();
   const { selectedDate } = useDate();
@@ -56,8 +59,16 @@ export default function Incomes() {
   const [currentIncomesOnAccount, setCurrentIncomesOnAccount] =
     useState<IncomeOnAccount[]>();
   const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
+  const [confirmUnreceivedVisible, setConfirmUnreceivedVisible] =
+    useState(false);
   const [currentTotalIncomes, setCurrentTotalIncomes] = useState(0);
   const [estimateTotalIncomes, setEstimateTotalIncomes] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
+  const [editSucessfully, setEditSucessfully] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(
+    'Erro ao atualizar informações',
+  );
 
   const colors = getIncomesColors(theme);
 
@@ -83,36 +94,62 @@ export default function Incomes() {
 
   const handleToggleIncomeOnAccount = useCallback(
     async (income: any) => {
-      //console.log('income', income);
       const accountLastBalance = accountSelected?.balances?.find(balance =>
         isSameMonth(new Date(balance.month), selectedDate),
       );
 
       if (user) {
-        const input: CreateIncomeOnAccount = {
-          userId: user.id,
-          accountId: income.receiptDefault || accountSelected?.id,
-          incomeId: income?.id,
-          month: selectedDate,
-          value: income.value,
-          recurrence: income.endDate
-            ? `${
-                differenceInMonths(selectedDate, new Date(income.startDate)) + 1
-              }/${
-                differenceInMonths(selectedDate, new Date(income.endDate)) + 1
-              }`
-            : 'mensal',
-        };
-        await handleCreateIncomeOnAccount(input);
+        if (income.month) {
+          try {
+            await api.delete(`incomes/onAccount/${income.id}/${user.id}`);
+            await getUserIncomesOnAccount();
+            setConfirmUnreceivedVisible(false);
+            return;
+          } catch (error: any) {
+            if (error?.response?.data?.message)
+              setErrorMessage(error?.response?.data?.message);
+            setHasError(true);
+          }
+        } else {
+          setIsSubmitting(true);
+          const input: CreateIncomeOnAccount = {
+            userId: user.id,
+            accountId: income.receiptDefault || accountSelected?.id,
+            incomeId: income?.id,
+            month: selectedDate,
+            value: income.value,
+            name: income.name,
+            recurrence: income.endDate
+              ? `${
+                  differenceInMonths(selectedDate, new Date(income.startDate)) +
+                  1
+                }/${
+                  differenceInMonths(selectedDate, new Date(income.endDate)) + 1
+                }`
+              : 'mensal',
+          };
+          try {
+            await handleCreateIncomeOnAccount(input);
 
-        const account = accounts.find(acc => acc.id === input.accountId);
+            const account = accounts.find(acc => acc.id === input.accountId);
 
-        await handleUpdateAccountBalance(
-          accountLastBalance,
-          input.value,
-          account,
-          'Income',
-        );
+            await handleUpdateAccountBalance(
+              accountLastBalance,
+              input.value,
+              account,
+              'Income',
+            );
+
+            await getUserIncomesOnAccount();
+            setEditSucessfully(true);
+          } catch (error: any) {
+            if (error?.response?.data?.message)
+              setErrorMessage(error?.response?.data?.message);
+            setHasError(true);
+          } finally {
+            setIsSubmitting(false);
+          }
+        }
       }
     },
     [
@@ -322,9 +359,15 @@ export default function Incomes() {
                     received={!!income?.paymentDate}
                     mainColor={colors.primaryColor}
                     handleRemove={() => console.log('removed')}
+                    backgroundColor={colors.secondaryCardLoader}
                     onSwitchChange={() => {
                       setIncomeSelected(income);
-                      setConfirmReceivedVisible(true);
+                      console.log(income);
+                      if (income?.month) {
+                        setConfirmUnreceivedVisible(true);
+                      } else {
+                        setConfirmReceivedVisible(true);
+                      }
                     }}
                   />
                 ))}
@@ -358,6 +401,42 @@ export default function Incomes() {
         accounts={accounts}
       />
 
+      <ModalComponent
+        type="loading"
+        visible={isSubmitting}
+        transparent
+        title={'Recebendo...'}
+        animationType="slide"
+      />
+      <ModalComponent
+        type="error"
+        visible={hasError}
+        handleCancel={() => setHasError(false)}
+        onRequestClose={() => setHasError(false)}
+        transparent
+        title={errorMessage}
+        subtitle="Tente novamente mais tarde"
+        animationType="slide"
+      />
+      <ModalComponent
+        type="success"
+        visible={editSucessfully}
+        transparent
+        title="Entrada recebida com sucesso!"
+        animationType="slide"
+        handleCancel={() => setEditSucessfully(false)}
+      />
+
+      <ModalComponent
+        type="confirmation"
+        visible={confirmUnreceivedVisible}
+        handleCancel={() => setConfirmUnreceivedVisible(false)}
+        onRequestClose={() => setConfirmUnreceivedVisible(false)}
+        transparent
+        title="Tem certeza? Essa entrada será marcada como não recebida."
+        animationType="slide"
+        handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
+      />
       <Menu />
     </>
   );

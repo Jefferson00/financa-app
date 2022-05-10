@@ -1,31 +1,37 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../../hooks/AuthContext';
-import Menu from '../../../components/Menu';
+import { useNavigation } from '@react-navigation/native';
+import FeatherIcons from 'react-native-vector-icons/Feather';
+import IonIcons from 'react-native-vector-icons/Ionicons';
+import DatePicker from 'react-native-date-picker';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { RFPercentage } from 'react-native-responsive-fontsize';
+import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+
 import { Colors } from '../../../styles/global';
 import * as S from './styles';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import Icons from 'react-native-vector-icons/Feather';
-import Icon from 'react-native-vector-icons/Ionicons';
+
+import { useAuth } from '../../../hooks/AuthContext';
+import { useTheme } from '../../../hooks/ThemeContext';
+import { useAccount } from '../../../hooks/AccountContext';
+import { useDate } from '../../../hooks/DateContext';
+
+import Menu from '../../../components/Menu';
 import Header from '../../../components/Header';
 import ControlledInput from '../../../components/ControlledInput';
 import Button from '../../../components/Button';
-import DatePicker from 'react-native-date-picker';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../../services/api';
 import ModalComponent from '../../../components/Modal';
-import { useTheme } from '../../../hooks/ThemeContext';
-import { RFPercentage } from 'react-native-responsive-fontsize';
+import Input from '../../../components/Input';
+
+import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useAccount } from '../../../hooks/AccountContext';
-import Input from '../../../components/Input';
-import { useDate } from '../../../hooks/DateContext';
-import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
+import { IncomeCategories } from '../../../utils/categories';
+import { getCreateIncomesColors } from '../../../utils/colors/incomes';
 
 interface IncomeProps {
   route?: {
@@ -52,11 +58,10 @@ export default function CreateIncome(props: IncomeProps) {
   const { accounts, getUserIncomes } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
-  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
-    useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [incomeState, setIncomeState] = useState(props?.route?.params?.income);
+  const colors = getCreateIncomesColors(theme);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [incomeState] = useState(props?.route?.params?.income);
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
   );
@@ -68,6 +73,7 @@ export default function CreateIncome(props: IncomeProps) {
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
+
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
       name: incomeState?.name || '',
@@ -75,53 +81,21 @@ export default function CreateIncome(props: IncomeProps) {
         ? getCurrencyFormat(incomeState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: incomeState?.receiptDefault || '',
-      category: incomeState?.category || '',
+      receiptDefault: incomeState?.receiptDefault || accounts[0].id,
+      category: incomeState?.category || IncomeCategories[0].name,
     },
     resolver: yupResolver(schema),
   });
 
-  const titleColor =
-    theme === 'dark'
-      ? Colors.INCOME_PRIMARY_DARKER
-      : Colors.INCOME_PRIMARY_LIGTHER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.INCOME_SOFT_DARKER : Colors.INCOME_SOFT_LIGTHER;
-  const deleteButtonColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
-
   const SaveIcon = () => {
     return (
-      <Icons
+      <FeatherIcons
         name="save"
         size={24}
         color={theme === 'dark' ? '#d8d8d8' : '#fff'}
       />
     );
   };
-
-  const incomeCategories = [
-    {
-      id: 1,
-      name: 'Salário',
-    },
-    {
-      id: 2,
-      name: 'Benefício',
-    },
-    {
-      id: 3,
-      name: 'Transferência',
-    },
-    {
-      id: 4,
-      name: 'Outro',
-    },
-  ];
 
   type FormData = {
     name: string;
@@ -149,22 +123,20 @@ export default function CreateIncome(props: IncomeProps) {
       name: data.name,
       userId: user?.id,
       value: Number(currencyToValue(data.value)),
-      category: incomeCategories.find(cat => cat.id === Number(data.category))
-        ?.name,
+      category: data.category,
       iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
       receiptDate: startDate,
       startDate,
       endDate:
         recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
-      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
+      receiptDefault: data.receiptDefault,
     };
 
     try {
       if (incomeState) {
         await api.put(`incomes/${incomeState.id}`, incomeInput);
       } else {
-        const res = await api.post(`incomes`, incomeInput);
-        console.log(res);
+        await api.post(`incomes`, incomeInput);
       }
 
       await getUserIncomes();
@@ -172,13 +144,10 @@ export default function CreateIncome(props: IncomeProps) {
     } catch (error: any) {
       if (error?.response?.data?.message)
         setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
       setHasError(true);
     } finally {
       setIsSubmitting(false);
     }
-
-    console.log(incomeInput);
   };
 
   return (
@@ -191,14 +160,14 @@ export default function CreateIncome(props: IncomeProps) {
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={titleColor}>
+          <S.Title color={colors.titleColor}>
             {incomeState ? `Editar Entrada` : `Nova Entrada`}
           </S.Title>
 
           <ControlledInput
             label="Nome"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             autoCapitalize="sentences"
             name="name"
@@ -208,8 +177,8 @@ export default function CreateIncome(props: IncomeProps) {
 
           <ControlledInput
             label="Valor"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             keyboardType="number-pad"
             name="value"
@@ -218,13 +187,13 @@ export default function CreateIncome(props: IncomeProps) {
             value={incomeState?.value ? String(incomeState.value) : '0'}
           />
 
-          <S.Label color={textColor}>Recorrência</S.Label>
+          <S.Label color={colors.textColor}>Recorrência</S.Label>
           <S.Row>
             <S.SelectOption
               onPress={() => setRecurrence('Mensal')}
               checked={recurrence === 'Mensal'}>
               <S.Option>Mensal</S.Option>
-              <Icon name="checkmark" size={RFPercentage(4)} />
+              <IonIcons name="checkmark" size={RFPercentage(4)} />
             </S.SelectOption>
 
             <S.SelectOption
@@ -232,12 +201,12 @@ export default function CreateIncome(props: IncomeProps) {
               checked={recurrence === 'Parcelada'}
               style={{ marginHorizontal: RFPercentage(2) }}>
               <S.Option>Parcelada</S.Option>
-              <Icon name="checkmark" size={RFPercentage(4)} />
+              <IonIcons name="checkmark" size={RFPercentage(4)} />
             </S.SelectOption>
 
             <Input
-              background={inputBackground}
-              textColor={textColor}
+              background={colors.inputBackground}
+              textColor={colors.textColor}
               value={String(iteration)}
               keyboardType="number-pad"
               maxLength={2}
@@ -250,9 +219,9 @@ export default function CreateIncome(props: IncomeProps) {
 
           <S.Row>
             <S.Col>
-              <S.Label color={textColor}>Data de recebimento</S.Label>
+              <S.Label color={colors.textColor}>Data de recebimento</S.Label>
               <S.SelectOption onPress={() => setSelectStartDateModal(true)}>
-                <Icon name="calendar" size={RFPercentage(4)} />
+                <IonIcons name="calendar" size={RFPercentage(4)} />
                 <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
@@ -261,17 +230,19 @@ export default function CreateIncome(props: IncomeProps) {
 
             <S.SwitchContainer>
               <S.Label
-                color={textColor}
+                color={colors.textColor}
                 style={{ width: '100%', textAlign: 'right' }}>
                 Recebido
               </S.Label>
               <ControlledInput
                 type="switch"
                 background="transparent"
-                textColor={textColor}
+                textColor={colors.textColor}
                 name="status"
                 control={control}
                 value={'false'}
+                thumbColor={colors.thumbColor}
+                trackColor={colors.trackColor}
               />
             </S.SwitchContainer>
           </S.Row>
@@ -279,25 +250,27 @@ export default function CreateIncome(props: IncomeProps) {
           <ControlledInput
             label="Conta padrão de recebimento"
             type="select"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="receiptDefault"
             control={control}
             value={
-              incomeState?.receiptDefault ? incomeState.receiptDefault : ''
+              incomeState?.receiptDefault
+                ? incomeState.receiptDefault
+                : accounts[0].id
             }
-            selectItems={[...accounts, { name: 'Nenhum', id: 0 }]}
+            selectItems={accounts}
           />
 
           <ControlledInput
             label="Categoria"
             type="select"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="category"
             control={control}
-            value={incomeState?.category ? incomeState.category : ''}
-            selectItems={incomeCategories}
+            value={incomeState?.category ? incomeState.category : 'Outro'}
+            selectItems={IncomeCategories}
           />
 
           <S.ButtonContainer>

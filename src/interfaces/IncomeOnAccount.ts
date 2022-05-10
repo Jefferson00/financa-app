@@ -2,6 +2,7 @@ export interface CreateIncomeOnAccount {
   userId: string;
   incomeId: string;
   accountId: string;
+  name: string;
   month: Date;
   value: number;
   recurrence: string;

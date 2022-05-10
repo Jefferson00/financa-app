@@ -24,7 +24,7 @@ export const DateProvider: React.FC = ({ children }) => {
           ),
         );
         resolve(true);
-      }, 500);
+      }, 200);
     });
   }
 

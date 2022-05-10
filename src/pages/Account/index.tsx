@@ -1,28 +1,32 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import FeatherIcons from 'react-native-vector-icons/Feather';
+import IonIcons from 'react-native-vector-icons/Ionicons';
 import { useForm } from 'react-hook-form';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { RFPercentage } from 'react-native-responsive-fontsize';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
+
 import { useAuth } from '../../hooks/AuthContext';
+import { useTheme } from '../../hooks/ThemeContext';
+import { useAccount } from '../../hooks/AccountContext';
+
 import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
-import * as S from './styles';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import Icons from 'react-native-vector-icons/Feather';
-import Icon from 'react-native-vector-icons/Ionicons';
 import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
-import { currencyToValue, phoneMask, priceMask } from '../../utils/masks';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../services/api';
 import ModalComponent from '../../components/Modal';
-import { useTheme } from '../../hooks/ThemeContext';
-import { RFPercentage } from 'react-native-responsive-fontsize';
-import { Nav } from '../../routes';
-import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useAccount } from '../../hooks/AccountContext';
-import { Account as IAccount } from '../../interfaces/Account';
 
+import { Colors } from '../../styles/global';
+import * as S from './styles';
+
+import api from '../../services/api';
+import { Nav } from '../../routes';
+import { currencyToValue } from '../../utils/masks';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import { getAccountColors } from '../../utils/colors/account';
+import { accountTypes } from '../../utils/accountTypes';
 interface ProfileProps {
   route?: {
     key: string;
@@ -43,23 +47,32 @@ const schema = yup.object({
   type: yup.string().required('Campo obrigátorio'),
 });
 
+type FormData = {
+  name: string;
+  type: string;
+  status: string;
+  initialValue?: string;
+};
+
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
-  const { user, updateUser } = useAuth();
+  const { user } = useAuth();
   const { getUserAccounts } = useAccount();
   const { theme } = useTheme();
+  const colors = getAccountColors(theme);
+
   const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
     useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountState, setAccountState] = useState(
     props?.route?.params?.account,
   );
-
   const [hasError, setHasError] = useState(false);
   const [editSucessfully, setEditSucessfully] = useState(false);
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
+
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
       name: accountState?.name || '',
@@ -72,51 +85,14 @@ export default function Account(props: ProfileProps) {
     resolver: yupResolver(schema),
   });
 
-  const titleColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
-  const deleteButtonColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
-
   const SaveIcon = () => {
     return (
-      <Icons
+      <FeatherIcons
         name="save"
         size={24}
         color={theme === 'dark' ? '#d8d8d8' : '#fff'}
       />
     );
-  };
-
-  const accountTypes = [
-    {
-      id: 1,
-      name: 'Conta Corrente',
-    },
-    {
-      id: 2,
-      name: 'Conta Poupança',
-    },
-    {
-      id: 3,
-      name: 'Carteira',
-    },
-    {
-      id: 4,
-      name: 'Outro',
-    },
-  ];
-
-  type FormData = {
-    name: string;
-    type: string;
-    status: string;
-    initialValue?: string;
   };
 
   const saveButtonColors = {
@@ -156,7 +132,6 @@ export default function Account(props: ProfileProps) {
     } catch (error: any) {
       if (error?.response?.data?.message)
         setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
       setHasError(true);
     } finally {
       setIsSubmitting(false);
@@ -170,8 +145,10 @@ export default function Account(props: ProfileProps) {
         await api.delete(`accounts/${accountState.id}/${user.id}`);
         await getUserAccounts();
         navigation.navigate('Home');
-      } catch (error) {
-        console.log(error);
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          setErrorMessage(error?.response?.data?.message);
+        setHasError(true);
       } finally {
         setIsSubmitting(false);
       }
@@ -188,14 +165,14 @@ export default function Account(props: ProfileProps) {
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={titleColor}>
+          <S.Title color={colors.titleColor}>
             {accountState ? `Editar Conta` : `Nova Conta`}
           </S.Title>
 
           <ControlledInput
             label="Nome"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             autoCapitalize="sentences"
             name="name"
@@ -206,8 +183,8 @@ export default function Account(props: ProfileProps) {
           <ControlledInput
             label="Tipo de conta"
             type="select"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="type"
             control={control}
             value={accountState?.type ? accountState.type : ''}
@@ -218,8 +195,8 @@ export default function Account(props: ProfileProps) {
             <S.Col>
               <ControlledInput
                 label="Saldo Inicial"
-                background={inputBackground}
-                textColor={textColor}
+                background={colors.inputBackground}
+                textColor={colors.textColor}
                 returnKeyType="next"
                 keyboardType="number-pad"
                 name="initialValue"
@@ -236,17 +213,19 @@ export default function Account(props: ProfileProps) {
 
             <S.SwitchContainer>
               <S.Label
-                color={textColor}
+                color={colors.textColor}
                 style={{ width: '100%', textAlign: 'right' }}>
                 Ativo
               </S.Label>
               <ControlledInput
                 type="switch"
                 background="transparent"
-                textColor={textColor}
+                textColor={colors.textColor}
                 name="status"
                 control={control}
                 value={accountState?.status ? accountState.status : 'active'}
+                thumbColor={colors.thumbColor}
+                trackColor={colors.trackColor}
               />
             </S.SwitchContainer>
           </S.Row>
@@ -262,15 +241,16 @@ export default function Account(props: ProfileProps) {
             {accountState && (
               <S.DeleteButton
                 onPress={() => setDeleteConfirmationVisible(true)}>
-                <Icon
+                <IonIcons
                   name="trash"
                   size={RFPercentage(4)}
-                  color={deleteButtonColor}
+                  color={colors.deleteButtonColor}
                 />
               </S.DeleteButton>
             )}
           </S.ButtonContainer>
         </KeyboardAwareScrollView>
+
         <ModalComponent
           type="loading"
           visible={isSubmitting}

@@ -38,6 +38,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 interface AccountContextData {
   getUserAccounts: () => Promise<void>;
   getUserIncomes: () => Promise<void>;
+  getUserIncomesOnAccount: () => Promise<void>;
   handleCreateIncomeOnAccount: (
     createIncomeOnAccount: CreateIncomeOnAccount,
   ) => Promise<void>;
@@ -57,6 +58,8 @@ interface AccountContextData {
   incomesOnAccounts: IncomeOnAccount[];
   expansesOnAccounts: ExpanseOnAccount[];
   isLoadingData: boolean;
+  isLoadingCards: boolean;
+  hasAccount: boolean;
   accountCards: any[];
   totalEstimateBalance: number;
   totalCurrentBalance: number;
@@ -93,6 +96,8 @@ export const AccountProvider: React.FC = ({ children }) => {
     ExpanseOnAccount[]
   >([]);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [isLoadingCards, setIsLoadingCards] = useState(true);
+  const [hasAccount, setHasAccount] = useState(false);
   //const [lastMonthEstimateBalance, setLastMonthEstimateBalance] = useState(0);
   const controller = new AbortController();
 
@@ -337,6 +342,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   );
 
   const handleAccountCardMount = useCallback(async () => {
+    setIsLoadingCards(true);
     const cardsArray: any[] = [];
     let sumTotalCurrentBalance = 0;
     let sumTotalEstimateBalance = 0;
@@ -400,7 +406,7 @@ export const AccountProvider: React.FC = ({ children }) => {
     setTotalCurrentBalance(sumTotalCurrentBalance);
     setTotalEstimateBalance(sumTotalEstimateBalance);
     setAccountCards(cardsArray);
-    setIsLoadingData(false);
+    setIsLoadingCards(false);
   }, [accounts, getAccountCurrentBalance, getAccountEstimateBalance]);
 
   useEffect(() => {
@@ -411,7 +417,7 @@ export const AccountProvider: React.FC = ({ children }) => {
             if (
               item[0].startsWith('@FinancaAppBeta:CurrentMonthEstimateBalance')
             ) {
-              console.log('achouuuuu', item[0]);
+              // console.log('achouuuuu', item[0]);
               await AsyncStorage.removeItem(item[0]);
             }
           }),
@@ -423,7 +429,9 @@ export const AccountProvider: React.FC = ({ children }) => {
     getUserAccounts().finally(() =>
       getUserIncomes().finally(() => {
         getUserIncomesOnAccount().finally(() =>
-          getUserExpanses().finally(() => getUserExpansesOnAccount()),
+          getUserExpanses().finally(() =>
+            getUserExpansesOnAccount().finally(() => setIsLoadingData(false)),
+          ),
         );
       }),
     );
@@ -440,22 +448,31 @@ export const AccountProvider: React.FC = ({ children }) => {
   ]);
 
   useEffect(() => {
-    if (cacheCleared) {
+    if (cacheCleared && !isLoadingData) {
       handleAccountCardMount();
+      console.log('chamouuuu');
     }
-  }, [accounts, handleAccountCardMount, cacheCleared]);
+  }, [accounts, handleAccountCardMount, cacheCleared, isLoadingData]);
+
+  useEffect(() => {
+    if (accounts.length > 0) {
+      setHasAccount(true);
+    }
+  }, [accounts]);
 
   return (
     <AccountContext.Provider
       value={{
         getUserAccounts,
         getUserIncomes,
+        getUserIncomesOnAccount,
         handleCreateIncomeOnAccount,
         handleSelectAccount,
         handleUpdateAccountBalance,
         handleCreateExpanseOnAccount,
         expansesOnAccounts,
         accounts,
+        isLoadingCards,
         incomes,
         expanses,
         incomesOnAccounts,
@@ -464,6 +481,7 @@ export const AccountProvider: React.FC = ({ children }) => {
         totalCurrentBalance,
         totalEstimateBalance,
         accountSelected,
+        hasAccount,
       }}>
       {children}
     </AccountContext.Provider>

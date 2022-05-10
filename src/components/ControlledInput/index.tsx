@@ -4,13 +4,20 @@ import { Switch, Text, View } from 'react-native';
 import { MaskInputProps } from 'react-native-mask-input';
 import { priceMask } from '../../utils/masks';
 import * as S from './styles';
-import Icons from 'react-native-vector-icons/Ionicons';
 
 interface ButtonProps extends MaskInputProps {
   icon?: React.FC;
   background: string;
   border?: string;
   textColor: string;
+  trackColor?: {
+    true: string;
+    false: string;
+  };
+  thumbColor?: {
+    true: string;
+    false: string;
+  };
   control: Control<any>;
   name: string;
   disabled?: boolean;
@@ -32,6 +39,8 @@ export default function ControlledInput({
   label,
   currencyFormater,
   selectItems,
+  trackColor,
+  thumbColor,
   ...rest
 }: ButtonProps) {
   const [isFocused, setIsFocused] = useState(false);
@@ -86,8 +95,15 @@ export default function ControlledInput({
             )}
             {type === 'switch' && (
               <Switch
-                trackColor={{ true: textColor, false: textColor }}
-                thumbColor={field.value === 'active' ? textColor : textColor}
+                trackColor={{
+                  true: trackColor?.true || '#000',
+                  false: trackColor?.false || '#000',
+                }}
+                thumbColor={
+                  field.value === 'active'
+                    ? thumbColor?.true || '#000'
+                    : thumbColor?.false || '#000'
+                }
                 value={field.value === 'active'}
                 onChange={() => {
                   if (field.value === 'active') {

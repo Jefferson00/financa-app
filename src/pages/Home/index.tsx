@@ -23,6 +23,7 @@ export default function Home() {
   const navigation = useNavigation<Nav>();
   const {
     isLoadingData,
+    isLoadingCards,
     accountCards,
     totalCurrentBalance,
     totalEstimateBalance,
@@ -43,7 +44,7 @@ export default function Home() {
         showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
-          {isLoadingData && (
+          {(isLoadingData || isLoadingCards) && (
             <ContentLoader
               viewBox="0 0 269 140"
               height={140}
@@ -55,7 +56,7 @@ export default function Home() {
               <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
             </ContentLoader>
           )}
-          {!isLoadingData && (
+          {!isLoadingData && !isLoadingCards && (
             <>
               <Carousel
                 data={accountCards}
@@ -164,7 +165,7 @@ export default function Home() {
               )}
             </S.Balance>
 
-            <S.Balance>
+            <S.Balance style={{ opacity: 0.6 }}>
               <S.BalanceText color={colors.primaryColor}>
                 Saldo previsto
               </S.BalanceText>

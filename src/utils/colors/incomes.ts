@@ -45,3 +45,45 @@ export const getIncomesColors = (theme: ColorSchemeName) => {
     alertColor,
   };
 };
+
+export const getCreateIncomesColors = (theme: ColorSchemeName) => {
+  const titleColor =
+    theme === 'dark'
+      ? Colors.INCOME_PRIMARY_DARKER
+      : Colors.INCOME_PRIMARY_LIGTHER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
+  const inputBackground =
+    theme === 'dark' ? Colors.INCOME_SOFT_DARKER : Colors.INCOME_SOFT_LIGTHER;
+  const deleteButtonColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const trackColor = {
+    true:
+      theme === 'dark'
+        ? Colors.INCOME_SECONDARY_DARKER
+        : Colors.INCOME_SECONDARY_LIGTHER,
+    false: theme === 'dark' ? '#737373' : '#d2d2d2',
+  };
+
+  const thumbColor = {
+    true:
+      theme === 'dark'
+        ? Colors.INCOME_PRIMARY_DARKER
+        : Colors.INCOME_PRIMARY_LIGTHER,
+    false:
+      theme === 'dark'
+        ? Colors.INCOME_SECONDARY_DARKER
+        : Colors.INCOME_SECONDARY_LIGTHER,
+  };
+
+  return {
+    inputBackground,
+    deleteButtonColor,
+    titleColor,
+    textColor,
+    trackColor,
+    thumbColor,
+  };
+};
