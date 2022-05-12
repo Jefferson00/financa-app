@@ -49,7 +49,7 @@ const schema = yup.object({
 export default function CreateExpanse(props: ExpanseProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserIncomes } = useAccount();
+  const { accounts, getUserExpanses } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
@@ -145,6 +145,11 @@ export default function CreateExpanse(props: ExpanseProps) {
     TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
+  const handleOkSucess = () => {
+    setEditSucessfully(false);
+    setTimeout(() => navigation.navigate('Expanses'), 300);
+  };
+
   const handleSubmitAccount = async (data: FormData) => {
     setIsSubmitting(true);
     const expanseInput = {
@@ -168,7 +173,7 @@ export default function CreateExpanse(props: ExpanseProps) {
         const res = await api.post(`expanses`, expanseInput);
       }
 
-      await getUserIncomes();
+      await getUserExpanses();
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)
@@ -355,6 +360,7 @@ export default function CreateExpanse(props: ExpanseProps) {
           }
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+          onSucessOkButton={handleOkSucess}
         />
       </S.Container>
       <Menu />

@@ -39,6 +39,8 @@ interface AccountContextData {
   getUserAccounts: () => Promise<void>;
   getUserIncomes: () => Promise<void>;
   getUserIncomesOnAccount: () => Promise<void>;
+  getUserExpansesOnAccount: () => Promise<void>;
+  getUserExpanses: () => Promise<void>;
   handleCreateIncomeOnAccount: (
     createIncomeOnAccount: CreateIncomeOnAccount,
   ) => Promise<void>;
@@ -185,7 +187,6 @@ export const AccountProvider: React.FC = ({ children }) => {
               : accountLastBalance.value - value,
           accountId: account?.id,
         });
-        console.log('balanço da conta', res.data.value);
       } else {
         await api.post(`accounts/balance`, {
           month: selectedDate,
@@ -204,13 +205,11 @@ export const AccountProvider: React.FC = ({ children }) => {
   const handleCreateIncomeOnAccount = useCallback(
     async (createIncomeOnAccount: CreateIncomeOnAccount) => {
       if (user) {
-        console.log(createIncomeOnAccount);
         try {
           const { data } = await api.post(
             `incomes/onAccount`,
             createIncomeOnAccount,
           );
-          console.log(data);
           /*  const arr = incomesOnAccounts;
           arr.push(data);
           setIncomesOnAccounts(arr); */
@@ -225,13 +224,11 @@ export const AccountProvider: React.FC = ({ children }) => {
   const handleCreateExpanseOnAccount = useCallback(
     async (createExpanseOnAccount: CreateExpanseOnAccount) => {
       if (user) {
-        console.log(createExpanseOnAccount);
         try {
           const { data } = await api.post(
             `expanses/onAccount`,
             createExpanseOnAccount,
           );
-          console.log(data);
           /*  const arr = incomesOnAccounts;
           arr.push(data);
           setIncomesOnAccounts(arr); */
@@ -329,8 +326,6 @@ export const AccountProvider: React.FC = ({ children }) => {
         allExpansesInThisAccount,
         currentBalance,
       );
-      // console.log('estimateBalance', estimateBalance);
-      // setLastMonthEstimateBalance(estimateBalance);
 
       await AsyncStorage.setItem(
         `@FinancaAppBeta:LastMonthEstimateBalance@${account.id}`,
@@ -417,7 +412,6 @@ export const AccountProvider: React.FC = ({ children }) => {
             if (
               item[0].startsWith('@FinancaAppBeta:CurrentMonthEstimateBalance')
             ) {
-              // console.log('achouuuuu', item[0]);
               await AsyncStorage.removeItem(item[0]);
             }
           }),
@@ -450,7 +444,6 @@ export const AccountProvider: React.FC = ({ children }) => {
   useEffect(() => {
     if (cacheCleared && !isLoadingData) {
       handleAccountCardMount();
-      console.log('chamouuuu');
     }
   }, [accounts, handleAccountCardMount, cacheCleared, isLoadingData]);
 
@@ -470,6 +463,8 @@ export const AccountProvider: React.FC = ({ children }) => {
         handleSelectAccount,
         handleUpdateAccountBalance,
         handleCreateExpanseOnAccount,
+        getUserExpansesOnAccount,
+        getUserExpanses,
         expansesOnAccounts,
         accounts,
         isLoadingCards,

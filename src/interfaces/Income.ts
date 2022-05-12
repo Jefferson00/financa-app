@@ -13,6 +13,7 @@ export interface Income {
 export interface IncomeList {
   id: string;
   category?: string;
+  incomeId?: string;
   description?: string;
   name?: string;
   receiptDate?: string;

@@ -40,13 +40,13 @@ export default function Incomes() {
   const navigation = useNavigation<Nav>();
   const {
     incomes,
-    isLoadingData,
     handleCreateIncomeOnAccount,
     accounts,
     incomesOnAccounts,
     accountSelected,
     handleUpdateAccountBalance,
     getUserIncomesOnAccount,
+    getUserIncomes,
   } = useAccount();
   const { user } = useAuth();
   const { selectedDate } = useDate();
@@ -64,8 +64,11 @@ export default function Incomes() {
   const [currentTotalIncomes, setCurrentTotalIncomes] = useState(0);
   const [estimateTotalIncomes, setEstimateTotalIncomes] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [editSucessfully, setEditSucessfully] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
@@ -92,6 +95,46 @@ export default function Incomes() {
     TEXT: '#fff',
   };
 
+  const handleOkSucess = () => {
+    setConfirmReceivedVisible(false);
+    setConfirmUnreceivedVisible(false);
+    setEditSucessfully(false);
+  };
+
+  const handleRemove = useCallback(
+    async (income: IncomeList) => {
+      setIsDeleteModalVisible(false);
+      setLoadingMessage('Excluindo...');
+      setIsSubmitting(true);
+      const findIncome = incomes.find(
+        i => i.id === income.id || i.id === income?.incomeId,
+      );
+
+      if (!findIncome) {
+        await handleToggleIncomeOnAccount(income);
+        setIsSubmitting(false);
+        return;
+      }
+
+      try {
+        if (income?.incomeId) {
+          await api.delete(`incomes/${income.incomeId}/${user?.id}`);
+          await getUserIncomes();
+          return;
+        }
+        await api.delete(`incomes/${income.id}/${user?.id}`);
+        await getUserIncomes();
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          setErrorMessage(error?.response?.data?.message);
+        setHasError(true);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [user],
+  );
+
   const handleToggleIncomeOnAccount = useCallback(
     async (income: any) => {
       const accountLastBalance = accountSelected?.balances?.find(balance =>
@@ -111,6 +154,7 @@ export default function Incomes() {
             setHasError(true);
           }
         } else {
+          setLoadingMessage('Recebendo...');
           setIsSubmitting(true);
           const input: CreateIncomeOnAccount = {
             userId: user.id,
@@ -238,6 +282,7 @@ export default function Incomes() {
     });
 
     setIncomesByDate(incomesOrderedByDay.sort((a, b) => a.day - b.day));
+    setIsLoading(false);
   }, [incomes, incomesOnAccounts, selectedDate]);
 
   useEffect(() => {
@@ -259,7 +304,7 @@ export default function Incomes() {
     <>
       <Header />
       <S.Container>
-        {isLoadingData && (
+        {isLoading && (
           <ContentLoader
             viewBox="0 0 269 140"
             height={140}
@@ -271,7 +316,7 @@ export default function Incomes() {
             <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
           </ContentLoader>
         )}
-        {!isLoadingData && (
+        {!isLoading && (
           <>
             <Card
               id={'income'}
@@ -321,7 +366,7 @@ export default function Incomes() {
         />
       </S.ButtonContainer>
 
-      {isLoadingData ? (
+      {isLoading ? (
         <ContentLoader
           viewBox="0 0 327 100"
           height={100}
@@ -358,11 +403,13 @@ export default function Incomes() {
                     value={income.value}
                     received={!!income?.paymentDate}
                     mainColor={colors.primaryColor}
-                    handleRemove={() => console.log('removed')}
+                    handleRemove={() => {
+                      setIncomeSelected(income);
+                      setIsDeleteModalVisible(true);
+                    }}
                     backgroundColor={colors.secondaryCardLoader}
                     onSwitchChange={() => {
                       setIncomeSelected(income);
-                      console.log(income);
                       if (income?.month) {
                         setConfirmUnreceivedVisible(true);
                       } else {
@@ -375,7 +422,7 @@ export default function Incomes() {
             ))}
         </ScrollView>
       )}
-      {incomesByDate.length === 0 && (
+      {!isLoading && incomesByDate.length === 0 && (
         <S.Empty>
           <Icon
             name="close-circle"
@@ -404,7 +451,7 @@ export default function Incomes() {
         type="loading"
         visible={isSubmitting}
         transparent
-        title={'Recebendo...'}
+        title={loadingMessage}
         animationType="slide"
       />
       <ModalComponent
@@ -424,6 +471,18 @@ export default function Incomes() {
         title="Entrada recebida com sucesso!"
         animationType="slide"
         handleCancel={() => setEditSucessfully(false)}
+        onSucessOkButton={handleOkSucess}
+      />
+
+      <ModalComponent
+        type="confirmation"
+        visible={isDeleteModalVisible}
+        handleCancel={() => setIsDeleteModalVisible(false)}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+        transparent
+        title="Tem certeza que deseja excluir essa despesa em definitivo?"
+        animationType="slide"
+        handleConfirm={() => handleRemove(incomeSelected)}
       />
 
       <ModalComponent

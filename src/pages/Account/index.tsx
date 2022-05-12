@@ -57,7 +57,8 @@ type FormData = {
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { getUserAccounts } = useAccount();
+  const { getUserAccounts, incomesOnAccounts, expansesOnAccounts } =
+    useAccount();
   const { theme } = useTheme();
   const colors = getAccountColors(theme);
 
@@ -72,6 +73,20 @@ export default function Account(props: ProfileProps) {
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
+  const [loadingMessage, setLoadingMessage] = useState('');
+  const [sucessMessage, setSucessMessage] = useState('');
+
+  const handleOkSucess = () => {
+    setEditSucessfully(false);
+    setTimeout(() => navigation.navigate('Home'), 300);
+  };
+
+  const canDelete = useCallback(() => {
+    return (
+      !incomesOnAccounts.find(i => i.accountId === accountState.id) &&
+      !expansesOnAccounts.find(i => i.accountId === accountState.id)
+    );
+  }, [expansesOnAccounts, incomesOnAccounts, accountState]);
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -108,7 +123,6 @@ export default function Account(props: ProfileProps) {
   };
 
   const handleSubmitAccount = async (data: FormData) => {
-    setIsSubmitting(true);
     const accountInput = {
       userId: user?.id,
       status: data.status,
@@ -117,14 +131,20 @@ export default function Account(props: ProfileProps) {
     };
     try {
       if (accountState) {
+        setLoadingMessage('Atualizando...');
+        setIsSubmitting(true);
         await api.put(`accounts/${accountState.id}`, accountInput);
+        setSucessMessage('Conta atualizada com sucesso!');
       } else {
+        setLoadingMessage('Criando...');
+        setIsSubmitting(true);
         await api.post(`accounts`, {
           ...accountInput,
           initialValue: data.initialValue
             ? Number(currencyToValue(data.initialValue))
             : 0,
         });
+        setSucessMessage('Conta criada com sucesso!');
       }
 
       await getUserAccounts();
@@ -140,11 +160,14 @@ export default function Account(props: ProfileProps) {
 
   const handleDelete = useCallback(async () => {
     if (user && accountState) {
+      setDeleteConfirmationVisible(false);
+      setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
         await api.delete(`accounts/${accountState.id}/${user.id}`);
         await getUserAccounts();
-        navigation.navigate('Home');
+        setSucessMessage('Conta excluída com sucesso!');
+        setEditSucessfully(true);
       } catch (error: any) {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);
@@ -238,7 +261,7 @@ export default function Account(props: ProfileProps) {
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}
             />
-            {accountState && (
+            {accountState && canDelete() && (
               <S.DeleteButton
                 onPress={() => setDeleteConfirmationVisible(true)}>
                 <IonIcons
@@ -255,7 +278,7 @@ export default function Account(props: ProfileProps) {
           type="loading"
           visible={isSubmitting}
           transparent
-          title={accountState ? 'Atualizando...' : 'Criando...'}
+          title={loadingMessage}
           animationType="slide"
         />
         <ModalComponent
@@ -272,13 +295,10 @@ export default function Account(props: ProfileProps) {
           type="success"
           visible={editSucessfully}
           transparent
-          title={
-            accountState
-              ? 'Conta atualizada com sucesso!'
-              : 'Conta criada com sucesso!'
-          }
+          title={sucessMessage}
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+          onSucessOkButton={handleOkSucess}
         />
         <ModalComponent
           type="confirmation"

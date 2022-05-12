@@ -2,6 +2,7 @@ export interface CreateExpanseOnAccount {
   userId: string;
   expanseId: string;
   accountId: string;
+  name: string;
   value: number;
   month: Date;
   recurrence: string;

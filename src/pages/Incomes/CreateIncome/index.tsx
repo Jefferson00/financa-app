@@ -117,13 +117,21 @@ export default function CreateIncome(props: IncomeProps) {
     TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
+  const handleOkSucess = () => {
+    setEditSucessfully(false);
+    setTimeout(() => navigation.navigate('Incomes'), 300);
+  };
+
   const handleSubmitAccount = async (data: FormData) => {
     setIsSubmitting(true);
+    console.log(data);
     const incomeInput = {
       name: data.name,
       userId: user?.id,
       value: Number(currencyToValue(data.value)),
-      category: data.category,
+      category:
+        IncomeCategories.find(i => i.id === Number(data.category))?.name ||
+        data.category,
       iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
       receiptDate: startDate,
       startDate,
@@ -329,6 +337,7 @@ export default function CreateIncome(props: IncomeProps) {
           }
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+          onSucessOkButton={handleOkSucess}
         />
       </S.Container>
       <Menu />

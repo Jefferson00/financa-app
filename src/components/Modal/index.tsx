@@ -12,6 +12,7 @@ interface IModalProps extends ModalBaseProps {
   type: 'success' | 'error' | 'info' | 'confirmation' | 'loading';
   handleConfirm?: () => Promise<void>;
   handleCancel?: () => void;
+  onSucessOkButton?: () => void;
 }
 
 export default function ModalComponent({
@@ -21,6 +22,7 @@ export default function ModalComponent({
   type,
   handleCancel,
   handleConfirm,
+  onSucessOkButton,
   ...rest
 }: IModalProps) {
   const successColor = Colors.SUCCESS_LIGHTER;
@@ -48,11 +50,21 @@ export default function ModalComponent({
             {title && <S.Title>{title}</S.Title>}
             {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
 
-            {(type === 'error' || type === 'success') && handleCancel && (
+            {type === 'error' && handleCancel && (
               <S.OkButton>
                 <S.ButtonText
                   color={primaryColor}
                   onPress={() => handleCancel()}>
+                  OK
+                </S.ButtonText>
+              </S.OkButton>
+            )}
+
+            {type === 'success' && onSucessOkButton && (
+              <S.OkButton>
+                <S.ButtonText
+                  color={primaryColor}
+                  onPress={() => onSucessOkButton()}>
                   OK
                 </S.ButtonText>
               </S.OkButton>
