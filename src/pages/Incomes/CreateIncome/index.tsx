@@ -55,7 +55,7 @@ const schema = yup.object({
 export default function CreateIncome(props: IncomeProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserIncomes } = useAccount();
+  const { accounts, getUserIncomes, handleClearCache } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const colors = getCreateIncomesColors(theme);
@@ -147,6 +147,7 @@ export default function CreateIncome(props: IncomeProps) {
         await api.post(`incomes`, incomeInput);
       }
 
+      handleClearCache();
       await getUserIncomes();
       setEditSucessfully(true);
     } catch (error: any) {

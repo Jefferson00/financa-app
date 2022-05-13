@@ -17,6 +17,7 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useAccount } from '../../hooks/AccountContext';
 import { Alert } from 'react-native';
+import { useDate } from '../../hooks/DateContext';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
@@ -24,6 +25,7 @@ export default function Menu() {
   const routeName = routes.name;
   const { hasAccount } = useAccount();
   const { theme } = useTheme();
+  const { setCurrentMonth } = useDate();
   const iconColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
 
@@ -117,7 +119,9 @@ export default function Menu() {
           isActive={routeName === 'Home'}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
           onPressIn={() => (buttonHomeAnimate.value = withTiming(1))}
-          onPressOut={() => handleClickButton(buttonHomeAnimate, 'Home')}>
+          onPressOut={() => {
+            setCurrentMonth(), handleClickButton(buttonHomeAnimate, 'Home');
+          }}>
           <S.AnimatedView style={buttonHomeAnimated}>
             <Icon name="home" size={RFPercentage(5.2)} color={iconColor} />
           </S.AnimatedView>

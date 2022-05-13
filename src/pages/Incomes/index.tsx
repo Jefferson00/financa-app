@@ -47,6 +47,8 @@ export default function Incomes() {
     handleUpdateAccountBalance,
     getUserIncomesOnAccount,
     getUserIncomes,
+    handleClearCache,
+    handleSelectAccount,
   } = useAccount();
   const { user } = useAuth();
   const { selectedDate } = useDate();
@@ -106,11 +108,10 @@ export default function Incomes() {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
-      const findIncome = incomes.find(
+      const findIncome = incomes.filter(
         i => i.id === income.id || i.id === income?.incomeId,
       );
-
-      if (!findIncome) {
+      if (findIncome.length === 0) {
         await handleToggleIncomeOnAccount(income);
         setIsSubmitting(false);
         return;
@@ -119,10 +120,12 @@ export default function Incomes() {
       try {
         if (income?.incomeId) {
           await api.delete(`incomes/${income.incomeId}/${user?.id}`);
+          handleClearCache();
           await getUserIncomes();
           return;
         }
         await api.delete(`incomes/${income.id}/${user?.id}`);
+        handleClearCache();
         await getUserIncomes();
       } catch (error: any) {
         if (error?.response?.data?.message)
@@ -132,19 +135,31 @@ export default function Incomes() {
         setIsSubmitting(false);
       }
     },
-    [user],
+    [user, incomes],
   );
 
   const handleToggleIncomeOnAccount = useCallback(
     async (income: any) => {
-      const accountLastBalance = accountSelected?.balances?.find(balance =>
-        isSameMonth(new Date(balance.month), selectedDate),
-      );
-
       if (user) {
         if (income.month) {
           try {
             await api.delete(`incomes/onAccount/${income.id}/${user.id}`);
+
+            const account = accounts.find(acc => acc.id === income.accountId);
+
+            const accountLastBalance = account?.balances?.find(balance => {
+              if (isSameMonth(new Date(balance.month), selectedDate)) {
+                return balance;
+              }
+            });
+
+            await handleUpdateAccountBalance(
+              accountLastBalance,
+              income.value,
+              account,
+              'Expanse',
+            );
+
             await getUserIncomesOnAccount();
             setConfirmUnreceivedVisible(false);
             return;
@@ -176,6 +191,12 @@ export default function Incomes() {
             await handleCreateIncomeOnAccount(input);
 
             const account = accounts.find(acc => acc.id === input.accountId);
+
+            const accountLastBalance = account?.balances?.find(balance => {
+              if (isSameMonth(new Date(balance.month), selectedDate)) {
+                return balance;
+              }
+            });
 
             await handleUpdateAccountBalance(
               accountLastBalance,

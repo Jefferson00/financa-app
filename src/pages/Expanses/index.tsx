@@ -119,14 +119,26 @@ export default function Expanses() {
 
   const handleToggleIncomeOnAccount = useCallback(
     async (income: any) => {
-      const accountLastBalance = accountSelected?.balances?.find(balance =>
-        isSameMonth(new Date(balance.month), selectedDate),
-      );
-
       if (user) {
         if (income.month) {
           try {
             await api.delete(`expanses/onAccount/${income.id}/${user.id}`);
+
+            const account = accounts.find(acc => acc.id === income.accountId);
+
+            const accountLastBalance = account?.balances?.find(balance => {
+              if (isSameMonth(new Date(balance.month), selectedDate)) {
+                return balance;
+              }
+            });
+
+            await handleUpdateAccountBalance(
+              accountLastBalance,
+              income.value,
+              account,
+              'Income',
+            );
+
             await getUserExpansesOnAccount();
             setConfirmUnreceivedVisible(false);
             return;
@@ -158,6 +170,12 @@ export default function Expanses() {
             await handleCreateExpanseOnAccount(input);
 
             const account = accounts.find(acc => acc.id === input.accountId);
+
+            const accountLastBalance = account?.balances?.find(balance => {
+              if (isSameMonth(new Date(balance.month), selectedDate)) {
+                return balance;
+              }
+            });
 
             await handleUpdateAccountBalance(
               accountLastBalance,

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState } from 'react';
 interface DateContextData {
   selectedDate: Date;
   changeMonth(order: 'PREV' | 'NEXT'): Promise<unknown>;
+  setCurrentMonth: () => void;
 }
 
 export const DateContext = createContext<DateContextData>(
@@ -28,8 +29,13 @@ export const DateProvider: React.FC = ({ children }) => {
     });
   }
 
+  const setCurrentMonth = () => {
+    setSelectedDate(new Date());
+  };
+
   return (
-    <DateContext.Provider value={{ selectedDate, changeMonth }}>
+    <DateContext.Provider
+      value={{ selectedDate, changeMonth, setCurrentMonth }}>
       {children}
     </DateContext.Provider>
   );

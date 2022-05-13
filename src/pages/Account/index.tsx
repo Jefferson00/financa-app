@@ -164,6 +164,11 @@ export default function Account(props: ProfileProps) {
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
+        await Promise.all(
+          accountState.balances.map(async (balance: any) => {
+            await api.delete(`accounts/${balance.id}`);
+          }),
+        );
         await api.delete(`accounts/${accountState.id}/${user.id}`);
         await getUserAccounts();
         setSucessMessage('Conta excluída com sucesso!');
