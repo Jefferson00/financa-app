@@ -19,7 +19,7 @@ import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 
 import { Nav } from '../../routes';
-import { Income, IncomeList } from '../../interfaces/Income';
+import { ExpanseList, Income, IncomeList } from '../../interfaces/Income';
 import {
   getCurrentExpanses,
   getCurrentIncomes,
@@ -72,6 +72,8 @@ export default function Expanses() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [editSucessfully, setEditSucessfully] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
@@ -100,11 +102,26 @@ export default function Expanses() {
     TEXT: '#fff',
   };
 
+  const handleOkSucess = () => {
+    setConfirmReceivedVisible(false);
+    setConfirmUnreceivedVisible(false);
+    setEditSucessfully(false);
+  };
+
   const handleRemove = useCallback(
-    async (income: IncomeList) => {
+    async (expanse: ExpanseList) => {
+      setIsDeleteModalVisible(false);
+      setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
+
       try {
-        await api.delete(`expanses/${income.id}/${user?.id}`);
+        if (expanse?.expanseId) {
+          await handleToggleExpanseOnAccount(expanse);
+          await api.delete(`expanses/${expanse.expanseId}/${user?.id}`);
+          await getUserExpanses();
+          return;
+        }
+        await api.delete(`expanses/${expanse.id}/${user?.id}`);
         await getUserExpanses();
       } catch (error: any) {
         if (error?.response?.data?.message)
@@ -117,14 +134,16 @@ export default function Expanses() {
     [user],
   );
 
-  const handleToggleIncomeOnAccount = useCallback(
-    async (income: any) => {
+  const handleToggleExpanseOnAccount = useCallback(
+    async (expanse: any) => {
       if (user) {
-        if (income.month) {
+        if (expanse.month) {
+          setLoadingMessage('Excluindo pagamento...');
+          setIsSubmitting(true);
           try {
-            await api.delete(`expanses/onAccount/${income.id}/${user.id}`);
+            await api.delete(`expanses/onAccount/${expanse.id}/${user.id}`);
 
-            const account = accounts.find(acc => acc.id === income.accountId);
+            const account = accounts.find(acc => acc.id === expanse.accountId);
 
             const accountLastBalance = account?.balances?.find(balance => {
               if (isSameMonth(new Date(balance.month), selectedDate)) {
@@ -134,7 +153,7 @@ export default function Expanses() {
 
             await handleUpdateAccountBalance(
               accountLastBalance,
-              income.value,
+              expanse.value,
               account,
               'Income',
             );
@@ -146,23 +165,26 @@ export default function Expanses() {
             if (error?.response?.data?.message)
               setErrorMessage(error?.response?.data?.message);
             setHasError(true);
+          } finally {
+            setIsSubmitting(false);
           }
         } else {
+          setLoadingMessage('Pagando...');
           setIsSubmitting(true);
           const input: CreateExpanseOnAccount = {
             userId: user.id,
-            accountId: income.receiptDefault || accountSelected?.id,
-            expanseId: income?.id,
+            accountId: expanse.receiptDefault || accountSelected?.id,
+            expanseId: expanse?.id,
             month: selectedDate,
-            value: income.value,
-            name: income.name,
-            recurrence: income.endDate
+            value: expanse.value,
+            name: expanse.name,
+            recurrence: expanse.endDate
               ? `${differenceInMonths(
                   selectedDate,
-                  new Date(income.startDate),
+                  new Date(expanse.startDate),
                 )}/${differenceInMonths(
                   selectedDate,
-                  new Date(income.endDate),
+                  new Date(expanse.endDate),
                 )}`
               : 'mensal',
           };
@@ -204,7 +226,7 @@ export default function Expanses() {
     ],
   );
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     const expansesInThisMonth = expanses.filter(exp =>
       exp.endDate
         ? (isBefore(selectedDate, new Date(exp.endDate)) ||
@@ -283,6 +305,10 @@ export default function Expanses() {
     setExpanseByDate(expansesOrderedByDay.sort((a, b) => a.day - b.day));
     setIsLoading(false);
   }, [expanses, expansesOnAccounts, selectedDate]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   useEffect(() => {
     if (currentExpanses && currentExpansesOnAccount) {
@@ -411,7 +437,10 @@ export default function Expanses() {
                     value={expanse.value}
                     received={!!expanse?.paymentDate}
                     mainColor={colors.primaryColor}
-                    handleRemove={() => handleRemove(expanse)}
+                    handleRemove={() => {
+                      setExpanseSelected(expanse);
+                      setIsDeleteModalVisible(true);
+                    }}
                     backgroundColor={colors.secondaryCardLoader}
                     onSwitchChange={() => {
                       setExpanseSelected(expanse);
@@ -445,10 +474,10 @@ export default function Expanses() {
         handleCancel={() => setConfirmReceivedVisible(false)}
         onRequestClose={() => setConfirmReceivedVisible(false)}
         transparent
-        title="Em qual conta a despesa será recebida?"
+        title="Em qual conta a despesa será paga?"
         animationType="slide"
         defaulAccount={expanseSelected?.receiptDefault}
-        handleConfirm={() => handleToggleIncomeOnAccount(expanseSelected)}
+        handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
         accounts={accounts}
       />
 
@@ -456,7 +485,7 @@ export default function Expanses() {
         type="loading"
         visible={isSubmitting}
         transparent
-        title={'Pagando...'}
+        title={loadingMessage}
         animationType="slide"
       />
       <ModalComponent
@@ -476,6 +505,18 @@ export default function Expanses() {
         title="Despesa paga com sucesso!"
         animationType="slide"
         handleCancel={() => setEditSucessfully(false)}
+        onSucessOkButton={handleOkSucess}
+      />
+
+      <ModalComponent
+        type="confirmation"
+        visible={isDeleteModalVisible}
+        handleCancel={() => setIsDeleteModalVisible(false)}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+        transparent
+        title="Tem certeza que deseja excluir essa despesa em definitivo?"
+        animationType="slide"
+        handleConfirm={() => handleRemove(expanseSelected)}
       />
 
       <ModalComponent
@@ -486,7 +527,7 @@ export default function Expanses() {
         transparent
         title="Tem certeza? Essa despesa será marcada como não paga."
         animationType="slide"
-        handleConfirm={() => handleToggleIncomeOnAccount(expanseSelected)}
+        handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
       />
 
       <Menu />

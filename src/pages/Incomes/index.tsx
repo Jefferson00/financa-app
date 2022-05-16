@@ -48,7 +48,6 @@ export default function Incomes() {
     getUserIncomesOnAccount,
     getUserIncomes,
     handleClearCache,
-    handleSelectAccount,
   } = useAccount();
   const { user } = useAuth();
   const { selectedDate } = useDate();
@@ -108,7 +107,7 @@ export default function Incomes() {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
-      const findIncome = incomes.filter(
+      /*  const findIncome = incomes.filter(
         i => i.id === income.id || i.id === income?.incomeId,
       );
       if (findIncome.length === 0) {
@@ -116,9 +115,10 @@ export default function Incomes() {
         setIsSubmitting(false);
         return;
       }
-
+ */
       try {
         if (income?.incomeId) {
+          await handleToggleIncomeOnAccount(income);
           await api.delete(`incomes/${income.incomeId}/${user?.id}`);
           handleClearCache();
           await getUserIncomes();
@@ -142,6 +142,8 @@ export default function Incomes() {
     async (income: any) => {
       if (user) {
         if (income.month) {
+          setLoadingMessage('Excluindo recebimento...');
+          setIsSubmitting(true);
           try {
             await api.delete(`incomes/onAccount/${income.id}/${user.id}`);
 
@@ -167,6 +169,8 @@ export default function Incomes() {
             if (error?.response?.data?.message)
               setErrorMessage(error?.response?.data?.message);
             setHasError(true);
+          } finally {
+            setIsSubmitting(false);
           }
         } else {
           setLoadingMessage('Recebendo...');

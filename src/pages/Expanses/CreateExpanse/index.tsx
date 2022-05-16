@@ -26,6 +26,8 @@ import { useDate } from '../../../hooks/DateContext';
 import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
+import { ExpanseCategories } from '../../../utils/categories';
+import { getCreateExpansesColors } from '../../../utils/colors/expanses';
 
 interface ExpanseProps {
   route?: {
@@ -70,6 +72,9 @@ export default function CreateExpanse(props: ExpanseProps) {
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
+
+  const colors = getCreateExpansesColors(theme);
+
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
       name: expanseState?.name || '',
@@ -77,24 +82,11 @@ export default function CreateExpanse(props: ExpanseProps) {
         ? getCurrencyFormat(expanseState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: expanseState?.receiptDefault || '',
-      category: expanseState?.category || '',
+      receiptDefault: expanseState?.receiptDefault || accounts[0].id,
+      category: expanseState?.category || ExpanseCategories[0].name,
     },
     resolver: yupResolver(schema),
   });
-
-  const titleColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.EXPANSE_SOFT_DARKER : Colors.EXPANSE_SOFT_LIGTHER;
-  const deleteButtonColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
 
   const SaveIcon = () => {
     return (
@@ -106,43 +98,12 @@ export default function CreateExpanse(props: ExpanseProps) {
     );
   };
 
-  const incomeCategories = [
-    {
-      id: 1,
-      name: 'Salário',
-    },
-    {
-      id: 2,
-      name: 'Benefício',
-    },
-    {
-      id: 3,
-      name: 'Transferência',
-    },
-    {
-      id: 4,
-      name: 'Outro',
-    },
-  ];
-
   type FormData = {
     name: string;
     value: string;
     status: boolean;
     receiptDefault?: string;
     category: string;
-  };
-
-  const saveButtonColors = {
-    PRIMARY_BACKGROUND:
-      theme === 'dark'
-        ? Colors.EXPANSE_PRIMARY_DARKER
-        : Colors.EXPANSE_PRIMARY_LIGTHER,
-    SECOND_BACKGROUND:
-      theme === 'dark'
-        ? Colors.EXPANSE_SECONDARY_DARKER
-        : Colors.EXPANSE_SECONDARY_LIGTHER,
-    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
   const handleOkSucess = () => {
@@ -156,8 +117,9 @@ export default function CreateExpanse(props: ExpanseProps) {
       name: data.name,
       userId: user?.id,
       value: Number(currencyToValue(data.value)),
-      category: incomeCategories.find(cat => cat.id === Number(data.category))
-        ?.name,
+      category:
+        ExpanseCategories.find(exp => exp.id === Number(data.category))?.name ||
+        data.category,
       iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
       receiptDate: startDate,
       startDate,
@@ -170,7 +132,7 @@ export default function CreateExpanse(props: ExpanseProps) {
       if (expanseState) {
         await api.put(`expanses/${expanseState.id}`, expanseInput);
       } else {
-        const res = await api.post(`expanses`, expanseInput);
+        await api.post(`expanses`, expanseInput);
       }
 
       await getUserExpanses();
@@ -195,14 +157,14 @@ export default function CreateExpanse(props: ExpanseProps) {
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={titleColor}>
+          <S.Title color={colors.titleColor}>
             {expanseState ? `Editar Despesa` : `Nova Despesa`}
           </S.Title>
 
           <ControlledInput
             label="Nome"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             autoCapitalize="sentences"
             name="name"
@@ -212,8 +174,8 @@ export default function CreateExpanse(props: ExpanseProps) {
 
           <ControlledInput
             label="Valor"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             keyboardType="number-pad"
             name="value"
@@ -222,9 +184,10 @@ export default function CreateExpanse(props: ExpanseProps) {
             value={expanseState?.value ? String(expanseState.value) : '0'}
           />
 
-          <S.Label color={textColor}>Recorrência</S.Label>
+          <S.Label color={colors.textColor}>Recorrência</S.Label>
           <S.Row>
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Mensal')}
               checked={recurrence === 'Mensal'}>
               <S.Option>Mensal</S.Option>
@@ -232,6 +195,7 @@ export default function CreateExpanse(props: ExpanseProps) {
             </S.SelectOption>
 
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Parcelada')}
               checked={recurrence === 'Parcelada'}
               style={{ marginHorizontal: RFPercentage(2) }}>
@@ -240,8 +204,8 @@ export default function CreateExpanse(props: ExpanseProps) {
             </S.SelectOption>
 
             <Input
-              background={inputBackground}
-              textColor={textColor}
+              background={colors.inputBackground}
+              textColor={colors.textColor}
               value={String(iteration)}
               keyboardType="number-pad"
               maxLength={2}
@@ -254,8 +218,10 @@ export default function CreateExpanse(props: ExpanseProps) {
 
           <S.Row>
             <S.Col>
-              <S.Label color={textColor}>Data de recebimento</S.Label>
-              <S.SelectOption onPress={() => setSelectStartDateModal(true)}>
+              <S.Label color={colors.textColor}>Data de recebimento</S.Label>
+              <S.SelectOption
+                backgroundColor={colors.inputBackground}
+                onPress={() => setSelectStartDateModal(true)}>
                 <Icon name="calendar" size={RFPercentage(4)} />
                 <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
@@ -265,17 +231,19 @@ export default function CreateExpanse(props: ExpanseProps) {
 
             <S.SwitchContainer>
               <S.Label
-                color={textColor}
+                color={colors.textColor}
                 style={{ width: '100%', textAlign: 'right' }}>
-                Recebido
+                Pago
               </S.Label>
               <ControlledInput
                 type="switch"
                 background="transparent"
-                textColor={textColor}
+                textColor={colors.textColor}
                 name="status"
                 control={control}
                 value={'false'}
+                thumbColor={colors.thumbColor}
+                trackColor={colors.trackColor}
               />
             </S.SwitchContainer>
           </S.Row>
@@ -283,8 +251,8 @@ export default function CreateExpanse(props: ExpanseProps) {
           <ControlledInput
             label="Conta padrão de recebimento"
             type="select"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="receiptDefault"
             control={control}
             value={
@@ -296,18 +264,18 @@ export default function CreateExpanse(props: ExpanseProps) {
           <ControlledInput
             label="Categoria"
             type="select"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="category"
             control={control}
             value={expanseState?.category ? expanseState.category : ''}
-            selectItems={incomeCategories}
+            selectItems={ExpanseCategories}
           />
 
           <S.ButtonContainer>
             <Button
               title="Salvar"
-              colors={saveButtonColors}
+              colors={colors.saveButtonColors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}

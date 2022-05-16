@@ -26,3 +26,20 @@ export interface IncomeList {
   month?: string;
   income: Income;
 }
+
+export interface ExpanseList {
+  id: string;
+  category?: string;
+  expanseId?: string;
+  description?: string;
+  name?: string;
+  receiptDate?: string;
+  receiptDefault?: string;
+  startDate?: string;
+  endDate?: string;
+  value: number;
+  paymentDate?: string;
+  recurence?: string;
+  month?: string;
+  income: Income;
+}

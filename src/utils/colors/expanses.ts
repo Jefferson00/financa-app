@@ -45,3 +45,58 @@ export const getExpansesColors = (theme: ColorSchemeName) => {
     alertColor,
   };
 };
+
+export const getCreateExpansesColors = (theme: ColorSchemeName) => {
+  const titleColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
+  const inputBackground =
+    theme === 'dark' ? Colors.EXPANSE_SOFT_DARKER : Colors.EXPANSE_SOFT_LIGTHER;
+  const deleteButtonColor =
+    theme === 'dark'
+      ? Colors.EXPANSE_PRIMARY_DARKER
+      : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const trackColor = {
+    true:
+      theme === 'dark'
+        ? Colors.EXPANSE_SECONDARY_DARKER
+        : Colors.EXPANSE_SECONDARY_LIGTHER,
+    false: theme === 'dark' ? '#737373' : '#d2d2d2',
+  };
+
+  const thumbColor = {
+    true:
+      theme === 'dark'
+        ? Colors.EXPANSE_PRIMARY_DARKER
+        : Colors.EXPANSE_PRIMARY_LIGTHER,
+    false:
+      theme === 'dark'
+        ? Colors.EXPANSE_SECONDARY_DARKER
+        : Colors.EXPANSE_SECONDARY_LIGTHER,
+  };
+
+  const saveButtonColors = {
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.EXPANSE_PRIMARY_DARKER
+        : Colors.EXPANSE_PRIMARY_LIGTHER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.EXPANSE_SECONDARY_DARKER
+        : Colors.EXPANSE_SECONDARY_LIGTHER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
+  };
+
+  return {
+    inputBackground,
+    deleteButtonColor,
+    titleColor,
+    textColor,
+    trackColor,
+    thumbColor,
+    saveButtonColors,
+  };
+};
