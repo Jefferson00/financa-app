@@ -25,7 +25,7 @@ import {
   getCurrentIncomes,
   getEstimateIncomes,
 } from '../../utils/getCurrentBalance';
-import { getMonthName } from '../../utils/dateFormats';
+import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
 import {
   CreateIncomeOnAccount,
   IncomeOnAccount,
@@ -427,6 +427,16 @@ export default function Incomes() {
                     title={income?.name || income?.income?.name}
                     value={income.value}
                     received={!!income?.paymentDate}
+                    receivedMessage={
+                      income.paymentDate
+                        ? `Recebido em ${getDayOfTheMounth(
+                            new Date(income.paymentDate),
+                          )} - ${
+                            accounts.find(acc => acc.id === income.accountId)
+                              ?.name
+                          }`
+                        : 'Receber'
+                    }
                     mainColor={colors.primaryColor}
                     handleRemove={() => {
                       setIncomeSelected(income);

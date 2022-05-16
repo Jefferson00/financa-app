@@ -51,6 +51,12 @@ export const TitleText = styled.Text<TextColor>`
   font-size: ${RFPercentage(2.3)}px;
 `;
 
+export const SubtitleText = styled.Text<TextColor>`
+  color: ${props => props.color};
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(1.8)}px;
+`;
+
 export const ValueText = styled.Text<TextColor>`
   color: ${props => props.color};
   font-family: 'Poppins-SemiBold';

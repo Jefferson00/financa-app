@@ -16,6 +16,7 @@ interface ItemCardProps {
   actionBarColor?: string;
   switchValue?: boolean;
   received?: boolean;
+  receivedMessage?: string;
   onSwitchChange?: () => void;
   value: number;
   handleRemove: () => void;
@@ -30,6 +31,7 @@ export default function ItemCard({
   switchValue,
   backgroundColor,
   received,
+  receivedMessage,
   onSwitchChange,
   handleRemove,
   ...rest
@@ -62,9 +64,9 @@ export default function ItemCard({
         </S.Main>
 
         <S.ActionContainer backgroundColor="#FF981E">
-          <S.TitleText color={textColor ? textColor : '#000'}>
-            {received ? 'Recebido' : 'Receber'}
-          </S.TitleText>
+          <S.SubtitleText color={textColor ? textColor : '#000'}>
+            {received ? receivedMessage : 'Receber'}
+          </S.SubtitleText>
 
           <Switch
             trackColor={{ true: textColor, false: textColor }}

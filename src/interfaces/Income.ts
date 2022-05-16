@@ -17,6 +17,7 @@ export interface IncomeList {
   description?: string;
   name?: string;
   receiptDate?: string;
+  accountId?: string;
   receiptDefault?: string;
   startDate?: string;
   endDate?: string;
@@ -35,6 +36,7 @@ export interface ExpanseList {
   name?: string;
   receiptDate?: string;
   receiptDefault?: string;
+  accountId?: string;
   startDate?: string;
   endDate?: string;
   value: number;

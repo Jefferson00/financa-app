@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
@@ -18,6 +18,8 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { Nav } from '../../routes';
 import { getHomeColors } from '../../utils/colors/home';
+import AsyncStorage from '@react-native-community/async-storage';
+import { Easing } from 'react-native-reanimated';
 
 export default function Home() {
   const navigation = useNavigation<Nav>();
@@ -34,6 +36,17 @@ export default function Home() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   const colors = getHomeColors(theme);
+
+  const handleSetActiveSlide = async (slide: number) => {
+    await AsyncStorage.setItem(`@FinancaAppBeta:ActiveSlide`, String(slide));
+    setActiveSlide(slide);
+  };
+
+  useEffect(() => {
+    AsyncStorage.getItem(`@FinancaAppBeta:ActiveSlide`).then(slide => {
+      setActiveSlide(Number(slide));
+    });
+  }, []);
 
   return (
     <>
@@ -60,10 +73,12 @@ export default function Home() {
             <>
               <Carousel
                 data={accountCards}
-                onSnapToItem={index => setActiveSlide(index)}
+                onSnapToItem={index => handleSetActiveSlide(index)}
                 sliderWidth={width}
                 itemWidth={width}
                 itemHeight={149}
+                firstItem={activeSlide}
+                enableSnap
                 renderItem={({ item }) => (
                   <Card
                     id={String(item.id)}

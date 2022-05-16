@@ -25,7 +25,7 @@ import {
   getCurrentIncomes,
   getEstimateIncomes,
 } from '../../utils/getCurrentBalance';
-import { getMonthName } from '../../utils/dateFormats';
+import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
 import {
   CreateIncomeOnAccount,
   IncomeOnAccount,
@@ -436,6 +436,16 @@ export default function Expanses() {
                     title={expanse?.name || ''}
                     value={expanse.value}
                     received={!!expanse?.paymentDate}
+                    receivedMessage={
+                      expanse.paymentDate
+                        ? `Recebido em ${getDayOfTheMounth(
+                            new Date(expanse.paymentDate),
+                          )} - ${
+                            accounts.find(acc => acc.id === expanse.accountId)
+                              ?.name
+                          }`
+                        : 'Receber'
+                    }
                     mainColor={colors.primaryColor}
                     handleRemove={() => {
                       setExpanseSelected(expanse);
