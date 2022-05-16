@@ -54,7 +54,7 @@ export const EstimateIndicator = styled.View<EstimatesProps>`
   height: ${props =>
     props.indicatorVelue ? `${props.indicatorVelue}px` : `4px`};
   width: 100%;
-  max-height: ${RFPercentage(10)}px;
+  max-height: ${RFPercentage(100)}px;
   border-radius: 10px;
   background-color: ${props => props.indicatorColor};
 `;
