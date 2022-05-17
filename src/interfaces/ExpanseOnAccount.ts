@@ -9,10 +9,12 @@ export interface CreateExpanseOnAccount {
 }
 
 export interface ExpanseOnAccount {
+  id: string;
   value: number;
   accountId: string;
   paymentDate: string;
   recurence?: string;
   expanseId: string;
   month: string;
+  name: string;
 }

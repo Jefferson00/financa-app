@@ -9,6 +9,8 @@ export interface CreateIncomeOnAccount {
 }
 
 export interface IncomeOnAccount {
+  id: string;
+  name: string;
   value: number;
   accountId: string;
   paymentDate: string;
