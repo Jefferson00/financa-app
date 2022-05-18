@@ -1,12 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
 import { getDayOfTheMounth } from '../../../../utils/dateFormats';
 import { Colors } from '../../../../styles/global';
 import * as S from './styles';
 import { useTheme } from '../../../../hooks/ThemeContext';
-import { useAccount } from '../../../../hooks/AccountContext';
-import { isSameMonth } from 'date-fns';
+import api from '../../../../services/api';
+import { useAuth } from '../../../../hooks/AuthContext';
+import ContentLoader, { Rect } from 'react-content-loader/native';
+import { Dimensions } from 'react-native';
+import { getHomeColors } from '../../../../utils/colors/home';
 
 interface ITransactions {
   id: string;
@@ -18,11 +21,15 @@ interface ITransactions {
 }
 
 const LastTransactions = () => {
+  const width = Dimensions.get('screen').width;
   const { theme } = useTheme();
-  const { incomesOnAccounts, expansesOnAccounts } = useAccount();
+  const { user } = useAuth();
   const [lastTransactionsState, setLastTransactionsState] = useState<
     ITransactions[]
   >([]);
+  const [loadingData, setLoadingData] = useState(true);
+
+  const colors = getHomeColors(theme);
 
   const iconColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
@@ -39,68 +46,34 @@ const LastTransactions = () => {
       ? Colors.INCOME_PRIMARY_DARKER
       : Colors.INCOME_PRIMARY_LIGTHER;
 
+  const getLastTransactions = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await api.get(`users/lastTransactions/${user?.id}`);
+        console.log(data);
+        setLastTransactionsState(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [user]);
+
   useEffect(() => {
-    const incomesInThisMonth = incomesOnAccounts.filter(i =>
-      isSameMonth(new Date(i.month), new Date()),
-    );
-    const expansesInThisMonth = expansesOnAccounts.filter(i =>
-      isSameMonth(new Date(i.month), new Date()),
-    );
-
-    const allTransactions = [...incomesInThisMonth, ...expansesInThisMonth];
-
-    const lastTransactions = allTransactions.sort(
-      (a, b) => new Date(b.paymentDate) - new Date(a.paymentDate),
-    );
-
-    const transactions: ITransactions[] = [];
-
-    lastTransactions.slice(0, 3).map(transaction => {
-      transactions.push({
-        id: transaction.id,
-        category: 'any',
-        paymentDate: new Date(transaction.paymentDate),
-        title: transaction.name,
-        type: transaction?.incomeId ? 'Income' : 'Expanse',
-        value: transaction.value,
-      });
-    });
-
-    setLastTransactionsState(transactions);
-  }, [incomesOnAccounts, expansesOnAccounts]);
-
-  /*  const lastTransactions = [
-    {
-      id: '1',
-      title: 'Compras do mês',
-      value: 58590,
-      created_at: new Date(),
-      category: 'others',
-      type: 'expanse',
-    },
-    {
-      id: '2',
-      title: 'Beneficio de não sei o que',
-      value: 200000,
-      created_at: new Date(),
-      category: 'others',
-      type: 'income',
-    },
-    {
-      id: '3',
-      title: 'Minha pika',
-      value: 100000,
-      created_at: new Date(),
-      category: 'others',
-      type: 'income',
-    },
-  ]; */
-
-  // const lastTransactions: any[] = [];
+    getLastTransactions().finally(() => setLoadingData(false));
+  }, [getLastTransactions]);
 
   return (
     <>
-      {lastTransactionsState.length === 0 ? (
+      {loadingData ? (
+        <ContentLoader
+          viewBox={`0 0 ${width} 80`}
+          height={80}
+          width={'100%'}
+          backgroundColor={colors.secondaryColor}
+          foregroundColor="rgb(255, 255, 255)">
+          <Rect x="0" y="0" rx="20" ry="20" width={width} height="80" />
+        </ContentLoader>
+      ) : lastTransactionsState.length === 0 ? (
         <S.LastTransactionsView backgroundColor={backgroundColor}>
           <S.TransactionText color={textColor}>
             Nenhuma transação por enquanto
@@ -128,7 +101,7 @@ const LastTransactions = () => {
                 {getCurrencyFormat(transaction.value)}
               </S.TransactionValue>
               <S.TransactionDate color={textColor}>
-                {getDayOfTheMounth(transaction.paymentDate)}
+                {getDayOfTheMounth(new Date(transaction.paymentDate))}
               </S.TransactionDate>
             </S.DetailsContainer>
           </S.LastTransactionsView>

@@ -4,7 +4,6 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
-import { RectButton } from 'react-native-gesture-handler';
 
 interface ItemCardProps {
   icon: React.FC;
@@ -17,6 +16,7 @@ interface ItemCardProps {
   switchValue?: boolean;
   received?: boolean;
   receivedMessage?: string;
+  onRedirect?: () => void;
   onSwitchChange?: () => void;
   value: number;
   handleRemove: () => void;
@@ -34,6 +34,7 @@ export default function ItemCard({
   receivedMessage,
   onSwitchChange,
   handleRemove,
+  onRedirect,
   ...rest
 }: ItemCardProps) {
   return (
@@ -48,7 +49,7 @@ export default function ItemCard({
         </Animated.View>
       )}>
       <S.Container backgroundColor={backgroundColor || '#fff'}>
-        <S.Main>
+        <S.Main onPress={onRedirect}>
           <S.TitleContainer>
             <Icon />
             <S.TitleText color={textColor ? textColor : '#000'}>

@@ -224,18 +224,7 @@ export default function Home() {
             <S.BalanceText color={colors.primaryColor}>
               Últimas Transações
             </S.BalanceText>
-            {isLoadingData ? (
-              <ContentLoader
-                viewBox={`0 0 ${width} 80`}
-                height={80}
-                width={'100%'}
-                backgroundColor={colors.secondaryColor}
-                foregroundColor="rgb(255, 255, 255)">
-                <Rect x="0" y="0" rx="20" ry="20" width={width} height="80" />
-              </ContentLoader>
-            ) : (
-              <LastTransactions />
-            )}
+            <LastTransactions />
           </S.LastTransactions>
         </S.Container>
       </ScrollView>

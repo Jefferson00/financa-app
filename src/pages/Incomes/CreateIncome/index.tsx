@@ -139,12 +139,15 @@ export default function CreateIncome(props: IncomeProps) {
         recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
       receiptDefault: data.receiptDefault,
     };
-
+    console.log(incomeState);
     try {
       if (incomeState) {
         await api.put(`incomes/${incomeState.id}`, incomeInput);
+        // atualizar o nome em incomesAccount
       } else {
         await api.post(`incomes`, incomeInput);
+
+        // se tiver marcado como recebido, criar incomeAccount
       }
 
       handleClearCache();

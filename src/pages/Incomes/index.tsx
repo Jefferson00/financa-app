@@ -300,9 +300,16 @@ export default function Incomes() {
       );
       item.incomes = [
         ...item.incomes,
-        ...incomesOnAccountInThisMonth.filter(
-          income => new Date(income.month).getDate() === item.day,
-        ),
+        ...incomesOnAccountInThisMonth.filter(income => {
+          if (new Date(income.month).getDate() === item.day) {
+            Object.assign(income, {
+              income: incomesInThisMonth.filter(
+                i => i.id === income.incomeId,
+              )[0],
+            });
+            return income;
+          }
+        }),
       ];
     });
 
@@ -443,6 +450,11 @@ export default function Incomes() {
                       setIsDeleteModalVisible(true);
                     }}
                     backgroundColor={colors.secondaryCardLoader}
+                    onRedirect={() => {
+                      navigation.navigate('CreateIncome', {
+                        income: income.income,
+                      });
+                    }}
                     onSwitchChange={() => {
                       setIncomeSelected(income);
                       if (income?.month) {

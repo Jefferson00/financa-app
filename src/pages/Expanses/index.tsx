@@ -452,6 +452,11 @@ export default function Expanses() {
                       setIsDeleteModalVisible(true);
                     }}
                     backgroundColor={colors.secondaryCardLoader}
+                    onRedirect={() =>
+                      navigation.navigate('CreateExpanse', {
+                        expanse,
+                      })
+                    }
                     onSwitchChange={() => {
                       setExpanseSelected(expanse);
                       if (expanse?.month) {

@@ -25,7 +25,7 @@ export const Container = styled(Animated.View)<MainContainer>`
   margin-top: ${RFPercentage(3)}px;
 `;
 
-export const Main = styled.View`
+export const Main = styled.TouchableOpacity`
   width: 100%;
   flex-direction: row;
   justify-content: space-between;
