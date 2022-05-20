@@ -27,6 +27,7 @@ import { isAfter, isBefore, isSameMonth, lastDayOfMonth } from 'date-fns';
 import { getPreviousMonth } from '../utils/dateFormats';
 import { AccountBalance } from '../interfaces/AccountBalance';
 import AsyncStorage from '@react-native-community/async-storage';
+import { CreditCards } from '../interfaces/CreditCards';
 
 interface AccountContextData {
   getUserAccounts: () => Promise<void>;
@@ -60,6 +61,7 @@ interface AccountContextData {
   totalEstimateBalance: number;
   totalCurrentBalance: number;
   accountSelected: Account | undefined;
+  creditCards: CreditCards[];
 }
 
 export const AccountContext = createContext<AccountContextData>(
@@ -82,6 +84,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   const [totalEstimateBalance, setTotalEstimateBalance] = useState(0);
   const [totalCurrentBalance, setTotalCurrentBalance] = useState(0);
   const [accountCards, setAccountCards] = useState([defaultAccountCard]);
+  const [creditCards, setCreditCards] = useState<CreditCards[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expanses, setExpanses] = useState<Expanse[]>([]);
   const [cacheCleared, setCacheCleared] = useState(false);
@@ -115,6 +118,17 @@ export const AccountProvider: React.FC = ({ children }) => {
           }),
         );
         setAccounts(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [user]);
+
+  const getUserCreditCards = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await api.get(`creditCards/user/${user.id}`);
+        setCreditCards(data);
       } catch (error) {
         console.log(error);
       }
@@ -481,7 +495,9 @@ export const AccountProvider: React.FC = ({ children }) => {
       getUserIncomes().finally(() => {
         getUserIncomesOnAccount().finally(() =>
           getUserExpanses().finally(() =>
-            getUserExpansesOnAccount().finally(() => setIsLoadingData(false)),
+            getUserExpansesOnAccount().finally(() =>
+              getUserCreditCards().finally(() => setIsLoadingData(false)),
+            ),
           ),
         );
       }),
@@ -496,6 +512,7 @@ export const AccountProvider: React.FC = ({ children }) => {
     getUserIncomesOnAccount,
     getUserExpansesOnAccount,
     getUserExpanses,
+    getUserCreditCards,
   ]);
 
   useEffect(() => {
@@ -535,6 +552,7 @@ export const AccountProvider: React.FC = ({ children }) => {
         totalEstimateBalance,
         accountSelected,
         hasAccount,
+        creditCards,
       }}>
       {children}
     </AccountContext.Provider>

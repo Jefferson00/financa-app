@@ -11,6 +11,7 @@ import Incomes from '../pages/Incomes';
 import CreateIncome from '../pages/Incomes/CreateIncome';
 import Expanses from '../pages/Expanses';
 import CreateExpanse from '../pages/Expanses/CreateExpanse';
+import CreateCreditCard from '../pages/Expanses/CreateCreditCard';
 
 const App = createSharedElementStackNavigator();
 
@@ -32,6 +33,7 @@ export default function AuthRoutes() {
       <App.Screen name="Incomes" component={Incomes} />
       <App.Screen name="CreateIncome" component={CreateIncome} />
       <App.Screen name="CreateExpanse" component={CreateExpanse} />
+      <App.Screen name="CreateCreditCard" component={CreateCreditCard} />
       <App.Screen
         name="Profile"
         component={Profile}

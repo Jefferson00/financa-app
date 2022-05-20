@@ -33,6 +33,18 @@ export const getExpansesColors = (theme: ColorSchemeName) => {
       ? Colors.EXPANSE_PRIMARY_DARKER
       : Colors.EXPANSE_PRIMARY_LIGTHER;
 
+  const creditCardButtonColors = {
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_PRIMARY_DARKER
+        : Colors.BLUE_PRIMARY_LIGHTER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_SECONDARY_DARKER
+        : Colors.BLUE_SECONDARY_LIGHTER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
+  };
+
   return {
     primaryColor,
     secondaryColor,
@@ -43,6 +55,7 @@ export const getExpansesColors = (theme: ColorSchemeName) => {
     dateTitleColor,
     textColor,
     alertColor,
+    creditCardButtonColors,
   };
 };
 

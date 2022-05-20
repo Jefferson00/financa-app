@@ -78,6 +78,7 @@ export default function ControlledInput({
                       key={item.id}
                       label={item.name}
                       value={item.id}
+                      color={item?.color}
                     />
                   ))}
               </S.InputSelect>

@@ -100,7 +100,7 @@ export default function EditProfile({ id }: ProfileProps) {
     } catch (error: any) {
       if (error?.response?.data?.message)
         setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
+      console.log(error);
       setHasError(true);
     } finally {
       setIsSubmitting(false);

@@ -35,9 +35,10 @@ export const IncomesTitle = styled.View`
 
 export const TitleItem = styled.TouchableOpacity<TitleItemProps>`
   flex-direction: row;
-  align-items: flex-end;
+`;
 
-  opacity: ${props => (props.selected ? 1 : 0.5)};
+export const TitleItemView = styled.TouchableOpacity<TitleItemProps>`
+  flex-direction: row;
 `;
 
 export const IncomesTitleText = styled.Text<TextProps>`

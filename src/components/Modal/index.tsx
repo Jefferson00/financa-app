@@ -1,5 +1,10 @@
 import React from 'react';
-import { ModalBaseProps, Modal, ActivityIndicator } from 'react-native';
+import {
+  ModalBaseProps,
+  Modal,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import * as S from './styles';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../styles/global';
@@ -9,7 +14,10 @@ interface IModalProps extends ModalBaseProps {
   title?: string;
   subtitle?: string;
   icon?: React.FC;
-  type: 'success' | 'error' | 'info' | 'confirmation' | 'loading';
+  type: 'success' | 'error' | 'info' | 'confirmation' | 'loading' | 'select';
+  selectTitle?: string;
+  selectList?: any[];
+  renderItem?: (item: any) => Element;
   handleConfirm?: () => Promise<void>;
   handleCancel?: () => void;
   onSucessOkButton?: () => void;
@@ -20,6 +28,9 @@ export default function ModalComponent({
   subtitle,
   icon: Icon,
   type,
+  selectTitle,
+  selectList,
+  renderItem,
   handleCancel,
   handleConfirm,
   onSucessOkButton,
@@ -35,57 +46,77 @@ export default function ModalComponent({
   return (
     <S.Container visible={rest.visible || false}>
       <Modal {...rest}>
-        <S.Wrapper>
-          <S.Content>
-            {type === 'loading' && (
-              <ActivityIndicator size="large" color={loadingColor} />
-            )}
-            {(type === 'error' || type === 'confirmation') && (
-              <Icons name="alert-circle" size={36} color={errorColor} />
-            )}
-            {type === 'success' && (
-              <Icons name="checkmark-circle" size={36} color={successColor} />
-            )}
+        <S.Wrapper onPress={handleCancel}>
+          <TouchableWithoutFeedback>
+            <S.Content>
+              {type === 'loading' && (
+                <ActivityIndicator size="large" color={loadingColor} />
+              )}
+              {(type === 'error' || type === 'confirmation') && (
+                <Icons name="alert-circle" size={36} color={errorColor} />
+              )}
+              {type === 'success' && (
+                <Icons name="checkmark-circle" size={36} color={successColor} />
+              )}
 
-            {title && <S.Title>{title}</S.Title>}
-            {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
+              {title && <S.Title>{title}</S.Title>}
+              {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
 
-            {type === 'error' && handleCancel && (
-              <S.OkButton>
-                <S.ButtonText
-                  color={primaryColor}
-                  onPress={() => handleCancel()}>
-                  OK
-                </S.ButtonText>
-              </S.OkButton>
-            )}
-
-            {type === 'success' && onSucessOkButton && (
-              <S.OkButton>
-                <S.ButtonText
-                  color={primaryColor}
-                  onPress={() => onSucessOkButton()}>
-                  OK
-                </S.ButtonText>
-              </S.OkButton>
-            )}
-
-            {type === 'confirmation' && (
-              <S.ConfirmationButtons>
-                <S.Button backgroundColor={primaryColor} onPress={handleCancel}>
-                  <S.ButtonText size={2} color="#fff">
-                    Cancelar
+              {type === 'error' && handleCancel && (
+                <S.OkButton>
+                  <S.ButtonText
+                    color={primaryColor}
+                    onPress={() => handleCancel()}>
+                    OK
                   </S.ButtonText>
-                </S.Button>
+                </S.OkButton>
+              )}
 
-                <S.Button backgroundColor={errorColor} onPress={handleConfirm}>
-                  <S.ButtonText size={2} color="#fff">
-                    Sim
+              {type === 'success' && onSucessOkButton && (
+                <S.OkButton>
+                  <S.ButtonText
+                    color={primaryColor}
+                    onPress={() => onSucessOkButton()}>
+                    OK
                   </S.ButtonText>
-                </S.Button>
-              </S.ConfirmationButtons>
-            )}
-          </S.Content>
+                </S.OkButton>
+              )}
+
+              {type === 'confirmation' && (
+                <S.ConfirmationButtons>
+                  <S.Button
+                    backgroundColor={primaryColor}
+                    onPress={handleCancel}>
+                    <S.ButtonText size={2} color="#fff">
+                      Cancelar
+                    </S.ButtonText>
+                  </S.Button>
+
+                  <S.Button
+                    backgroundColor={errorColor}
+                    onPress={handleConfirm}>
+                    <S.ButtonText size={2} color="#fff">
+                      Sim
+                    </S.ButtonText>
+                  </S.Button>
+                </S.ConfirmationButtons>
+              )}
+
+              {type === 'select' && (
+                <>
+                  <S.SelectTitle>{selectTitle}</S.SelectTitle>
+                  <S.SelectContent>
+                    {selectList &&
+                      selectList.map((item, index) => (
+                        <S.SelectItem key={item.id || index}>
+                          {renderItem && renderItem(item)}
+                        </S.SelectItem>
+                      ))}
+                  </S.SelectContent>
+                </>
+              )}
+            </S.Content>
+          </TouchableWithoutFeedback>
         </S.Wrapper>
       </Modal>
     </S.Container>

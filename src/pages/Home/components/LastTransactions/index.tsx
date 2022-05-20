@@ -10,6 +10,7 @@ import { useAuth } from '../../../../hooks/AuthContext';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { Dimensions } from 'react-native';
 import { getHomeColors } from '../../../../utils/colors/home';
+import { useAccount } from '../../../../hooks/AccountContext';
 
 interface ITransactions {
   id: string;
@@ -24,6 +25,7 @@ const LastTransactions = () => {
   const width = Dimensions.get('screen').width;
   const { theme } = useTheme();
   const { user } = useAuth();
+  const { expansesOnAccounts, incomesOnAccounts } = useAccount();
   const [lastTransactionsState, setLastTransactionsState] = useState<
     ITransactions[]
   >([]);
@@ -60,7 +62,7 @@ const LastTransactions = () => {
 
   useEffect(() => {
     getLastTransactions().finally(() => setLoadingData(false));
-  }, [getLastTransactions]);
+  }, [getLastTransactions, incomesOnAccounts, expansesOnAccounts]);
 
   return (
     <>
@@ -98,6 +100,7 @@ const LastTransactions = () => {
                 color={
                   transaction.type === 'Expanse' ? expanseColor : incomeColor
                 }>
+                {transaction.type === 'Expanse' && '-'}
                 {getCurrencyFormat(transaction.value)}
               </S.TransactionValue>
               <S.TransactionDate color={textColor}>

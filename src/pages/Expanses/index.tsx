@@ -19,18 +19,12 @@ import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 
 import { Nav } from '../../routes';
-import { ExpanseList, Income, IncomeList } from '../../interfaces/Income';
+import { ExpanseList, IncomeList } from '../../interfaces/Income';
 import {
   getCurrentExpanses,
-  getCurrentIncomes,
   getEstimateIncomes,
 } from '../../utils/getCurrentBalance';
 import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
-import {
-  CreateIncomeOnAccount,
-  IncomeOnAccount,
-} from '../../interfaces/IncomeOnAccount';
-// import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 import { useAuth } from '../../hooks/AuthContext';
 import { getExpansesColors } from '../../utils/colors/expanses';
@@ -42,6 +36,7 @@ import { Expanse } from '../../interfaces/Expanse';
 import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 import ModalComponent from '../../components/Modal';
 import api from '../../services/api';
+import CreditCardsView from './Components/CreditCardsView';
 
 export default function Expanses() {
   const navigation = useNavigation<Nav>();
@@ -61,6 +56,9 @@ export default function Expanses() {
   const [expanseByDate, setExpanseByDate] = useState<
     { day: number; expanses: IncomeList[] }[]
   >([]);
+  const [tabSelected, setTabSelected] = useState<'Expanses' | 'Cards'>(
+    'Expanses',
+  );
   const [expanseSelected, setExpanseSelected] = useState<any>();
   const [currentExpanses, setCurrentExpanses] = useState<Expanse[]>();
   const [currentExpansesOnAccount, setCurrentExpansesOnAccount] =
@@ -368,121 +366,138 @@ export default function Expanses() {
       </S.Container>
 
       <S.IncomesTitle>
-        <S.TitleItem selected>
+        <S.TitleItem onPress={() => setTabSelected('Expanses')}>
           <Icon
             name="arrow-down-circle"
             size={RFPercentage(4)}
             color={colors.titleColor}
+            style={{ opacity: tabSelected === 'Expanses' ? 1 : 0.5 }}
           />
-          <S.IncomesTitleText color={colors.titleColor}>
+          <S.IncomesTitleText
+            color={colors.titleColor}
+            style={{ opacity: tabSelected === 'Expanses' ? 1 : 0.5 }}>
             Despesas
           </S.IncomesTitleText>
         </S.TitleItem>
 
-        <S.TitleItem selected={false}>
-          <Icon name="card" size={RFPercentage(4)} color={colors.titleColor} />
-          <S.IncomesTitleText color={colors.titleColor}>
+        <S.TitleItem onPress={() => setTabSelected('Cards')}>
+          <Icon
+            name="card"
+            size={RFPercentage(4)}
+            color={colors.titleColor}
+            style={{ opacity: tabSelected === 'Cards' ? 1 : 0.5 }}
+          />
+          <S.IncomesTitleText
+            color={colors.titleColor}
+            style={{ opacity: tabSelected === 'Cards' ? 1 : 0.5 }}>
             Cartões
           </S.IncomesTitleText>
         </S.TitleItem>
       </S.IncomesTitle>
 
-      <S.ButtonContainer>
-        <Button
-          title="Nova Despesa"
-          icon={PlusIcon}
-          colors={buttonColors}
-          onPress={() =>
-            navigation.navigate('CreateExpanse', {
-              expanse: null,
-            })
-          }
-        />
-      </S.ButtonContainer>
+      {tabSelected === 'Expanses' && (
+        <>
+          <S.ButtonContainer>
+            <Button
+              title="Nova Despesa"
+              icon={PlusIcon}
+              colors={buttonColors}
+              onPress={() =>
+                navigation.navigate('CreateExpanse', {
+                  expanse: null,
+                })
+              }
+            />
+          </S.ButtonContainer>
 
-      {isLoading ? (
-        <ContentLoader
-          viewBox="0 0 327 100"
-          height={100}
-          style={{
-            marginTop: 32,
-          }}
-          backgroundColor={colors.secondaryCardLoader}
-          foregroundColor="rgb(255, 255, 255)">
-          <Rect x="0" y="0" rx="20" ry="20" width="327" height="100" />
-        </ContentLoader>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={{
-            paddingBottom: RFPercentage(15),
-            flex: 1,
-            marginTop: RFPercentage(2),
-          }}
-          contentContainerStyle={{
-            paddingBottom: RFPercentage(20),
-          }}>
-          {expanseByDate.length > 0 &&
-            expanseByDate.map(item => (
-              <S.ItemView key={item.day}>
-                <S.DateTitle color={colors.dateTitleColor}>
-                  {item.day} de {getMonthName(selectedDate)}
-                </S.DateTitle>
+          {isLoading ? (
+            <ContentLoader
+              viewBox="0 0 327 100"
+              height={100}
+              style={{
+                marginTop: 32,
+              }}
+              backgroundColor={colors.secondaryCardLoader}
+              foregroundColor="rgb(255, 255, 255)">
+              <Rect x="0" y="0" rx="20" ry="20" width="327" height="100" />
+            </ContentLoader>
+          ) : (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              style={{
+                paddingBottom: RFPercentage(15),
+                flex: 1,
+                marginTop: RFPercentage(2),
+              }}
+              contentContainerStyle={{
+                paddingBottom: RFPercentage(20),
+              }}>
+              {expanseByDate.length > 0 &&
+                expanseByDate.map(item => (
+                  <S.ItemView key={item.day}>
+                    <S.DateTitle color={colors.dateTitleColor}>
+                      {item.day} de {getMonthName(selectedDate)}
+                    </S.DateTitle>
 
-                {item.expanses.map(expanse => (
-                  <ItemCard
-                    key={expanse.id}
-                    icon={MoneyIcon}
-                    title={expanse?.name || ''}
-                    value={expanse.value}
-                    received={!!expanse?.paymentDate}
-                    receivedMessage={
-                      expanse.paymentDate
-                        ? `Recebido em ${getDayOfTheMounth(
-                            new Date(expanse.paymentDate),
-                          )} - ${
-                            accounts.find(acc => acc.id === expanse.accountId)
-                              ?.name
-                          }`
-                        : 'Receber'
-                    }
-                    mainColor={colors.primaryColor}
-                    handleRemove={() => {
-                      setExpanseSelected(expanse);
-                      setIsDeleteModalVisible(true);
-                    }}
-                    backgroundColor={colors.secondaryCardLoader}
-                    onRedirect={() =>
-                      navigation.navigate('CreateExpanse', {
-                        expanse,
-                      })
-                    }
-                    onSwitchChange={() => {
-                      setExpanseSelected(expanse);
-                      if (expanse?.month) {
-                        setConfirmUnreceivedVisible(true);
-                      } else {
-                        setConfirmReceivedVisible(true);
-                      }
-                    }}
-                  />
+                    {item.expanses.map(expanse => (
+                      <ItemCard
+                        key={expanse.id}
+                        icon={MoneyIcon}
+                        title={expanse?.name || ''}
+                        value={expanse.value}
+                        received={!!expanse?.paymentDate}
+                        receivedMessage={
+                          expanse.paymentDate
+                            ? `Recebido em ${getDayOfTheMounth(
+                                new Date(expanse.paymentDate),
+                              )} - ${
+                                accounts.find(
+                                  acc => acc.id === expanse.accountId,
+                                )?.name
+                              }`
+                            : 'Receber'
+                        }
+                        mainColor={colors.primaryColor}
+                        handleRemove={() => {
+                          setExpanseSelected(expanse);
+                          setIsDeleteModalVisible(true);
+                        }}
+                        backgroundColor={colors.secondaryCardLoader}
+                        onRedirect={() =>
+                          navigation.navigate('CreateExpanse', {
+                            expanse,
+                          })
+                        }
+                        onSwitchChange={() => {
+                          setExpanseSelected(expanse);
+                          if (expanse?.month) {
+                            setConfirmUnreceivedVisible(true);
+                          } else {
+                            setConfirmReceivedVisible(true);
+                          }
+                        }}
+                      />
+                    ))}
+                  </S.ItemView>
                 ))}
-              </S.ItemView>
-            ))}
-        </ScrollView>
+            </ScrollView>
+          )}
+          {!isLoading && expanseByDate.length === 0 && (
+            <S.Empty>
+              <Icon
+                name="close-circle"
+                size={RFPercentage(4)}
+                color={colors.primaryColor}
+              />
+              <S.EmptyText color={colors.textColor}>
+                Nenhuma despesa nesse mês
+              </S.EmptyText>
+            </S.Empty>
+          )}
+        </>
       )}
-      {!isLoading && expanseByDate.length === 0 && (
-        <S.Empty>
-          <Icon
-            name="close-circle"
-            size={RFPercentage(4)}
-            color={colors.primaryColor}
-          />
-          <S.EmptyText color={colors.textColor}>
-            Nenhuma despesa nesse mês
-          </S.EmptyText>
-        </S.Empty>
-      )}
+
+      {tabSelected === 'Cards' && <CreditCardsView />}
 
       <ConfirmReceivedModalComponent
         visible={confirmReceivedVisible}

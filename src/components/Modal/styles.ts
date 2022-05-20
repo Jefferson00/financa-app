@@ -22,7 +22,7 @@ export const Container = styled.View<ModalProps>`
   display: ${props => (props.visible ? 'flex' : 'none')};
 `;
 
-export const Wrapper = styled.View`
+export const Wrapper = styled.Pressable`
   flex: 1;
   justify-content: center;
   align-items: center;
@@ -79,4 +79,20 @@ export const Button = styled.TouchableOpacity<ButtonProps>`
   align-items: center;
   justify-content: center;
   border-radius: 8px;
+`;
+
+export const SelectTitle = styled.Text`
+  font-family: 'Poppins-SemiBold';
+  margin-top: ${RFPercentage(2.2)}px;
+  font-size: ${RFPercentage(2.2)}px;
+  text-align: center;
+`;
+
+export const SelectContent = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+`;
+
+export const SelectItem = styled.View`
+  margin: ${RFPercentage(2)}px;
 `;
