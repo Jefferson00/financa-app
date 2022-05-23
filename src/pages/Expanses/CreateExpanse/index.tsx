@@ -51,7 +51,13 @@ const schema = yup.object({
 export default function CreateExpanse(props: ExpanseProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserExpanses } = useAccount();
+  const {
+    accounts,
+    creditCards,
+    getUserExpanses,
+    getUserCreditCards,
+    expanses,
+  } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
@@ -83,7 +89,9 @@ export default function CreateExpanse(props: ExpanseProps) {
         : getCurrencyFormat(0),
       status: false,
       receiptDefault: expanseState?.receiptDefault || accounts[0].id,
-      category: expanseState?.category || ExpanseCategories[0].name,
+      category: ExpanseCategories.find(c => c.name === expanseState?.category)
+        ? ExpanseCategories.find(c => c.name === expanseState?.category)?.id
+        : ExpanseCategories[0].name,
     },
     resolver: yupResolver(schema),
   });
@@ -103,7 +111,7 @@ export default function CreateExpanse(props: ExpanseProps) {
     value: string;
     status: boolean;
     receiptDefault?: string;
-    category: string;
+    category: string | number;
   };
 
   const handleOkSucess = () => {
@@ -136,6 +144,7 @@ export default function CreateExpanse(props: ExpanseProps) {
       }
 
       await getUserExpanses();
+      await getUserCreditCards();
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)
@@ -146,6 +155,15 @@ export default function CreateExpanse(props: ExpanseProps) {
       setIsSubmitting(false);
     }
   };
+
+  /* useEffect(() => {
+    const expanseFound = expanses.find(
+      exp =>
+        exp.id === props?.route?.params?.expanse.id ||
+        props?.route?.params?.expanse.expanseId,
+    );
+    if (expanseFound) setExpanseState(expanseFound);
+  }, [props?.route?.params?.expanse, expanses]); */
 
   return (
     <>
@@ -170,6 +188,7 @@ export default function CreateExpanse(props: ExpanseProps) {
             name="name"
             control={control}
             value={expanseState?.name ? expanseState.name : ''}
+            defaultValue={expanseState?.name ? expanseState.name : ''}
           />
 
           <ControlledInput
@@ -258,7 +277,7 @@ export default function CreateExpanse(props: ExpanseProps) {
             value={
               expanseState?.receiptDefault ? expanseState.receiptDefault : ''
             }
-            selectItems={[...accounts, { name: 'Nenhum', id: 0 }]}
+            selectItems={[...accounts, ...creditCards]}
           />
 
           <ControlledInput

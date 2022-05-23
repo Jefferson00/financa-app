@@ -54,7 +54,7 @@ export default function Expanses() {
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [expanseByDate, setExpanseByDate] = useState<
-    { day: number; expanses: IncomeList[] }[]
+    { day: number; expanses: ExpanseList[] }[]
   >([]);
   const [tabSelected, setTabSelected] = useState<'Expanses' | 'Cards'>(
     'Expanses',
@@ -236,6 +236,10 @@ export default function Expanses() {
             isSameMonth(new Date(exp.startDate), selectedDate)),
     );
 
+    const expansesInAccounts = expansesInThisMonth.filter(expanse =>
+      accounts.find(acc => acc.id === expanse.receiptDefault),
+    );
+
     setCurrentExpanses(expansesInThisMonth);
 
     const expansesOnAccountInThisMonth = expansesOnAccounts.filter(i =>
@@ -244,7 +248,7 @@ export default function Expanses() {
 
     setCurrentExpansesOnAccount(expansesOnAccountInThisMonth);
 
-    const expansesWithoutAccount = expansesInThisMonth.filter(expanse => {
+    const expansesWithoutAccount = expansesInAccounts.filter(expanse => {
       if (expansesOnAccountInThisMonth.find(i => i.expanseId === expanse.id)) {
         // console.log('ta pago', income);
         return false;
@@ -302,7 +306,7 @@ export default function Expanses() {
 
     setExpanseByDate(expansesOrderedByDay.sort((a, b) => a.day - b.day));
     setIsLoading(false);
-  }, [expanses, expansesOnAccounts, selectedDate]);
+  }, [expanses, expansesOnAccounts, selectedDate, accounts]);
 
   useEffect(() => {
     loadData();
@@ -465,7 +469,11 @@ export default function Expanses() {
                         backgroundColor={colors.secondaryCardLoader}
                         onRedirect={() =>
                           navigation.navigate('CreateExpanse', {
-                            expanse,
+                            expanse: expanses.find(
+                              exp =>
+                                exp.id === expanse.id ||
+                                exp.id === expanse.expanseId,
+                            ),
                           })
                         }
                         onSwitchChange={() => {

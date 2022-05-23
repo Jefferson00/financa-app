@@ -1,6 +1,7 @@
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import styled, { css } from 'styled-components/native';
 import Animated from 'react-native-reanimated';
+import { RectButton } from 'react-native-gesture-handler';
 
 interface TextProps {
   color: string;
@@ -71,10 +72,18 @@ export const ItemView = styled.View`
   padding-bottom: ${RFPercentage(3.2)}px;
 `;
 
-export const ItemCard = styled.View`
-  height: ${RFPercentage(10)}px;
+export const ItemCard = styled.Pressable`
+  height: ${RFPercentage(13)}px;
+
   border-radius: 20px;
-  background-color: #ffffffaa;
+  background-color: #ffffff5a;
+  margin: ${RFPercentage(2)}px 0;
+
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: ${RFPercentage(2.5)}px;
 `;
 
 export const DateTitle = styled.Text<TextProps>`
@@ -83,4 +92,49 @@ export const DateTitle = styled.Text<TextProps>`
   margin-top: ${RFPercentage(2)}px;
 
   color: ${props => (props.color ? props.color : '#000')};
+`;
+
+export const DollarSign = styled.View`
+  height: ${RFPercentage(8)}px;
+  width: ${RFPercentage(8)}px;
+  background-color: #fff;
+  border-radius: ${RFPercentage(4)}px;
+
+  justify-content: center;
+  align-items: center;
+`;
+
+export const ItemInfo = styled.View`
+  align-items: flex-end;
+`;
+
+export const ItemTitle = styled.Text`
+  font-family: 'Poppins-Regular';
+  font-size: ${RFPercentage(2)}px;
+
+  color: #000;
+`;
+
+export const ItemValue = styled.Text`
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2)}px;
+
+  color: #fff;
+`;
+
+export const DeleteButton = styled(RectButton)`
+  width: ${RFPercentage(20)}px;
+  height: ${RFPercentage(8)}px;
+
+  justify-content: center;
+  align-items: center;
+
+  position: relative;
+
+  margin-top: ${RFPercentage(6.5)}px;
+  border-radius: 20px;
+
+  padding-left: ${RFPercentage(6)}px;
+
+  right: ${RFPercentage(1)}px;
 `;

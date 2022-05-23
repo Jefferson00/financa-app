@@ -49,6 +49,7 @@ interface AccountContextData {
     createExpanseOnAccount: CreateExpanseOnAccount,
   ) => Promise<void>;
   handleClearCache: () => void;
+  getUserCreditCards: () => Promise<void>;
   accounts: Account[];
   incomes: Income[];
   expanses: Expanse[];
@@ -129,6 +130,7 @@ export const AccountProvider: React.FC = ({ children }) => {
       try {
         const { data } = await api.get(`creditCards/user/${user.id}`);
         setCreditCards(data);
+        console.log('invoices', data[0].Invoice.length);
       } catch (error) {
         console.log(error);
       }
@@ -197,7 +199,7 @@ export const AccountProvider: React.FC = ({ children }) => {
             accountId: account?.id,
           },
         );
-        console.log('update balance: ', data);
+        //console.log('update balance: ', data);
       } else {
         const { data } = await api.post(`accounts/balance`, {
           month: selectedDate,
@@ -208,7 +210,7 @@ export const AccountProvider: React.FC = ({ children }) => {
             : value,
           accountId: account?.id,
         });
-        console.log('create balance: ', data);
+        //console.log('create balance: ', data);
       }
       await getUserAccounts();
     },
@@ -350,8 +352,15 @@ export const AccountProvider: React.FC = ({ children }) => {
         i => i.receiptDefault === account.id,
       );
 
+      //buscar todas despesas da conta e dos cartões da conta
       const allExpansesInThisAccount = expansesWithoutAccount.filter(
-        i => i.receiptDefault === account.id,
+        i =>
+          i.receiptDefault === account.id ||
+          creditCards.find(
+            card =>
+              card.id === i.receiptDefault &&
+              card.receiptDefault === account.id,
+          ),
       );
 
       /* console.log('allIncomesInThisAccount', allIncomesInThisAccount);
@@ -371,7 +380,7 @@ export const AccountProvider: React.FC = ({ children }) => {
       //console.log('estimateBalance', estimateBalance);
       return estimateBalance;
     },
-    [incomes, selectedDate, expanses],
+    [incomes, selectedDate, expanses, creditCards],
   );
 
   const handleAccountCardMount = useCallback(async () => {
@@ -396,7 +405,7 @@ export const AccountProvider: React.FC = ({ children }) => {
           );
 
           //console.log('lastMonthEstimateBalance', lastMonthEstimateBalance);
-          console.log('balances', account?.balances);
+          //console.log('balances', account?.balances);
 
           const estimateBalance = isTheSameMonth
             ? await getAccountEstimateBalance(
@@ -540,6 +549,7 @@ export const AccountProvider: React.FC = ({ children }) => {
         getUserExpansesOnAccount,
         getUserExpanses,
         handleClearCache,
+        getUserCreditCards,
         expansesOnAccounts,
         accounts,
         isLoadingCards,

@@ -51,7 +51,7 @@ const schema = yup.object({
 export default function CreateCreditCard(props: CreateCreditCardProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserExpanses } = useAccount();
+  const { accounts, getUserCreditCards } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -125,7 +125,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
         await api.post(`creditCards`, creditCardInput);
       }
 
-      // await getUserCreditCards();
+      await getUserCreditCards();
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)

@@ -5,6 +5,7 @@ export interface ExpanseOnInvoice {
   value: number;
   name: string;
   invoiceId: string;
+  day: number;
 }
 
 export interface Invoice {

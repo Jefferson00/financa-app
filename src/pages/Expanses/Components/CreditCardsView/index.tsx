@@ -73,19 +73,6 @@ export default function CreditCardsView() {
           }
         />
 
-        {creditCards.length === 0 && (
-          <S.Empty>
-            <Ionicons
-              name="close-circle"
-              size={RFPercentage(4)}
-              color={colors.primaryColor}
-            />
-            <S.EmptyText color={colors.textColor}>
-              Sem cartões cadastrados
-            </S.EmptyText>
-          </S.Empty>
-        )}
-
         {creditCards.length > 0 &&
           creditCards.map(card => (
             <CardContent
@@ -96,6 +83,19 @@ export default function CreditCardsView() {
             />
           ))}
       </S.Container>
+
+      {creditCards.length === 0 && (
+        <S.Empty>
+          <Ionicons
+            name="close-circle"
+            size={RFPercentage(4)}
+            color={colors.primaryColor}
+          />
+          <S.EmptyText color={colors.textColor}>
+            Sem cartões cadastrados
+          </S.EmptyText>
+        </S.Empty>
+      )}
 
       <ModalComponent
         type="loading"

@@ -17,11 +17,11 @@ export const Container = styled.ScrollView`
 `;
 
 export const Empty = styled.View`
+  padding: 0 ${RFPercentage(3.2)}px;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
-  padding-bottom: ${RFPercentage(10)}px;
-  flex: 1;
+
+  height: ${RFPercentage(32)}px;
 `;
 
 export const EmptyText = styled.Text<TextProps>`
