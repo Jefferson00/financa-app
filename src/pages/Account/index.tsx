@@ -18,7 +18,6 @@ import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
 import ModalComponent from '../../components/Modal';
 
-import { Colors } from '../../styles/global';
 import * as S from './styles';
 
 import api from '../../services/api';
@@ -108,18 +107,6 @@ export default function Account(props: ProfileProps) {
         color={theme === 'dark' ? '#d8d8d8' : '#fff'}
       />
     );
-  };
-
-  const saveButtonColors = {
-    PRIMARY_BACKGROUND:
-      theme === 'dark'
-        ? Colors.ORANGE_PRIMARY_DARKER
-        : Colors.ORANGE_PRIMARY_LIGHTER,
-    SECOND_BACKGROUND:
-      theme === 'dark'
-        ? Colors.ORANGE_SECONDARY_DARKER
-        : Colors.ORANGE_SECONDARY_LIGHTER,
-    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
   const handleSubmitAccount = async (data: FormData) => {
@@ -261,7 +248,7 @@ export default function Account(props: ProfileProps) {
           <S.ButtonContainer>
             <Button
               title={accountState ? 'Salvar' : 'Criar'}
-              colors={saveButtonColors}
+              colors={colors.saveButtonColors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}

@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
 import * as S from './styles';
 
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -18,6 +17,7 @@ import { ScrollView } from 'react-native';
 import { useSecurity } from '../../hooks/SecurityContext';
 import ModalComponent from '../../components/Modal';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { getSecurityColors } from '../../utils/colors/security';
 
 export default function SecurityScreen() {
   const { theme } = useTheme();
@@ -43,25 +43,7 @@ export default function SecurityScreen() {
   const [pinAccess, setPinAcess] = useState('');
   const [pin, setPin] = useState('');
 
-  const titleColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const trackColor =
-    theme === 'dark'
-      ? Colors.BLUE_PRIMARY_DARKER
-      : Colors.BLUE_SECONDARY_LIGHTER;
-  const falseTrackColor = theme === 'dark' ? '#919191' : '#d2d2d2';
-  const thumbColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const falseThumbColor =
-    theme === 'dark'
-      ? Colors.BLUE_SECONDARY_LIGHTER
-      : Colors.BLUE_SECONDARY_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
-  const inputFillBackground =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const colors = getSecurityColors(theme);
 
   const progress = useDerivedValue(() => {
     return theme === 'dark'
@@ -132,18 +114,23 @@ export default function SecurityScreen() {
         <ScrollView
           style={{ flex: 1, width: '100%' }}
           showsVerticalScrollIndicator={false}>
-          <S.MainTitle color={titleColor}>Selecionar tema</S.MainTitle>
+          <S.MainTitle color={colors.titleColor}>Selecionar tema</S.MainTitle>
 
           <S.ConfigCard color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
             <S.TextContainer>
-              <S.Title color={textColor}>Proteção do aplicativo</S.Title>
-              <S.Subtitle color={textColor}>
+              <S.Title color={colors.textColor}>Proteção do aplicativo</S.Title>
+              <S.Subtitle color={colors.textColor}>
                 Usar senha para acessar o aplicativo?
               </S.Subtitle>
             </S.TextContainer>
             <S.Switch
-              trackColor={{ true: trackColor, false: falseTrackColor }}
-              thumbColor={securityEnabled ? thumbColor : falseThumbColor}
+              trackColor={{
+                true: colors.trackColor,
+                false: colors.falseTrackColor,
+              }}
+              thumbColor={
+                securityEnabled ? colors.thumbColor : colors.falseThumbColor
+              }
               value={securityEnabled}
               onChange={toggleEnableSecurity}
             />
@@ -151,18 +138,18 @@ export default function SecurityScreen() {
 
           <S.KeyboardContainer color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
             {hasPinAccess && !hasAccess && (
-              <S.KeyboardText color={textColor}>
+              <S.KeyboardText color={colors.textColor}>
                 Insira a senha atual para alterar
               </S.KeyboardText>
             )}
             {((!hasPinAccess && !firstEnteredPinComplete) ||
               (hasAccess && !firstEnteredPinComplete)) && (
-              <S.KeyboardText color={textColor}>
+              <S.KeyboardText color={colors.textColor}>
                 Defina a senha de acesso
               </S.KeyboardText>
             )}
             {firstEnteredPinComplete && (
-              <S.KeyboardText color={textColor}>
+              <S.KeyboardText color={colors.textColor}>
                 Confirme a senha
               </S.KeyboardText>
             )}
@@ -181,13 +168,13 @@ export default function SecurityScreen() {
                   marginBottom: 0,
                 }}
                 inputViewEmptyStyle={{
-                  backgroundColor: inputBackground,
+                  backgroundColor: colors.inputBackground,
                 }}
                 inputViewFilledStyle={{
-                  backgroundColor: inputFillBackground,
+                  backgroundColor: colors.inputFillBackground,
                 }}
                 buttonTextStyle={{
-                  color: inputFillBackground,
+                  color: colors.inputFillBackground,
                 }}
                 onButtonPress={key => {
                   if (key === 'custom_left' && defaultPinView.current) {
@@ -209,7 +196,7 @@ export default function SecurityScreen() {
                     <Icon
                       name={'backspace'}
                       size={36}
-                      color={inputFillBackground}
+                      color={colors.inputFillBackground}
                     />
                   ) : undefined
                 }
@@ -219,7 +206,7 @@ export default function SecurityScreen() {
                     <Icon
                       name={'log-in'}
                       size={36}
-                      color={inputFillBackground}
+                      color={colors.inputFillBackground}
                     />
                   ) : undefined
                 }
@@ -239,13 +226,13 @@ export default function SecurityScreen() {
                   marginBottom: 0,
                 }}
                 inputViewEmptyStyle={{
-                  backgroundColor: inputBackground,
+                  backgroundColor: colors.inputBackground,
                 }}
                 inputViewFilledStyle={{
-                  backgroundColor: inputFillBackground,
+                  backgroundColor: colors.inputFillBackground,
                 }}
                 buttonTextStyle={{
-                  color: inputFillBackground,
+                  color: colors.inputFillBackground,
                 }}
                 onButtonPress={key => {
                   if (key === 'custom_left' && updatePinView.current) {
@@ -264,7 +251,7 @@ export default function SecurityScreen() {
                     <Icon
                       name={'backspace'}
                       size={36}
-                      color={inputFillBackground}
+                      color={colors.inputFillBackground}
                     />
                   ) : undefined
                 }
@@ -274,7 +261,7 @@ export default function SecurityScreen() {
                     <Icon
                       name={'log-in'}
                       size={36}
-                      color={inputFillBackground}
+                      color={colors.inputFillBackground}
                     />
                   ) : undefined
                 }

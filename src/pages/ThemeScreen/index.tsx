@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
 import * as S from './styles';
 
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -17,6 +16,7 @@ import {
   interpolateColor,
 } from 'react-native-reanimated';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { getThemeScreenColors } from '../../utils/colors/theme';
 
 interface ProfileProps {
   id: string;
@@ -30,21 +30,7 @@ export default function ThemeScreen({ id }: ProfileProps) {
     handleToggleDefaultThemeEnable,
   } = useTheme();
 
-  const titleColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const trackColor =
-    theme === 'dark'
-      ? Colors.BLUE_PRIMARY_DARKER
-      : Colors.BLUE_SECONDARY_LIGHTER;
-  const falseTrackColor = theme === 'dark' ? '#919191' : '#d2d2d2';
-  const thumbColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const falseThumbColor =
-    theme === 'dark'
-      ? Colors.BLUE_SECONDARY_LIGHTER
-      : Colors.BLUE_SECONDARY_LIGHTER;
+  const colors = getThemeScreenColors(theme);
 
   const iconAnimateX = useSharedValue(theme === 'dark' ? -2000 : 0);
   const iconAnimateY = useSharedValue(theme === 'dark' ? 2000 : 0);
@@ -160,7 +146,7 @@ export default function ThemeScreen({ id }: ProfileProps) {
     <>
       <Header reduced showMonthSelector={false} />
       <S.Container style={[colorAnimated]}>
-        <S.MainTitle color={titleColor}>Selecionar tema</S.MainTitle>
+        <S.MainTitle color={colors.titleColor}>Selecionar tema</S.MainTitle>
         <S.ThemeMainContainer>
           <S.ThemeIconContainer style={iconAnimated}>
             <Icon name="sunny" size={RFPercentage(20)} color="#FF981E" />
@@ -191,14 +177,21 @@ export default function ThemeScreen({ id }: ProfileProps) {
 
         <S.ConfigCard color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
           <S.TextContainer>
-            <S.Title color={textColor}>Padrão do sistema</S.Title>
-            <S.Subtitle color={textColor}>
+            <S.Title color={colors.textColor}>Padrão do sistema</S.Title>
+            <S.Subtitle color={colors.textColor}>
               Usar o tema padrão do dispositivo?
             </S.Subtitle>
           </S.TextContainer>
           <S.Switch
-            trackColor={{ true: trackColor, false: falseTrackColor }}
-            thumbColor={defaultDeviceThemeEnable ? thumbColor : falseThumbColor}
+            trackColor={{
+              true: colors.trackColor,
+              false: colors.falseTrackColor,
+            }}
+            thumbColor={
+              defaultDeviceThemeEnable
+                ? colors.thumbColor
+                : colors.falseThumbColor
+            }
             value={defaultDeviceThemeEnable}
             onChange={handleToggleDefaultThemeEnable}
           />

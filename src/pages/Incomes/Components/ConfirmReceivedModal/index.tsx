@@ -1,7 +1,6 @@
 import React from 'react';
-import { ModalBaseProps, Modal, ActivityIndicator } from 'react-native';
+import { ModalBaseProps, Modal } from 'react-native';
 import * as S from './styles';
-import Icons from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../../../styles/global';
 import { Account } from '../../../../interfaces/Account';
 import { useAccount } from '../../../../hooks/AccountContext';
@@ -24,7 +23,6 @@ export default function ConfirmReceivedModalComponent({
 }: IModalProps) {
   const { handleSelectAccount, accountSelected } = useAccount();
 
-  const textColor = Colors.MAIN_TEXT_LIGHTER;
   const cancelColor = Colors.ERROR_LIGTHER;
   const unselectColor = Colors.BLUE_SOFT_LIGHTER;
   const selectColor = '#ABCBF1';

@@ -78,6 +78,18 @@ export const getCreateIncomesColors = (theme: ColorSchemeName) => {
         : Colors.INCOME_SECONDARY_LIGTHER,
   };
 
+  const saveButtonColors = {
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.INCOME_PRIMARY_DARKER
+        : Colors.INCOME_PRIMARY_LIGTHER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.INCOME_SECONDARY_DARKER
+        : Colors.INCOME_SECONDARY_LIGTHER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
+  };
+
   return {
     inputBackground,
     deleteButtonColor,
@@ -85,5 +97,6 @@ export const getCreateIncomesColors = (theme: ColorSchemeName) => {
     textColor,
     trackColor,
     thumbColor,
+    saveButtonColors,
   };
 };

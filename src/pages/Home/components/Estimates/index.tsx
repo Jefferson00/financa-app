@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
+import { addMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
+
+import { useAccount } from '../../../../hooks/AccountContext';
+import { useTheme } from '../../../../hooks/ThemeContext';
+
 import { Colors } from '../../../../styles/global';
 import * as S from './styles';
-import { useTheme } from '../../../../hooks/ThemeContext';
-import { useAccount } from '../../../../hooks/AccountContext';
-import { addMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
+import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
+import { getEstimateColors } from '../../../../utils/colors/home';
 import {
   getPreviousMonth,
   getMounthAndYear,
@@ -23,21 +26,7 @@ const Estimates = () => {
   const { incomes, expanses, accounts } = useAccount();
   const [estimates, setEstimates] = useState<IEstimate[]>([]);
 
-  const backgroundColor =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
-
-  const estimateColors = {
-    month:
-      theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER,
-    value:
-      theme === 'dark'
-        ? Colors.BLUE_SECONDARY_DARKER
-        : Colors.BLUE_SECONDARY_LIGHTER,
-    indicator:
-      theme === 'dark'
-        ? Colors.ORANGE_SECONDARY_DARKER
-        : Colors.ORANGE_SECONDARY_LIGHTER,
-  };
+  const colors = getEstimateColors(theme);
 
   useEffect(() => {
     let estimatesArr = [];
@@ -107,7 +96,9 @@ const Estimates = () => {
       currentMonth = addMonths(currentMonth, 1);
       count++;
     }
+
     const maxValue = Math.max.apply(Math, values);
+
     estimatesArr = estimatesArr.map(e => {
       if (e.value === maxValue && maxValue !== 0) {
         return {
@@ -131,7 +122,7 @@ const Estimates = () => {
 
   return (
     <S.EstimateView
-      backgroundColor={backgroundColor}
+      backgroundColor={colors.backgroundColor}
       isEmpty={!estimates.find(est => est.value > 0)}>
       <ScrollView
         horizontal
@@ -143,16 +134,16 @@ const Estimates = () => {
         showsHorizontalScrollIndicator={false}>
         {estimates.map(estimate => (
           <S.EstimateInMonth key={estimate.id}>
-            <S.EstimateMonthText monthTextColor={estimateColors.month}>
+            <S.EstimateMonthText monthTextColor={colors.estimateColors.month}>
               {estimate.month}
             </S.EstimateMonthText>
-            <S.EstimateMonthValue valueTextColor={estimateColors.value}>
+            <S.EstimateMonthValue valueTextColor={colors.estimateColors.value}>
               {getCurrencyFormat(estimate.value)}
             </S.EstimateMonthValue>
 
             <S.EstimateIndicator
               indicatorVelue={estimate.indicator}
-              indicatorColor={estimateColors.indicator}
+              indicatorColor={colors.estimateColors.indicator}
             />
           </S.EstimateInMonth>
         ))}

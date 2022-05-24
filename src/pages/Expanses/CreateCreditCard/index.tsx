@@ -23,7 +23,6 @@ import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 import { isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
-import { ExpanseCategories } from '../../../utils/categories';
 import { getCreateExpansesColors } from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
 import { Modal, TouchableOpacity, View } from 'react-native';

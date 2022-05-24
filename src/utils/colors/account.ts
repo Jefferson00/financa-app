@@ -31,6 +31,18 @@ export const getAccountColors = (theme: ColorSchemeName) => {
         : Colors.BLUE_SECONDARY_LIGHTER,
   };
 
+  const saveButtonColors = {
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.ORANGE_PRIMARY_DARKER
+        : Colors.ORANGE_PRIMARY_LIGHTER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.ORANGE_SECONDARY_DARKER
+        : Colors.ORANGE_SECONDARY_LIGHTER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
+  };
+
   return {
     inputBackground,
     deleteButtonColor,
@@ -38,5 +50,6 @@ export const getAccountColors = (theme: ColorSchemeName) => {
     textColor,
     thumbColor,
     trackColor,
+    saveButtonColors,
   };
 };

@@ -10,7 +10,6 @@ import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 
-import { Colors } from '../../../styles/global';
 import * as S from './styles';
 
 import { useAuth } from '../../../hooks/AuthContext';
@@ -105,18 +104,6 @@ export default function CreateIncome(props: IncomeProps) {
     category: string;
   };
 
-  const saveButtonColors = {
-    PRIMARY_BACKGROUND:
-      theme === 'dark'
-        ? Colors.INCOME_PRIMARY_DARKER
-        : Colors.INCOME_PRIMARY_LIGTHER,
-    SECOND_BACKGROUND:
-      theme === 'dark'
-        ? Colors.INCOME_SECONDARY_DARKER
-        : Colors.INCOME_SECONDARY_LIGTHER,
-    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
-  };
-
   const handleOkSucess = () => {
     setEditSucessfully(false);
     setTimeout(() => navigation.navigate('Incomes'), 300);
@@ -124,7 +111,6 @@ export default function CreateIncome(props: IncomeProps) {
 
   const handleSubmitAccount = async (data: FormData) => {
     setIsSubmitting(true);
-    console.log(data);
     const incomeInput = {
       name: data.name,
       userId: user?.id,
@@ -288,7 +274,7 @@ export default function CreateIncome(props: IncomeProps) {
           <S.ButtonContainer>
             <Button
               title="Salvar"
-              colors={saveButtonColors}
+              colors={colors.saveButtonColors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}

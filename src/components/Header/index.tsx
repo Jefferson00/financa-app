@@ -118,9 +118,9 @@ export default function Header({
       )}
 
       <Pressable
-        onPress={() => navigation.navigate('Profile', { id: 'teste' })}>
+        onPress={() => navigation.navigate('Profile', { id: 'avatar' })}>
         {user?.avatar ? (
-          <SharedElement id="teste">
+          <SharedElement id="avatar">
             <S.Avatar
               source={{ uri: user.avatar }}
               style={{
@@ -132,7 +132,7 @@ export default function Header({
             />
           </SharedElement>
         ) : (
-          <SharedElement id="teste">
+          <SharedElement id="avatar">
             <S.EmptyAvatar
               style={{
                 borderRadius: RFPercentage(4),

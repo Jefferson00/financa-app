@@ -19,7 +19,7 @@ import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 
 import { Nav } from '../../routes';
-import { ExpanseList, IncomeList } from '../../interfaces/Income';
+import { ExpanseList } from '../../interfaces/Income';
 import {
   getCurrentExpanses,
   getEstimateIncomes,

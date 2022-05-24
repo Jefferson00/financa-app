@@ -5,6 +5,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
+import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 
 import * as S from './styles';
 
@@ -14,10 +15,12 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import ItemCard from '../../components/ItemCard';
 import ModalComponent from '../../components/Modal';
+import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 
 import { useAccount } from '../../hooks/AccountContext';
 import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
+import { useAuth } from '../../hooks/AuthContext';
 
 import { Nav } from '../../routes';
 import { Income, IncomeList } from '../../interfaces/Income';
@@ -31,9 +34,6 @@ import {
   IncomeOnAccount,
 } from '../../interfaces/IncomeOnAccount';
 import { getIncomesColors } from '../../utils/colors/incomes';
-import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
-import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
-import { useAuth } from '../../hooks/AuthContext';
 import api from '../../services/api';
 
 export default function Incomes() {
@@ -107,15 +107,6 @@ export default function Incomes() {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
-      /*  const findIncome = incomes.filter(
-        i => i.id === income.id || i.id === income?.incomeId,
-      );
-      if (findIncome.length === 0) {
-        await handleToggleIncomeOnAccount(income);
-        setIsSubmitting(false);
-        return;
-      }
- */
       try {
         if (income?.incomeId) {
           await handleToggleIncomeOnAccount(income);

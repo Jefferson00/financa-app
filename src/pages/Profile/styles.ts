@@ -1,8 +1,6 @@
 import React from 'react';
-import { Dimensions } from 'react-native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import styled, { css } from 'styled-components/native';
-const width = Dimensions.get('screen').width;
+import styled from 'styled-components/native';
 
 interface ContainerProps {
   backgroundColor: string;

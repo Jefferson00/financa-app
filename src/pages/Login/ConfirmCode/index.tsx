@@ -23,7 +23,6 @@ export default function ConfirmCodeLogin() {
   };
 
   const inputFillBackground = Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor = Colors.MAIN_TEXT_LIGHTER;
   const inputBackground = Colors.BLUE_SOFT_LIGHTER;
 
   const phoneButtonColors = {

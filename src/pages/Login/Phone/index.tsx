@@ -1,15 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { Platform } from 'react-native';
+import { Mask } from 'react-native-mask-input';
+import Icons from 'react-native-vector-icons/Ionicons';
+
 import * as S from './styles';
 import { Colors } from '../../../styles/global';
 
-import LogoImg from '../../../assets/Logos/logoLogin.png';
 import Button from '../../../components/Button';
-import Icons from 'react-native-vector-icons/Ionicons';
-import { useAuth } from '../../../hooks/AuthContext';
 import Input from '../../../components/Input';
-import { Platform, TextInput } from 'react-native';
-import { Mask } from 'react-native-mask-input';
 import ModalComponent from '../../../components/Modal';
+
+import LogoImg from '../../../assets/Logos/logoLogin.png';
+import { useAuth } from '../../../hooks/AuthContext';
 
 export default function PhoneLogin() {
   const {

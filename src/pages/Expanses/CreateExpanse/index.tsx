@@ -1,29 +1,31 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../../hooks/AuthContext';
-import Menu from '../../../components/Menu';
-import { Colors } from '../../../styles/global';
-import * as S from './styles';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import Icons from 'react-native-vector-icons/Feather';
-import Icon from 'react-native-vector-icons/Ionicons';
-import Header from '../../../components/Header';
-import ControlledInput from '../../../components/ControlledInput';
-import Button from '../../../components/Button';
+import { useNavigation } from '@react-navigation/native';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../../services/api';
-import ModalComponent from '../../../components/Modal';
-import { useTheme } from '../../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
+import { useAuth } from '../../../hooks/AuthContext';
+import { useAccount } from '../../../hooks/AccountContext';
+import { useTheme } from '../../../hooks/ThemeContext';
+import { useDate } from '../../../hooks/DateContext';
+
+import Menu from '../../../components/Menu';
+import ControlledInput from '../../../components/ControlledInput';
+import Button from '../../../components/Button';
+import Header from '../../../components/Header';
+import ModalComponent from '../../../components/Modal';
+import Input from '../../../components/Input';
+
+import * as S from './styles';
+import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useAccount } from '../../../hooks/AccountContext';
-import Input from '../../../components/Input';
-import { useDate } from '../../../hooks/DateContext';
-import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
 import { ExpanseCategories } from '../../../utils/categories';
@@ -51,17 +53,11 @@ const schema = yup.object({
 export default function CreateExpanse(props: ExpanseProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const {
-    accounts,
-    creditCards,
-    getUserExpanses,
-    getUserCreditCards,
-    expanses,
-  } = useAccount();
+  const { accounts, creditCards, getUserExpanses, getUserCreditCards } =
+    useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
-  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
-    useState(false);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expanseState, setExpanseState] = useState(
     props?.route?.params?.expanse,
@@ -98,7 +94,7 @@ export default function CreateExpanse(props: ExpanseProps) {
 
   const SaveIcon = () => {
     return (
-      <Icons
+      <FeatherIcon
         name="save"
         size={24}
         color={theme === 'dark' ? '#d8d8d8' : '#fff'}
@@ -119,7 +115,7 @@ export default function CreateExpanse(props: ExpanseProps) {
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
-  const handleSubmitAccount = async (data: FormData) => {
+  const handleSubmitExpanse = async (data: FormData) => {
     setIsSubmitting(true);
     const expanseInput = {
       name: data.name,
@@ -155,15 +151,6 @@ export default function CreateExpanse(props: ExpanseProps) {
       setIsSubmitting(false);
     }
   };
-
-  /* useEffect(() => {
-    const expanseFound = expanses.find(
-      exp =>
-        exp.id === props?.route?.params?.expanse.id ||
-        props?.route?.params?.expanse.expanseId,
-    );
-    if (expanseFound) setExpanseState(expanseFound);
-  }, [props?.route?.params?.expanse, expanses]); */
 
   return (
     <>
@@ -210,7 +197,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               onPress={() => setRecurrence('Mensal')}
               checked={recurrence === 'Mensal'}>
               <S.Option>Mensal</S.Option>
-              <Icon name="checkmark" size={RFPercentage(4)} />
+              <Ionicons name="checkmark" size={RFPercentage(4)} />
             </S.SelectOption>
 
             <S.SelectOption
@@ -219,7 +206,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               checked={recurrence === 'Parcelada'}
               style={{ marginHorizontal: RFPercentage(2) }}>
               <S.Option>Parcelada</S.Option>
-              <Icon name="checkmark" size={RFPercentage(4)} />
+              <Ionicons name="checkmark" size={RFPercentage(4)} />
             </S.SelectOption>
 
             <Input
@@ -241,7 +228,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               <S.SelectOption
                 backgroundColor={colors.inputBackground}
                 onPress={() => setSelectStartDateModal(true)}>
-                <Icon name="calendar" size={RFPercentage(4)} />
+                <Ionicons name="calendar" size={RFPercentage(4)} />
                 <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
@@ -297,7 +284,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               colors={colors.saveButtonColors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
-              onPress={handleSubmit(handleSubmitAccount)}
+              onPress={handleSubmit(handleSubmitExpanse)}
             />
           </S.ButtonContainer>
         </KeyboardAwareScrollView>

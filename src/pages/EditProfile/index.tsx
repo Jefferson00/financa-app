@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../hooks/AuthContext';
-import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
-import * as S from './styles';
 import Icons from 'react-native-vector-icons/Feather';
-import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
-import Button from '../../components/Button';
-import { phoneMask } from '../../utils/masks';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../services/api';
-import ModalComponent from '../../components/Modal';
-import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
+import { useAuth } from '../../hooks/AuthContext';
+import { useTheme } from '../../hooks/ThemeContext';
+
+import Menu from '../../components/Menu';
+import ModalComponent from '../../components/Modal';
+import Button from '../../components/Button';
+import Header from '../../components/Header';
+
+import * as S from './styles';
+import api from '../../services/api';
+import { phoneMask } from '../../utils/masks';
+import { getEditProfileColors } from '../../utils/colors/profile';
 
 interface ProfileProps {
   id: string;
@@ -28,6 +31,7 @@ const schema = yup.object({
     .min(2, 'deve ter no mínimo 2 caracteres')
     .max(25, 'deve ter no máximo 25 caracteres'),
   email: yup.string().required('Campo obrigátorio').email('E-mail inválido'),
+  phone: yup.string().required('Campo obrigátorio'),
 });
 
 export default function EditProfile({ id }: ProfileProps) {
@@ -48,12 +52,7 @@ export default function EditProfile({ id }: ProfileProps) {
     resolver: yupResolver(schema),
   });
 
-  const titleColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const colors = getEditProfileColors(theme);
 
   const SaveIcon = () => {
     return (
@@ -69,18 +68,6 @@ export default function EditProfile({ id }: ProfileProps) {
     name: string;
     email: string;
     phone?: string;
-  };
-
-  const saveButtonColors = {
-    PRIMARY_BACKGROUND:
-      theme === 'dark'
-        ? Colors.BLUE_PRIMARY_DARKER
-        : Colors.BLUE_PRIMARY_LIGHTER,
-    SECOND_BACKGROUND:
-      theme === 'dark'
-        ? Colors.BLUE_SECONDARY_DARKER
-        : Colors.BLUE_SECONDARY_LIGHTER,
-    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
   const handleUpdateProfile = async (data: FormData) => {
@@ -117,7 +104,7 @@ export default function EditProfile({ id }: ProfileProps) {
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={titleColor}>Editar Perfil</S.Title>
+          <S.Title color={colors.titleColor}>Editar Perfil</S.Title>
           {user?.avatar ? (
             <S.Avatar
               source={{ uri: user.avatar }}
@@ -134,8 +121,8 @@ export default function EditProfile({ id }: ProfileProps) {
 
           <ControlledInput
             label="Nome"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             autoCapitalize="words"
             name="name"
@@ -145,8 +132,8 @@ export default function EditProfile({ id }: ProfileProps) {
 
           <ControlledInput
             label="Email"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             keyboardType="email-address"
             name="email"
@@ -156,8 +143,8 @@ export default function EditProfile({ id }: ProfileProps) {
 
           <ControlledInput
             label="Celular"
-            background={inputBackground}
-            textColor={textColor}
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="phone"
             placeholder="(99) 9 9999-9999"
             keyboardType="phone-pad"
@@ -169,7 +156,7 @@ export default function EditProfile({ id }: ProfileProps) {
 
           <Button
             title="Salvar"
-            colors={saveButtonColors}
+            colors={colors.saveButtonColors}
             icon={SaveIcon}
             style={{ marginTop: 32 }}
             onPress={handleSubmit(handleUpdateProfile)}
