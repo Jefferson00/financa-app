@@ -516,7 +516,7 @@ export default function Expanses() {
         animationType="slide"
         defaulAccount={expanseSelected?.receiptDefault}
         handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
-        accounts={accounts}
+        accounts={accounts.filter(a => a.status === 'active')}
       />
 
       <ModalComponent

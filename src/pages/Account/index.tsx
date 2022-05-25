@@ -48,7 +48,7 @@ const schema = yup.object({
 
 type FormData = {
   name: string;
-  type: string;
+  type: string | number;
   status: string;
   initialValue?: string;
 };
@@ -90,7 +90,9 @@ export default function Account(props: ProfileProps) {
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
       name: accountState?.name || '',
-      type: accountState?.type || 'Conta Corrente',
+      type: accountTypes.find(c => c.name === accountState?.type)
+        ? accountTypes.find(c => c.name === accountState?.type)?.id
+        : accountTypes[0].name,
       status: accountState?.status || 'active',
       initialValue: accountState?.initialValue
         ? getCurrencyFormat(accountState?.initialValue)
@@ -114,7 +116,9 @@ export default function Account(props: ProfileProps) {
       userId: user?.id,
       status: data.status,
       name: data.name,
-      type: data.type,
+      type:
+        accountTypes.find(type => type.id === Number(data.type))?.name ||
+        data.type,
     };
     try {
       if (accountState) {

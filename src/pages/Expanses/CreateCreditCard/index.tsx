@@ -23,7 +23,10 @@ import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 import { isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
-import { getCreateExpansesColors } from '../../../utils/colors/expanses';
+import {
+  getCreateCreditCardColors,
+  getCreateExpansesColors,
+} from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
 import { Modal, TouchableOpacity, View } from 'react-native';
 import { currencyToValue } from '../../../utils/masks';
@@ -70,7 +73,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
     'Erro ao atualizar informações',
   );
 
-  const colors = getCreateExpansesColors(theme);
+  const colors = getCreateCreditCardColors(theme);
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -78,7 +81,9 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       limit: creditCardState?.limit
         ? getCurrencyFormat(creditCardState?.limit)
         : getCurrencyFormat(0),
-      receiptDefault: creditCardState?.receiptDefault || accounts[0].id,
+      receiptDefault:
+        creditCardState?.receiptDefault ||
+        accounts.filter(a => a.status === 'active')[0].id,
     },
     resolver: yupResolver(schema),
   });
@@ -242,7 +247,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 ? creditCardState.receiptDefault
                 : ''
             }
-            selectItems={accounts}
+            selectItems={accounts.filter(a => a.status === 'active')}
           />
 
           <S.ButtonContainer>

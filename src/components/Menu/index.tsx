@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import * as S from './styles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../styles/global';
@@ -16,8 +16,8 @@ import { Nav } from '../../routes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useAccount } from '../../hooks/AccountContext';
-import { Alert } from 'react-native';
 import { useDate } from '../../hooks/DateContext';
+import ModalComponent from '../Modal';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
@@ -26,6 +26,9 @@ export default function Menu() {
   const { hasAccount } = useAccount();
   const { theme } = useTheme();
   const { setCurrentMonth } = useDate();
+
+  const [alertModalVisible, setAlertModalVisible] = useState(false);
+
   const iconColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
 
@@ -91,7 +94,7 @@ export default function Menu() {
       if (hasAccount || route === 'Home') {
         navigation.navigate(route);
       } else {
-        Alert.alert('Cadastre uma conta para usar essa função');
+        setAlertModalVisible(true);
       }
     },
     [hasAccount],
@@ -165,6 +168,16 @@ export default function Menu() {
           />
         </S.MenuButton>
       </S.Container>
+
+      <ModalComponent
+        type="info"
+        visible={alertModalVisible}
+        title="Cadastre uma conta para usar essa função"
+        onSucessOkButton={() => setAlertModalVisible(false)}
+        animationType="slide"
+        transparent
+        handleCancel={() => setAlertModalVisible(false)}
+      />
     </>
   );
 }

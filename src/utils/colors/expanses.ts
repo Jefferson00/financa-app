@@ -113,3 +113,31 @@ export const getCreateExpansesColors = (theme: ColorSchemeName) => {
     saveButtonColors,
   };
 };
+
+export const getCreateCreditCardColors = (theme: ColorSchemeName) => {
+  const titleColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const textColor =
+    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
+  const inputBackground =
+    theme === 'dark' ? Colors.EXPANSE_SOFT_DARKER : Colors.EXPANSE_SOFT_LIGTHER;
+
+  const saveButtonColors = {
+    PRIMARY_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_PRIMARY_DARKER
+        : Colors.BLUE_PRIMARY_LIGHTER,
+    SECOND_BACKGROUND:
+      theme === 'dark'
+        ? Colors.BLUE_SECONDARY_DARKER
+        : Colors.BLUE_SECONDARY_LIGHTER,
+    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
+  };
+
+  return {
+    inputBackground,
+    titleColor,
+    textColor,
+    saveButtonColors,
+  };
+};

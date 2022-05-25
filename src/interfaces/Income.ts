@@ -5,7 +5,7 @@ export interface Income {
   name: string;
   value: number;
   receiptDate: string;
-  receiptDefault?: string;
+  receiptDefault: string;
   startDate: string;
   endDate?: string;
 }

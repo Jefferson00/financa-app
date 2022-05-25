@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import FeatherIcons from 'react-native-vector-icons/Feather';
@@ -6,7 +6,14 @@ import IonIcons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
+import {
+  addMonths,
+  differenceInMonths,
+  isSameMonth,
+  isToday,
+  lastDayOfMonth,
+  startOfMonth,
+} from 'date-fns';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 
@@ -31,6 +38,9 @@ import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
 import { IncomeCategories } from '../../../utils/categories';
 import { getCreateIncomesColors } from '../../../utils/colors/incomes';
+import { Switch } from 'react-native';
+import { CreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
+import { Income } from '../../../interfaces/Income';
 
 interface IncomeProps {
   route?: {
@@ -54,7 +64,14 @@ const schema = yup.object({
 export default function CreateIncome(props: IncomeProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserIncomes, handleClearCache } = useAccount();
+  const {
+    accounts,
+    getUserIncomes,
+    handleClearCache,
+    handleCreateIncomeOnAccount,
+    getUserIncomesOnAccount,
+    handleUpdateAccountBalance,
+  } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const colors = getCreateIncomesColors(theme);
@@ -69,6 +86,7 @@ export default function CreateIncome(props: IncomeProps) {
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
   const [editSucessfully, setEditSucessfully] = useState(false);
+  const [received, setReceived] = useState(false);
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
@@ -80,8 +98,12 @@ export default function CreateIncome(props: IncomeProps) {
         ? getCurrencyFormat(incomeState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: incomeState?.receiptDefault || accounts[0].id,
-      category: incomeState?.category || IncomeCategories[0].name,
+      receiptDefault:
+        incomeState?.receiptDefault ||
+        accounts.filter(a => a.status === 'active')[0].id,
+      category: IncomeCategories.find(c => c.name === incomeState?.category)
+        ? IncomeCategories.find(c => c.name === incomeState?.category)?.id
+        : IncomeCategories[0].name,
     },
     resolver: yupResolver(schema),
   });
@@ -101,7 +123,7 @@ export default function CreateIncome(props: IncomeProps) {
     value: string;
     status: boolean;
     receiptDefault?: string;
-    category: string;
+    category: string | number;
   };
 
   const handleOkSucess = () => {
@@ -109,7 +131,44 @@ export default function CreateIncome(props: IncomeProps) {
     setTimeout(() => navigation.navigate('Incomes'), 300);
   };
 
-  const handleSubmitAccount = async (data: FormData) => {
+  const receiveIncome = async (income: Income) => {
+    if (user) {
+      const input: CreateIncomeOnAccount = {
+        userId: user.id,
+        accountId: income.receiptDefault,
+        incomeId: income?.id,
+        month: selectedDate,
+        value: income.value,
+        name: income.name,
+        recurrence: income.endDate
+          ? `${
+              differenceInMonths(selectedDate, new Date(income.startDate)) + 1
+            }/${differenceInMonths(selectedDate, new Date(income.endDate)) + 1}`
+          : 'mensal',
+      };
+
+      await handleCreateIncomeOnAccount(input);
+
+      const account = accounts.find(acc => acc.id === input.accountId);
+
+      const accountLastBalance = account?.balances?.find(balance => {
+        if (isSameMonth(new Date(balance.month), selectedDate)) {
+          return balance;
+        }
+      });
+
+      await handleUpdateAccountBalance(
+        accountLastBalance,
+        input.value,
+        account,
+        'Income',
+      );
+
+      await getUserIncomesOnAccount();
+    }
+  };
+
+  const handleSubmitIncome = async (data: FormData) => {
     setIsSubmitting(true);
     const incomeInput = {
       name: data.name,
@@ -123,17 +182,19 @@ export default function CreateIncome(props: IncomeProps) {
       startDate,
       endDate:
         recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
-      receiptDefault: data.receiptDefault,
+      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
     };
-    console.log(incomeState);
     try {
       if (incomeState) {
         await api.put(`incomes/${incomeState.id}`, incomeInput);
         // atualizar o nome em incomesAccount
       } else {
-        await api.post(`incomes`, incomeInput);
+        const { data } = await api.post(`incomes`, incomeInput);
 
-        // se tiver marcado como recebido, criar incomeAccount
+        if (received) {
+          // se tiver marcado como recebido, criar incomeAccount
+          receiveIncome(data);
+        }
       }
 
       handleClearCache();
@@ -147,6 +208,14 @@ export default function CreateIncome(props: IncomeProps) {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (incomeState?.iteration !== 'Mensal') {
+      setIteration(incomeState?.iteration);
+    } else {
+      setRecurrence('Mensal');
+    }
+  }, [incomeState]);
 
   return (
     <>
@@ -205,7 +274,9 @@ export default function CreateIncome(props: IncomeProps) {
             <Input
               background={colors.inputBackground}
               textColor={colors.textColor}
-              value={String(iteration)}
+              value={
+                iteration <= 0 || isNaN(iteration) ? '1' : String(iteration)
+              }
               keyboardType="number-pad"
               maxLength={2}
               onChangeText={value => setIteration(Number(value))}
@@ -227,21 +298,25 @@ export default function CreateIncome(props: IncomeProps) {
             </S.Col>
 
             <S.SwitchContainer>
-              <S.Label
-                color={colors.textColor}
-                style={{ width: '100%', textAlign: 'right' }}>
-                Recebido
-              </S.Label>
-              <ControlledInput
-                type="switch"
-                background="transparent"
-                textColor={colors.textColor}
-                name="status"
-                control={control}
-                value={'false'}
-                thumbColor={colors.thumbColor}
-                trackColor={colors.trackColor}
-              />
+              {isSameMonth(new Date(), selectedDate) && !incomeState && (
+                <>
+                  <S.Label
+                    color={colors.textColor}
+                    style={{ width: '100%', textAlign: 'right' }}>
+                    Recebido
+                  </S.Label>
+                  <Switch
+                    value={received}
+                    onChange={() => setReceived(!received)}
+                    thumbColor={
+                      received
+                        ? colors.thumbColor?.true || '#000'
+                        : colors.thumbColor?.false || '#000'
+                    }
+                    trackColor={colors.trackColor}
+                  />
+                </>
+              )}
             </S.SwitchContainer>
           </S.Row>
 
@@ -253,11 +328,9 @@ export default function CreateIncome(props: IncomeProps) {
             name="receiptDefault"
             control={control}
             value={
-              incomeState?.receiptDefault
-                ? incomeState.receiptDefault
-                : accounts[0].id
+              incomeState?.receiptDefault ? incomeState.receiptDefault : ''
             }
-            selectItems={accounts}
+            selectItems={accounts.filter(acc => acc.status === 'active')}
           />
 
           <ControlledInput
@@ -277,7 +350,7 @@ export default function CreateIncome(props: IncomeProps) {
               colors={colors.saveButtonColors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
-              onPress={handleSubmit(handleSubmitAccount)}
+              onPress={handleSubmit(handleSubmitIncome)}
             />
           </S.ButtonContainer>
         </KeyboardAwareScrollView>

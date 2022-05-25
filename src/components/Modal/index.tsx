@@ -55,6 +55,9 @@ export default function ModalComponent({
               {(type === 'error' || type === 'confirmation') && (
                 <Icons name="alert-circle" size={36} color={errorColor} />
               )}
+              {type === 'info' && (
+                <Icons name="alert-circle" size={36} color={warningColor} />
+              )}
               {type === 'success' && (
                 <Icons name="checkmark-circle" size={36} color={successColor} />
               )}
@@ -73,6 +76,16 @@ export default function ModalComponent({
               )}
 
               {type === 'success' && onSucessOkButton && (
+                <S.OkButton>
+                  <S.ButtonText
+                    color={primaryColor}
+                    onPress={() => onSucessOkButton()}>
+                    OK
+                  </S.ButtonText>
+                </S.OkButton>
+              )}
+
+              {type === 'info' && onSucessOkButton && (
                 <S.OkButton>
                   <S.ButtonText
                     color={primaryColor}

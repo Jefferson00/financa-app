@@ -310,6 +310,16 @@ export default function CardContent({
                 </Swipeable>
               </S.ItemView>
             ))}
+          {!currentInvoice ||
+            (currentInvoice.ExpanseOnInvoice.length === 0 && (
+              <S.ItemView>
+                <S.ItemCard style={{ justifyContent: 'center' }}>
+                  <S.ItemInfo>
+                    <S.ItemTitle>Nenhuma despesa nessa fatura</S.ItemTitle>
+                  </S.ItemInfo>
+                </S.ItemCard>
+              </S.ItemView>
+            ))}
         </View>
       </S.HiddenContent>
 

@@ -186,6 +186,7 @@ export default function EditProfile({ id }: ProfileProps) {
           title="Perfil atualizado com sucesso!"
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+          onSucessOkButton={() => setEditSucessfully(false)}
         />
       </S.Container>
       <Menu />

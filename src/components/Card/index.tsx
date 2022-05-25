@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import LinearGradient from 'react-native-linear-gradient';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import * as S from './styles';
 
@@ -44,7 +45,13 @@ const Card = forwardRef(
       ) : (
         <>
           <S.CardInfo onPress={handleNavigate}>
-            <S.CardTitle>{title}</S.CardTitle>
+            {title.length > 15 ? (
+              <S.CardTitle style={{ fontSize: RFPercentage(2) }}>
+                {title}
+              </S.CardTitle>
+            ) : (
+              <S.CardTitle>{title}</S.CardTitle>
+            )}
             <S.CardBalance>
               {getCurrencyFormat(values?.current || 0)}
             </S.CardBalance>

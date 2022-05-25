@@ -531,7 +531,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   }, [accounts, handleAccountCardMount, cacheCleared, isLoadingData]);
 
   useEffect(() => {
-    if (accounts.length > 0) {
+    if (accounts.length > 0 && accounts.find(acc => acc.status === 'active')) {
       setHasAccount(true);
     }
   }, [accounts]);

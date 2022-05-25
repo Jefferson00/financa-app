@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigation } from '@react-navigation/native';
 import FeatherIcon from 'react-native-vector-icons/Feather';
@@ -6,7 +6,14 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { addMonths, isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
+import {
+  addMonths,
+  differenceInMonths,
+  isSameMonth,
+  isToday,
+  lastDayOfMonth,
+  startOfMonth,
+} from 'date-fns';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
@@ -30,6 +37,9 @@ import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
 import { ExpanseCategories } from '../../../utils/categories';
 import { getCreateExpansesColors } from '../../../utils/colors/expanses';
+import { Switch } from 'react-native';
+import { Expanse } from '../../../interfaces/Expanse';
+import { CreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
 
 interface ExpanseProps {
   route?: {
@@ -53,8 +63,15 @@ const schema = yup.object({
 export default function CreateExpanse(props: ExpanseProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, creditCards, getUserExpanses, getUserCreditCards } =
-    useAccount();
+  const {
+    accounts,
+    creditCards,
+    getUserExpanses,
+    getUserCreditCards,
+    handleCreateExpanseOnAccount,
+    getUserExpansesOnAccount,
+    handleUpdateAccountBalance,
+  } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
 
@@ -66,6 +83,7 @@ export default function CreateExpanse(props: ExpanseProps) {
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
   );
+  const [paid, setPaid] = useState(false);
   const [iteration, setIteration] = useState(1);
   const [hasError, setHasError] = useState(false);
   const [startDate, setStartDate] = useState(selectedDate);
@@ -84,7 +102,9 @@ export default function CreateExpanse(props: ExpanseProps) {
         ? getCurrencyFormat(expanseState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: expanseState?.receiptDefault || accounts[0].id,
+      receiptDefault:
+        expanseState?.receiptDefault ||
+        accounts.filter(a => a.status === 'active')[0].id,
       category: ExpanseCategories.find(c => c.name === expanseState?.category)
         ? ExpanseCategories.find(c => c.name === expanseState?.category)?.id
         : ExpanseCategories[0].name,
@@ -115,6 +135,43 @@ export default function CreateExpanse(props: ExpanseProps) {
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
+  const payExpanse = async (expanse: Expanse) => {
+    if (user) {
+      const input: CreateExpanseOnAccount = {
+        userId: user.id,
+        accountId: expanse.receiptDefault,
+        expanseId: expanse?.id,
+        month: selectedDate,
+        value: expanse.value,
+        name: expanse.name,
+        recurrence: expanse.endDate
+          ? `${differenceInMonths(
+              selectedDate,
+              new Date(expanse.startDate),
+            )}/${differenceInMonths(selectedDate, new Date(expanse.endDate))}`
+          : 'mensal',
+      };
+
+      await handleCreateExpanseOnAccount(input);
+
+      const account = accounts.find(acc => acc.id === input.accountId);
+
+      const accountLastBalance = account?.balances?.find(balance => {
+        if (isSameMonth(new Date(balance.month), selectedDate)) {
+          return balance;
+        }
+      });
+
+      await handleUpdateAccountBalance(
+        accountLastBalance,
+        input.value,
+        account,
+        'Expanse',
+      );
+      await getUserExpansesOnAccount();
+    }
+  };
+
   const handleSubmitExpanse = async (data: FormData) => {
     setIsSubmitting(true);
     const expanseInput = {
@@ -136,7 +193,16 @@ export default function CreateExpanse(props: ExpanseProps) {
       if (expanseState) {
         await api.put(`expanses/${expanseState.id}`, expanseInput);
       } else {
-        await api.post(`expanses`, expanseInput);
+        const { data } = await api.post(`expanses`, expanseInput);
+
+        const expanseToCreditCard = creditCards.find(
+          c => c.id === data.receiptDefault,
+        );
+
+        // se tiver marcado como pago, criar expanseAccount
+        if (paid && !expanseToCreditCard) {
+          payExpanse(data);
+        }
       }
 
       await getUserExpanses();
@@ -151,6 +217,14 @@ export default function CreateExpanse(props: ExpanseProps) {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (expanseState?.iteration !== 'Mensal') {
+      setIteration(expanseState?.iteration || 1);
+    } else {
+      setRecurrence('Mensal');
+    }
+  }, [expanseState]);
 
   return (
     <>
@@ -212,7 +286,9 @@ export default function CreateExpanse(props: ExpanseProps) {
             <Input
               background={colors.inputBackground}
               textColor={colors.textColor}
-              value={String(iteration)}
+              value={
+                iteration <= 0 || isNaN(iteration) ? '1' : String(iteration)
+              }
               keyboardType="number-pad"
               maxLength={2}
               onChangeText={value => setIteration(Number(value))}
@@ -236,21 +312,25 @@ export default function CreateExpanse(props: ExpanseProps) {
             </S.Col>
 
             <S.SwitchContainer>
-              <S.Label
-                color={colors.textColor}
-                style={{ width: '100%', textAlign: 'right' }}>
-                Pago
-              </S.Label>
-              <ControlledInput
-                type="switch"
-                background="transparent"
-                textColor={colors.textColor}
-                name="status"
-                control={control}
-                value={'false'}
-                thumbColor={colors.thumbColor}
-                trackColor={colors.trackColor}
-              />
+              {isSameMonth(new Date(), selectedDate) && !expanseState && (
+                <>
+                  <S.Label
+                    color={colors.textColor}
+                    style={{ width: '100%', textAlign: 'right' }}>
+                    Pago
+                  </S.Label>
+                  <Switch
+                    value={paid}
+                    onChange={() => setPaid(!paid)}
+                    thumbColor={
+                      paid
+                        ? colors.thumbColor?.true || '#000'
+                        : colors.thumbColor?.false || '#000'
+                    }
+                    trackColor={colors.trackColor}
+                  />
+                </>
+              )}
             </S.SwitchContainer>
           </S.Row>
 
@@ -264,7 +344,12 @@ export default function CreateExpanse(props: ExpanseProps) {
             value={
               expanseState?.receiptDefault ? expanseState.receiptDefault : ''
             }
-            selectItems={[...accounts, ...creditCards]}
+            selectItems={[
+              ...accounts.filter(a => a.status === 'active'),
+              ...creditCards.map(e => {
+                return { ...e, name: `Cartão - ${e.name}` };
+              }),
+            ]}
           />
 
           <ControlledInput

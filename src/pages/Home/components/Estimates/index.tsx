@@ -36,15 +36,17 @@ const Estimates = () => {
     let sumBalanceLastMonth = 0;
 
     accounts.map(account => {
-      if (account.balances) {
-        const balanceLastMonth = account.balances.find(balance =>
-          isSameMonth(new Date(balance.month), prevMonth),
-        );
+      if (account.status === 'active') {
+        if (account.balances) {
+          const balanceLastMonth = account.balances.find(balance =>
+            isSameMonth(new Date(balance.month), prevMonth),
+          );
 
-        if (balanceLastMonth) {
-          sumBalanceLastMonth = sumBalanceLastMonth + balanceLastMonth.value;
-        } else {
-          sumBalanceLastMonth = sumBalanceLastMonth + account.initialValue;
+          if (balanceLastMonth) {
+            sumBalanceLastMonth = sumBalanceLastMonth + balanceLastMonth.value;
+          } else {
+            sumBalanceLastMonth = sumBalanceLastMonth + account.initialValue;
+          }
         }
       }
     });

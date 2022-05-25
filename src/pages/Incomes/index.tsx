@@ -35,6 +35,7 @@ import {
 } from '../../interfaces/IncomeOnAccount';
 import { getIncomesColors } from '../../utils/colors/incomes';
 import api from '../../services/api';
+import { reduceString } from '../../utils/reduceString';
 
 export default function Incomes() {
   const navigation = useNavigation<Nav>();
@@ -429,10 +430,11 @@ export default function Incomes() {
                       income.paymentDate
                         ? `Recebido em ${getDayOfTheMounth(
                             new Date(income.paymentDate),
-                          )} - ${
+                          )} - ${reduceString(
                             accounts.find(acc => acc.id === income.accountId)
-                              ?.name
-                          }`
+                              ?.name,
+                            16,
+                          )}`
                         : 'Receber'
                     }
                     mainColor={colors.primaryColor}
@@ -443,7 +445,10 @@ export default function Incomes() {
                     backgroundColor={colors.secondaryCardLoader}
                     onRedirect={() => {
                       navigation.navigate('CreateIncome', {
-                        income: income.income,
+                        income: incomes.find(
+                          inc =>
+                            inc.id === income.id || inc.id === income.incomeId,
+                        ),
                       });
                     }}
                     onSwitchChange={() => {
@@ -482,7 +487,7 @@ export default function Incomes() {
         animationType="slide"
         defaulAccount={incomeSelected?.receiptDefault}
         handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
-        accounts={accounts}
+        accounts={accounts.filter(a => a.status === 'active')}
       />
 
       <ModalComponent

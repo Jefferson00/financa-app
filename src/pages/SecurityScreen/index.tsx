@@ -27,6 +27,8 @@ export default function SecurityScreen() {
     handleDefineSecurityPin,
     hasPinAccess,
     verifyPinAccess,
+    alertModalVisible,
+    closeAlertModal,
   } = useSecurity();
   const defaultPinView = useRef<any>(null);
   const updatePinView = useRef<any>(null);
@@ -102,7 +104,7 @@ export default function SecurityScreen() {
         setIsSuccessModalVisible(true);
       } else {
         setIsErrorModalVisible(true);
-        setErrorMessage('A combinação de senhas não combinam.');
+        setErrorMessage('Combinação de senhas incorreta.');
       }
     }
   }, [firstEnteredPin, comparePin]);
@@ -275,7 +277,20 @@ export default function SecurityScreen() {
           transparent
           title="Senha definida com sucesso!"
           animationType="slide"
-          handleCancel={() => setIsSuccessModalVisible(false)}
+          handleCancel={() => {
+            setFirstEnteredPin('');
+            setComparePin('');
+            setIsSuccessModalVisible(false);
+            defaultPinView.current.clearAll();
+            setFirstEnteredPinComplete(false);
+          }}
+          onSucessOkButton={() => {
+            setFirstEnteredPin('');
+            setComparePin('');
+            setIsSuccessModalVisible(false);
+            defaultPinView.current.clearAll();
+            setFirstEnteredPinComplete(false);
+          }}
         />
         <ModalComponent
           type="error"
@@ -286,6 +301,16 @@ export default function SecurityScreen() {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+        />
+
+        <ModalComponent
+          type="info"
+          visible={alertModalVisible}
+          title="Defina uma senha de acesso"
+          onSucessOkButton={closeAlertModal}
+          animationType="slide"
+          transparent
+          handleCancel={closeAlertModal}
         />
       </S.Container>
       <Menu />

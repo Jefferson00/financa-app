@@ -19,7 +19,6 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { Nav } from '../../routes';
 import { getHomeColors } from '../../utils/colors/home';
 import AsyncStorage from '@react-native-community/async-storage';
-import { Easing } from 'react-native-reanimated';
 
 export default function Home() {
   const navigation = useNavigation<Nav>();
