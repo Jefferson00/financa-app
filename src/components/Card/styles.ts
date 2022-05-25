@@ -10,7 +10,7 @@ interface ContainerProps {
 
 export const Container = styled(LinearGradient)<ContainerProps>`
   width: ${RFPercentage(38)}px;
-  height: 149px;
+  height: ${RFPercentage(20)}px;
   margin: 0 auto;
   border-radius: 10px;
 
@@ -19,13 +19,20 @@ export const Container = styled(LinearGradient)<ContainerProps>`
   flex-direction: row;
 `;
 
-export const CardInfo = styled.View<ContainerProps>`
+export const CardInfo = styled.Pressable<ContainerProps>`
   width: 80%;
   height: 100%;
   justify-content: flex-start;
 `;
 
 export const CardTitle = styled.Text<ContainerProps>`
+  font-family: 'Poppins-SemiBold';
+  font-size: ${RFPercentage(2.5)}px;
+
+  color: #fff;
+`;
+
+export const EmptyCardTitle = styled.Text<ContainerProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;
   text-align: center;

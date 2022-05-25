@@ -54,7 +54,7 @@ export const AuthProvider: React.FC = ({ children }) => {
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(async user => {
       if (user) {
-        const { displayName, photoURL, email, phoneNumber, uid } = user;
+        const { displayName, photoURL, email, phoneNumber } = user;
 
         const token = await user.getIdToken();
 
@@ -71,35 +71,74 @@ export const AuthProvider: React.FC = ({ children }) => {
           authorization: `Bearer ${token}`,
         } as CommonHeaderProperties;
 
-        api
-          .get('users')
-          .then(({ data }) => {
-            const user = data.find(
-              (u: IUser) =>
-                (email && u.email === email) ||
-                (phoneNumber && u.phone === phoneNumber),
-            );
-            // console.log('user: ', user);
-            if (!user) {
-              api
-                .post('users', userInput)
-                .then(({ data }) => {
-                  setUser({
-                    ...data,
-                    phone: data.phone.replace('+55', ''),
-                  });
-                  return;
-                })
-                .catch(err => console.log('erro ao criar:', err))
-                .finally(() => setLoading(false));
-            }
-            setUser({
-              ...user,
-              phone: user.phone.replace('+55', ''),
-            });
-          })
-          .catch(err => console.log('erro ao listar: ', err))
-          .finally(() => setLoading(false));
+        if (email) {
+          api
+            .get(`users/email/${email}`)
+            .then(({ data }) => {
+              // console.log('usuario encontrado com email', data);
+              if (!data) {
+                api
+                  .post('users', userInput)
+                  .then(({ data: dataCreated }) => {
+                    setUser({
+                      ...dataCreated,
+                      phone: dataCreated.phone
+                        ? dataCreated.phone.replace('+55', '')
+                        : null,
+                    });
+                    return;
+                  })
+                  .catch(err => console.log('erro ao criar usuário:', err))
+                  .finally(() => setLoading(false));
+                // console.log('user created with email: ', userInput);
+              } else {
+                setUser({
+                  ...data,
+                  phone: data.phone ? data.phone.replace('+55', '') : null,
+                });
+                return;
+              }
+            })
+            .catch(err => {
+              console.log('erro ao encontrar usuário com email', err);
+            })
+            .finally(() => setLoading(false));
+        } else if (phoneNumber) {
+          // console.log('phone', phoneNumber);
+          api
+            .get(`users/phone/${phoneNumber}`)
+            .then(({ data }) => {
+              // console.log('user found with phone', data);
+              if (!data) {
+                api
+                  .post('users', userInput)
+                  .then(({ data: dataCreated }) => {
+                    setUser({
+                      ...dataCreated,
+                      phone: dataCreated.phone
+                        ? dataCreated.phone.replace('+55', '')
+                        : null,
+                    });
+                    return;
+                  })
+                  .catch(err =>
+                    console.log('erro ao criar usuário com phone:', err),
+                  )
+                  .finally(() => setLoading(false));
+                // console.log('user created with phone: ', userInput);
+              } else {
+                setUser({
+                  ...data,
+                  phone: data.phone ? data.phone.replace('+55', '') : null,
+                });
+                return;
+              }
+            })
+            .catch(err => {
+              console.log('erro ao buscar usuario com phone', err);
+            })
+            .finally(() => setLoading(false));
+        }
       } else {
         setLoading(false);
       }

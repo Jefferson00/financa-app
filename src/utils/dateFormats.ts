@@ -25,3 +25,55 @@ export function getMounthAndYear(date: Date, reduced?: boolean) {
   }
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
+
+export function getMonthName(date: Date) {
+  switch (date.getMonth()) {
+    case 0:
+      return 'Janeiro';
+
+    case 1:
+      return 'Fevereiro';
+
+    case 2:
+      return 'Março';
+
+    case 3:
+      return 'Abril';
+
+    case 4:
+      return 'Maio';
+
+    case 5:
+      return 'Junho';
+
+    case 6:
+      return 'Julho';
+
+    case 7:
+      return 'Agosto';
+
+    case 8:
+      return 'Setembro';
+
+    case 9:
+      return 'Outubro';
+
+    case 10:
+      return 'Novembro';
+    case 11:
+      return 'Dezembro';
+
+    default:
+      break;
+  }
+}
+
+export function getPreviousMonth(date: Date) {
+  let previousMonth = date.getMonth() - 1;
+  if (previousMonth < 0) {
+    previousMonth += 12;
+    date.setFullYear(date.getFullYear() - 1);
+  }
+  date.setMonth(previousMonth);
+  return date;
+}

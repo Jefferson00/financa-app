@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import * as S from './styles';
 import { Colors } from '../../styles/global';
 
@@ -27,7 +27,7 @@ export default function Login() {
   };
 
   return (
-    <S.Container background={Colors.BLUE_PRIMARY_LIGHTER}>
+    <S.Container background={Colors.BLUE_PRIMARY_LIGHTER} testID="container">
       <S.Logo source={LogoImg} />
 
       <S.Main>
@@ -39,6 +39,7 @@ export default function Login() {
           title="Entrar"
           icon={GmailIcon}
           colors={buttonColors}
+          testID="google-login-button"
           onPress={() => signInGoogle()}
         />
         <Button
@@ -50,6 +51,8 @@ export default function Login() {
             TEXT: '#fff',
           }}
           onPress={() => navigation.navigate('Phone')}
+          testID="phone-login-button"
+          fontSize="small"
         />
       </S.ButtonContainer>
     </S.Container>

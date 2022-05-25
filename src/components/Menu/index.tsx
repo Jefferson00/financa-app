@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import * as S from './styles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../styles/global';
@@ -9,14 +9,26 @@ import {
   withTiming,
   useDerivedValue,
   interpolateColor,
+  SharedValue,
 } from 'react-native-reanimated';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { useTheme } from '../../hooks/ThemeContext';
+import { RFPercentage } from 'react-native-responsive-fontsize';
+import { useAccount } from '../../hooks/AccountContext';
+import { useDate } from '../../hooks/DateContext';
+import ModalComponent from '../Modal';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
+  const routes = useRoute();
+  const routeName = routes.name;
+  const { hasAccount } = useAccount();
   const { theme } = useTheme();
+  const { setCurrentMonth } = useDate();
+
+  const [alertModalVisible, setAlertModalVisible] = useState(false);
+
   const iconColor =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
 
@@ -26,13 +38,35 @@ export default function Menu() {
       : withTiming(0, { duration: 1000 });
   }, [theme]);
 
-  const buttonAnimate = useSharedValue(0);
+  const buttonHomeAnimate = useSharedValue(0);
+  const buttonIncomeAnimate = useSharedValue(0);
+  const buttonExpanseAnimate = useSharedValue(0);
 
-  const buttonAnimated = useAnimatedStyle(() => {
+  const buttonHomeAnimated = useAnimatedStyle(() => {
     return {
       transform: [
         {
-          scale: interpolate(buttonAnimate.value, [0, 1], [1, 0.8]),
+          scale: interpolate(buttonHomeAnimate.value, [0, 1], [1, 0.8]),
+        },
+      ],
+    };
+  });
+
+  const buttonIncomeAnimated = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: interpolate(buttonIncomeAnimate.value, [0, 1], [1, 0.8]),
+        },
+      ],
+    };
+  });
+
+  const buttonExpanseAnimated = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          scale: interpolate(buttonExpanseAnimate.value, [0, 1], [1, 0.8]),
         },
       ],
     };
@@ -54,6 +88,18 @@ export default function Menu() {
     return { backgroundColor, borderColor };
   });
 
+  const handleClickButton = useCallback(
+    (buttonAnimate: SharedValue<number>, route: string) => {
+      buttonAnimate.value = withTiming(0);
+      if (hasAccount || route === 'Home') {
+        navigation.navigate(route);
+      } else {
+        setAlertModalVisible(true);
+      }
+    },
+    [hasAccount],
+  );
+
   return (
     <>
       <S.Container
@@ -73,34 +119,65 @@ export default function Menu() {
           colorAnimated,
         ]}>
         <S.MenuButton
-          isActive
+          isActive={routeName === 'Home'}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
-          onPressIn={() => (buttonAnimate.value = withTiming(1))}
+          onPressIn={() => (buttonHomeAnimate.value = withTiming(1))}
           onPressOut={() => {
-            buttonAnimate.value = withTiming(0);
-            navigation.navigate('Home');
+            setCurrentMonth(), handleClickButton(buttonHomeAnimate, 'Home');
           }}>
-          <S.AnimatedView style={buttonAnimated}>
-            <Icon name="home" size={36} color={iconColor} />
+          <S.AnimatedView style={buttonHomeAnimated}>
+            <Icon name="home" size={RFPercentage(5.2)} color={iconColor} />
           </S.AnimatedView>
         </S.MenuButton>
 
         <S.MenuButton
-          isActive={false}
-          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="arrow-up-circle" size={36} color={iconColor} />
+          isActive={routeName === 'Incomes' || routeName === 'CreateIncome'}
+          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
+          onPressIn={() => (buttonIncomeAnimate.value = withTiming(1))}
+          onPressOut={() => handleClickButton(buttonIncomeAnimate, 'Incomes')}>
+          <S.AnimatedView style={buttonIncomeAnimated}>
+            <Icon
+              name="arrow-up-circle"
+              size={RFPercentage(5.2)}
+              color={iconColor}
+            />
+          </S.AnimatedView>
+        </S.MenuButton>
+        <S.MenuButton
+          isActive={routeName === 'Expanses' || routeName === 'CreateExpanse'}
+          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
+          onPressIn={() => (buttonExpanseAnimate.value = withTiming(1))}
+          onPressOut={() =>
+            handleClickButton(buttonExpanseAnimate, 'Expanses')
+          }>
+          <S.AnimatedView style={buttonExpanseAnimated}>
+            <Icon
+              name="arrow-down-circle"
+              size={RFPercentage(5.2)}
+              color={iconColor}
+            />
+          </S.AnimatedView>
         </S.MenuButton>
         <S.MenuButton
           isActive={false}
           hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="arrow-down-circle" size={36} color={iconColor} />
-        </S.MenuButton>
-        <S.MenuButton
-          isActive={false}
-          hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}>
-          <Icon name="notifications" size={36} color={iconColor} />
+          <Icon
+            name="notifications"
+            size={RFPercentage(5.2)}
+            color={iconColor}
+          />
         </S.MenuButton>
       </S.Container>
+
+      <ModalComponent
+        type="info"
+        visible={alertModalVisible}
+        title="Cadastre uma conta para usar essa função"
+        onSucessOkButton={() => setAlertModalVisible(false)}
+        animationType="slide"
+        transparent
+        handleCancel={() => setAlertModalVisible(false)}
+      />
     </>
   );
 }

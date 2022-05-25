@@ -1,15 +1,19 @@
 import React from 'react';
-import { useAuth } from '../../hooks/AuthContext';
-import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
-import * as S from './styles';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { SharedElement } from 'react-navigation-shared-element';
 import { ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { SharedElement } from 'react-navigation-shared-element';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { RFPercentage } from 'react-native-responsive-fontsize';
+
+import { useAuth } from '../../hooks/AuthContext';
+import { useTheme } from '../../hooks/ThemeContext';
+
+import Menu from '../../components/Menu';
+
+import * as S from './styles';
 import { Nav } from '../../routes';
 import { maskPhone } from '../../utils/masks';
-import { useTheme } from '../../hooks/ThemeContext';
+import { getProfileColors } from '../../utils/colors/profile';
 
 interface ProfileProps {
   id: string;
@@ -19,105 +23,106 @@ export default function Profile({ id }: ProfileProps) {
   const { user, signOut } = useAuth();
   const { theme } = useTheme();
   const navigation = useNavigation<Nav>();
-  const backgroundColor =
-    theme === 'dark' ? Colors.BACKGROUND_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const btnBackgroundColor =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : '#fff';
-  const btnColor = theme === 'dark' ? '#c5c5c5' : '#09192D';
-  const btnIconColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor = theme === 'dark' ? '#c5c5c5' : '#fff';
-  const signOutBtnColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
-  const alertColor = '#ffaea7';
+
+  const colors = getProfileColors(theme);
 
   return (
-    <S.Container backgroundColor={backgroundColor}>
-      {user?.avatar ? (
-        <SharedElement id="teste">
-          <S.Avatar
-            source={{ uri: user.avatar }}
-            resizeMode="cover"
-            style={{ borderRadius: 60, width: 120, height: 120 }}
-          />
-        </SharedElement>
-      ) : (
-        <SharedElement id="teste">
-          <S.EmptyAvatar
-            style={{
-              borderRadius: 60,
-              width: 120,
-              height: 120,
-              backgroundColor: '#d2d2d2',
-            }}
-          />
-        </SharedElement>
-      )}
-
-      {(!user?.name || !user?.email) && (
-        <S.Alert color={alertColor}>Atualize seus dados</S.Alert>
-      )}
-
-      {user?.name && <S.Title color={textColor}>Olá, {user?.name}</S.Title>}
-
-      <S.Subtitle color={textColor}>{user?.email}</S.Subtitle>
-      {user?.phone && (
-        <S.Subtitle color={textColor}>{maskPhone(user.phone)}</S.Subtitle>
-      )}
-
+    <S.Container backgroundColor={colors.backgroundColor}>
       <ScrollView
         style={{ width: '100%', padding: 24 }}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          flex: 1,
-          paddingBottom: 96,
+          paddingBottom: 150,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
+        {user?.avatar ? (
+          <SharedElement id="avatar">
+            <S.Avatar
+              source={{ uri: user.avatar }}
+              resizeMode="cover"
+              style={{
+                borderRadius: RFPercentage(8),
+                width: RFPercentage(16),
+                height: RFPercentage(16),
+              }}
+            />
+          </SharedElement>
+        ) : (
+          <SharedElement id="avatar">
+            <S.EmptyAvatar
+              style={{
+                borderRadius: RFPercentage(8),
+                width: RFPercentage(16),
+                height: RFPercentage(16),
+                backgroundColor: '#d2d2d2',
+              }}
+            />
+          </SharedElement>
+        )}
+
+        {(!user?.name || !user?.email) && (
+          <S.Alert color={colors.alertColor}>Atualize seus dados</S.Alert>
+        )}
+
+        {user?.name && (
+          <S.Title color={colors.textColor}>Olá, {user?.name}</S.Title>
+        )}
+
+        <S.Subtitle color={colors.textColor}>{user?.email}</S.Subtitle>
+        {user?.phone && (
+          <S.Subtitle color={colors.textColor}>
+            {maskPhone(user.phone)}
+          </S.Subtitle>
+        )}
+
         <S.MainButtonContainer>
           <S.Button
-            backgroundColor={btnBackgroundColor}
-            color={btnColor}
+            backgroundColor={colors.btnBackgroundColor}
+            color={colors.btnColor}
             onPress={() => navigation.navigate('EditProfile')}>
             <Icon
               name="create"
-              size={30}
-              color={btnIconColor}
+              size={RFPercentage(5)}
+              color={colors.btnIconColor}
               style={{ position: 'absolute', left: 18 }}
             />
-            <S.ButtonText color={btnColor}>Editar Perfil</S.ButtonText>
+            <S.ButtonText color={colors.btnColor}>Editar Perfil</S.ButtonText>
           </S.Button>
 
           <S.Button
-            backgroundColor={btnBackgroundColor}
-            color={btnColor}
+            backgroundColor={colors.btnBackgroundColor}
+            color={colors.btnColor}
             onPress={() => navigation.navigate('ThemeScreen')}>
             <Icon
               name="contrast"
-              size={30}
-              color={btnIconColor}
+              size={RFPercentage(5)}
+              color={colors.btnIconColor}
               style={{ position: 'absolute', left: 18 }}
             />
-            <S.ButtonText color={btnColor}>Tema</S.ButtonText>
+            <S.ButtonText color={colors.btnColor}>Tema</S.ButtonText>
           </S.Button>
 
           <S.Button
-            backgroundColor={btnBackgroundColor}
+            backgroundColor={colors.btnBackgroundColor}
             onPress={() => navigation.navigate('SecurityScreen')}>
             <Icon
               name="lock-closed"
-              size={30}
-              color={btnIconColor}
+              size={RFPercentage(5)}
+              color={colors.btnIconColor}
               style={{ position: 'absolute', left: 18 }}
             />
-            <S.ButtonText color={btnColor}>Segurança</S.ButtonText>
+            <S.ButtonText color={colors.btnColor}>Segurança</S.ButtonText>
           </S.Button>
         </S.MainButtonContainer>
 
         <S.LogoutContainer>
-          <S.Button backgroundColor={signOutBtnColor} onPress={() => signOut()}>
+          <S.Button
+            backgroundColor={colors.signOutBtnColor}
+            onPress={() => signOut()}>
             <Icon
               name="log-out"
-              size={30}
+              size={RFPercentage(5)}
               color="#fff"
               style={{ position: 'absolute', left: 18 }}
             />

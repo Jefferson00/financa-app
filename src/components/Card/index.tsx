@@ -1,5 +1,6 @@
 import React, { forwardRef } from 'react';
 import LinearGradient from 'react-native-linear-gradient';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import * as S from './styles';
 
@@ -20,11 +21,12 @@ interface CradsProps {
   values?: IValues;
   type?: 'ADD' | null;
   id: string;
+  handleNavigate?: () => void;
 }
 
 const Card = forwardRef(
   (
-    { colors, icon: Icon, title, type, values, id }: CradsProps,
+    { colors, icon: Icon, title, type, values, id, handleNavigate }: CradsProps,
     ref: React.Ref<LinearGradient> | undefined,
   ) => (
     <S.Container
@@ -33,10 +35,23 @@ const Card = forwardRef(
       end={{ x: 1, y: 0 }}
       colors={[colors.PRIMARY_BACKGROUND, colors.SECOND_BACKGROUND]}
       id={id}>
-      {!type && (
+      {type === 'ADD' ? (
+        <S.AddCardContainer>
+          <S.EmptyCardTitle>{title}</S.EmptyCardTitle>
+          <S.AddButton onPress={handleNavigate}>
+            <Icon />
+          </S.AddButton>
+        </S.AddCardContainer>
+      ) : (
         <>
-          <S.CardInfo>
-            <S.CardTitle>{title}</S.CardTitle>
+          <S.CardInfo onPress={handleNavigate}>
+            {title.length > 15 ? (
+              <S.CardTitle style={{ fontSize: RFPercentage(2) }}>
+                {title}
+              </S.CardTitle>
+            ) : (
+              <S.CardTitle>{title}</S.CardTitle>
+            )}
             <S.CardBalance>
               {getCurrencyFormat(values?.current || 0)}
             </S.CardBalance>
@@ -49,14 +64,6 @@ const Card = forwardRef(
             <Icon />
           </S.IconContainer>
         </>
-      )}
-      {type === 'ADD' && (
-        <S.AddCardContainer>
-          <S.CardTitle>{title}</S.CardTitle>
-          <S.AddButton>
-            <Icon />
-          </S.AddButton>
-        </S.AddCardContainer>
       )}
     </S.Container>
   ),

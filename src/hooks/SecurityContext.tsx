@@ -9,10 +9,12 @@ interface SecurityContextData {
   toggleEnableSecurity: () => Promise<void>;
   handleDefineSecurityPin: (pinAccess: string) => Promise<void>;
   verifyPinAccess: (pinAccess: string) => Promise<boolean>;
+  closeAlertModal: () => void;
   errorPinAccess: boolean;
   hasAuthenticated: boolean;
   securityEnabled: boolean;
   hasPinAccess: boolean;
+  alertModalVisible: boolean;
 }
 
 export const SecurityContext = createContext<SecurityContextData>(
@@ -24,6 +26,8 @@ export const SecurityProvider: React.FC = ({ children }) => {
   const [securityEnabled, setSecurityEnabled] = useState(false);
   const [errorPinAccess, setErrorPinAccess] = useState(false);
   const [hasPinAccess, setHasPinAccess] = useState(false);
+  const [alertModalVisible, setAlertModalVisible] = useState(false);
+
   const handleAuth = () => {
     FingerprintScanner.authenticate({ onAttempt: err => console.log(err) })
       .then(() => {
@@ -32,6 +36,10 @@ export const SecurityProvider: React.FC = ({ children }) => {
       .catch(error => {
         console.log(error);
       });
+  };
+
+  const closeAlertModal = () => {
+    setAlertModalVisible(false);
   };
 
   const handlePinAccess = async (pinAccess: string) => {
@@ -61,9 +69,10 @@ export const SecurityProvider: React.FC = ({ children }) => {
   const toggleEnableSecurity = async () => {
     const pin = await AsyncStorage.getItem('@FinancaAppBeta:securityPin');
     if (!pin) {
-      Alert.alert('Defina uma senha de acesso');
+      setAlertModalVisible(true);
       return;
     }
+    setHasAuthenticated(true);
     setSecurityEnabled(!securityEnabled);
     if (securityEnabled) {
       await AsyncStorage.removeItem('@FinancaAppBeta:securityEnabled');
@@ -107,10 +116,12 @@ export const SecurityProvider: React.FC = ({ children }) => {
         toggleEnableSecurity,
         handleDefineSecurityPin,
         verifyPinAccess,
+        closeAlertModal,
         hasAuthenticated,
         errorPinAccess,
         securityEnabled,
         hasPinAccess,
+        alertModalVisible,
       }}>
       {children}
     </SecurityContext.Provider>

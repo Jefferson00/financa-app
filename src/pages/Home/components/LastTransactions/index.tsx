@@ -1,70 +1,83 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
-import { getDayOfTheMounth } from '../../../../utils/dateFormats';
-import { Colors } from '../../../../styles/global';
-import * as S from './styles';
+import ContentLoader, { Rect } from 'react-content-loader/native';
+
+import { useAccount } from '../../../../hooks/AccountContext';
+import { useAuth } from '../../../../hooks/AuthContext';
 import { useTheme } from '../../../../hooks/ThemeContext';
 
+import * as S from './styles';
+import api from '../../../../services/api';
+import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
+import { getDayOfTheMounth } from '../../../../utils/dateFormats';
+import {
+  getHomeColors,
+  getLastTransactionsColors,
+} from '../../../../utils/colors/home';
+
+interface ITransactions {
+  id: string;
+  title: string;
+  value: number;
+  paymentDate: Date;
+  category: string;
+  type: 'Expanse' | 'Income';
+}
+
 const LastTransactions = () => {
+  const width = Dimensions.get('screen').width;
   const { theme } = useTheme();
+  const { user } = useAuth();
+  const { expansesOnAccounts, incomesOnAccounts } = useAccount();
+  const [lastTransactionsState, setLastTransactionsState] = useState<
+    ITransactions[]
+  >([]);
+  const [loadingData, setLoadingData] = useState(true);
 
-  const iconColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const backgroundColor =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const expanseColor =
-    theme === 'dark'
-      ? Colors.EXPANSE_PRIMARY_DARKER
-      : Colors.EXPANSE_PRIMARY_LIGTHER;
-  const incomeColor =
-    theme === 'dark'
-      ? Colors.INCOME_PRIMARY_DARKER
-      : Colors.INCOME_PRIMARY_LIGTHER;
+  const homeColors = getHomeColors(theme);
+  const colors = getLastTransactionsColors(theme);
 
-  const lastTransactions = [
-    {
-      id: '1',
-      title: 'Compras do mês',
-      value: 58590,
-      created_at: new Date(),
-      category: 'others',
-      type: 'expanse',
-    },
-    {
-      id: '2',
-      title: 'Beneficio de não sei o que',
-      value: 200000,
-      created_at: new Date(),
-      category: 'others',
-      type: 'income',
-    },
-    {
-      id: '3',
-      title: 'Minha pika',
-      value: 100000,
-      created_at: new Date(),
-      category: 'others',
-      type: 'income',
-    },
-  ];
+  const getLastTransactions = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await api.get(`users/lastTransactions/${user?.id}`);
+        setLastTransactionsState(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [user]);
+
+  useEffect(() => {
+    getLastTransactions().finally(() => setLoadingData(false));
+  }, [getLastTransactions, incomesOnAccounts, expansesOnAccounts]);
 
   return (
     <>
-      {lastTransactions.length === 0 ? (
-        <S.LastTransactionsView backgroundColor={backgroundColor}>
-          <S.TransactionText>Nenhuma transação por enquanto</S.TransactionText>
+      {loadingData ? (
+        <ContentLoader
+          viewBox={`0 0 ${width} 80`}
+          height={80}
+          width={'100%'}
+          backgroundColor={homeColors.secondaryColor}
+          foregroundColor="rgb(255, 255, 255)">
+          <Rect x="0" y="0" rx="20" ry="20" width={width} height="80" />
+        </ContentLoader>
+      ) : lastTransactionsState.length === 0 ? (
+        <S.LastTransactionsView backgroundColor={colors.backgroundColor}>
+          <S.TransactionText color={colors.textColor}>
+            Nenhuma transação por enquanto
+          </S.TransactionText>
         </S.LastTransactionsView>
       ) : (
-        lastTransactions.map(transaction => (
+        lastTransactionsState.map(transaction => (
           <S.LastTransactionsView
             key={transaction.id}
-            backgroundColor={backgroundColor}>
-            <Icon name="business" size={32} color={iconColor} />
+            backgroundColor={colors.backgroundColor}>
+            <Icon name="business" size={32} color={colors.iconColor} />
             <S.TitleContainer>
-              <S.TransactionTitle color={textColor}>
+              <S.TransactionTitle color={colors.textColor}>
                 {transaction.title.length > 15
                   ? `${transaction.title.substring(0, 16)}...`
                   : transaction.title}
@@ -74,12 +87,15 @@ const LastTransactions = () => {
             <S.DetailsContainer>
               <S.TransactionValue
                 color={
-                  transaction.type === 'expanse' ? expanseColor : incomeColor
+                  transaction.type === 'Expanse'
+                    ? colors.expanseColor
+                    : colors.incomeColor
                 }>
+                {transaction.type === 'Expanse' && '-'}
                 {getCurrencyFormat(transaction.value)}
               </S.TransactionValue>
-              <S.TransactionDate color={textColor}>
-                {getDayOfTheMounth(transaction.created_at)}
+              <S.TransactionDate color={colors.textColor}>
+                {getDayOfTheMounth(new Date(transaction.paymentDate))}
               </S.TransactionDate>
             </S.DetailsContainer>
           </S.LastTransactionsView>

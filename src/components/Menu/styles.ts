@@ -14,7 +14,7 @@ interface ButtonProps {
 export const Container = styled(Animated.View)`
   flex-direction: row;
   width: 100%;
-  height: 86px;
+  height: ${RFPercentage(13)}px;
   align-items: flex-start;
   justify-content: center;
 
@@ -32,7 +32,7 @@ export const MenuButton = styled.Pressable<ButtonProps>`
   flex: 1;
   justify-content: center;
   align-items: center;
-  padding-top: 16px;
+  padding-top: ${RFPercentage(2.5)}px;
 
   opacity: ${props => (props.isActive ? 1 : 0.5)};
 `;

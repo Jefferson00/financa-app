@@ -21,7 +21,7 @@ export const Container = styled(Animated.View)`
   flex: 1;
   align-items: center;
   padding: 16px 24px;
-  padding-bottom: ${RFPercentage(16)}px;
+  padding-bottom: ${RFPercentage(20)}px;
 
   transition: all 0.5s;
 `;

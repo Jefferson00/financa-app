@@ -1,24 +1,38 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../../hooks/AuthContext';
-import Menu from '../../components/Menu';
-import { Colors } from '../../styles/global';
-import * as S from './styles';
-import { useRoute } from '@react-navigation/native';
 import Icons from 'react-native-vector-icons/Feather';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
-import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
-import Button from '../../components/Button';
-import { phoneMask } from '../../utils/masks';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../services/api';
-import ModalComponent from '../../components/Modal';
+import { RFPercentage } from 'react-native-responsive-fontsize';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+
+import { useAuth } from '../../hooks/AuthContext';
 import { useTheme } from '../../hooks/ThemeContext';
+
+import Menu from '../../components/Menu';
+import ModalComponent from '../../components/Modal';
+import Button from '../../components/Button';
+import Header from '../../components/Header';
+
+import * as S from './styles';
+import api from '../../services/api';
+import { phoneMask } from '../../utils/masks';
+import { getEditProfileColors } from '../../utils/colors/profile';
 
 interface ProfileProps {
   id: string;
 }
+
+const schema = yup.object({
+  name: yup
+    .string()
+    .required('Campo obrigátorio')
+    .min(2, 'deve ter no mínimo 2 caracteres')
+    .max(25, 'deve ter no máximo 25 caracteres'),
+  email: yup.string().required('Campo obrigátorio').email('E-mail inválido'),
+  phone: yup.string().required('Campo obrigátorio'),
+});
 
 export default function EditProfile({ id }: ProfileProps) {
   const { user, updateUser } = useAuth();
@@ -35,14 +49,10 @@ export default function EditProfile({ id }: ProfileProps) {
       email: user?.email || '',
       phone: user?.phone || '',
     },
+    resolver: yupResolver(schema),
   });
 
-  const titleColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
-  const textColor =
-    theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
-  const inputBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const colors = getEditProfileColors(theme);
 
   const SaveIcon = () => {
     return (
@@ -58,18 +68,6 @@ export default function EditProfile({ id }: ProfileProps) {
     name: string;
     email: string;
     phone?: string;
-  };
-
-  const saveButtonColors = {
-    PRIMARY_BACKGROUND:
-      theme === 'dark'
-        ? Colors.BLUE_PRIMARY_DARKER
-        : Colors.BLUE_PRIMARY_LIGHTER,
-    SECOND_BACKGROUND:
-      theme === 'dark'
-        ? Colors.BLUE_SECONDARY_DARKER
-        : Colors.BLUE_SECONDARY_LIGHTER,
-    TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
   const handleUpdateProfile = async (data: FormData) => {
@@ -89,7 +87,7 @@ export default function EditProfile({ id }: ProfileProps) {
     } catch (error: any) {
       if (error?.response?.data?.message)
         setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
+      console.log(error);
       setHasError(true);
     } finally {
       setIsSubmitting(false);
@@ -106,20 +104,25 @@ export default function EditProfile({ id }: ProfileProps) {
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
           contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={titleColor}>Editar Perfil</S.Title>
+          <S.Title color={colors.titleColor}>Editar Perfil</S.Title>
           {user?.avatar ? (
             <S.Avatar
               source={{ uri: user.avatar }}
               resizeMode="cover"
-              style={{ borderRadius: 60, width: 120, height: 120 }}
+              style={{
+                borderRadius: RFPercentage(8),
+                width: RFPercentage(16),
+                height: RFPercentage(16),
+              }}
             />
           ) : (
             <S.EmptyAvatar />
           )}
-          <S.Label color={textColor}>Nome</S.Label>
+
           <ControlledInput
-            background={inputBackground}
-            textColor={textColor}
+            label="Nome"
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             autoCapitalize="words"
             name="name"
@@ -127,12 +130,10 @@ export default function EditProfile({ id }: ProfileProps) {
             value={user?.name ? user.name : ''}
           />
 
-          <S.Label color={textColor} style={{ marginTop: 16 }}>
-            Email
-          </S.Label>
           <ControlledInput
-            background={inputBackground}
-            textColor={textColor}
+            label="Email"
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             returnKeyType="next"
             keyboardType="email-address"
             name="email"
@@ -140,12 +141,10 @@ export default function EditProfile({ id }: ProfileProps) {
             value={user?.email ? user.email : ''}
           />
 
-          <S.Label color={textColor} style={{ marginTop: 16 }}>
-            Celular
-          </S.Label>
           <ControlledInput
-            background={inputBackground}
-            textColor={textColor}
+            label="Celular"
+            background={colors.inputBackground}
+            textColor={colors.textColor}
             name="phone"
             placeholder="(99) 9 9999-9999"
             keyboardType="phone-pad"
@@ -157,7 +156,7 @@ export default function EditProfile({ id }: ProfileProps) {
 
           <Button
             title="Salvar"
-            colors={saveButtonColors}
+            colors={colors.saveButtonColors}
             icon={SaveIcon}
             style={{ marginTop: 32 }}
             onPress={handleSubmit(handleUpdateProfile)}
@@ -187,6 +186,7 @@ export default function EditProfile({ id }: ProfileProps) {
           title="Perfil atualizado com sucesso!"
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
+          onSucessOkButton={() => setEditSucessfully(false)}
         />
       </S.Container>
       <Menu />

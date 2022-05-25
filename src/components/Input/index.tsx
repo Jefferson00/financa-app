@@ -1,5 +1,5 @@
 import React from 'react';
-import { TextInputProps } from 'react-native';
+import { Text, TextInputProps } from 'react-native';
 import { MaskInputProps } from 'react-native-mask-input';
 import * as S from './styles';
 
@@ -8,6 +8,9 @@ interface ButtonProps extends MaskInputProps {
   background: string;
   border?: string;
   textColor: string;
+  disabled?: boolean;
+  prefix?: string;
+  width?: number;
 }
 
 export default function Input({
@@ -15,12 +18,20 @@ export default function Input({
   icon: Icon,
   border,
   textColor,
+  disabled,
+  prefix,
+  width,
   ...rest
 }: ButtonProps) {
   return (
-    <S.Container backgroundColor={background}>
+    <S.Container
+      style={{ maxWidth: width }}
+      backgroundColor={background}
+      disabled={disabled}
+      prefix={prefix}>
       {Icon && <Icon />}
-      <S.InputText {...rest} color={textColor} />
+      <S.InputText {...rest} color={textColor} editable={!disabled} />
+      {prefix && <S.Prefix color={textColor}>{prefix}</S.Prefix>}
     </S.Container>
   );
 }

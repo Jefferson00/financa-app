@@ -12,6 +12,7 @@ interface ButtonProps extends PressableProps {
   icon: React.FC;
   title: string;
   colors: Colors;
+  fontSize?: 'small' | 'default';
 }
 
 interface Colors {
@@ -25,6 +26,7 @@ export default function Button({
   title,
   icon: Icon,
   colors,
+  fontSize,
   ...rest
 }: ButtonProps) {
   const buttonAnimate = useSharedValue(0);
@@ -46,7 +48,11 @@ export default function Button({
       {...rest}>
       <S.Container style={buttonAnimated}>
         <S.Main backgroundColor={colors.PRIMARY_BACKGROUND}>
-          <S.MainText color={colors.TEXT}>{title}</S.MainText>
+          {fontSize === 'small' ? (
+            <S.SubText color={colors.TEXT}>{title}</S.SubText>
+          ) : (
+            <S.MainText color={colors.TEXT}>{title}</S.MainText>
+          )}
         </S.Main>
 
         <S.Icon backgroundColor={colors.SECOND_BACKGROUND}>

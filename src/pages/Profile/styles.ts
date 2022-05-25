@@ -1,8 +1,6 @@
 import React from 'react';
-import { Dimensions } from 'react-native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import styled, { css } from 'styled-components/native';
-const width = Dimensions.get('screen').width;
+import styled from 'styled-components/native';
 
 interface ContainerProps {
   backgroundColor: string;
@@ -26,15 +24,15 @@ export const Container = styled.View<ContainerProps>`
 
 export const EmptyAvatar = styled.View`
   background-color: #d2d2d2;
-  margin-top: 64px;
-  margin-bottom: 32px;
+  margin-top: ${RFPercentage(8)}px;
+  margin-bottom: ${RFPercentage(4)}px;
   align-items: center;
   justify-content: center;
 `;
 
 export const Avatar = styled.Image`
-  margin-top: 64px;
-  margin-bottom: 32px;
+  margin-top: ${RFPercentage(8)}px;
+  margin-bottom: ${RFPercentage(4)}px;
 `;
 
 export const Title = styled.Text<TextProps>`
@@ -64,15 +62,17 @@ export const Button = styled.TouchableOpacity<ButtonProps>`
   color: ${props => (props.color ? props.color : '#09192D')};
 
   width: 100%;
-  height: 50px;
+  height: ${RFPercentage(8)}px;
   border-radius: 10px;
-  padding: 0 18px;
+  padding: 0 ${RFPercentage(1.5)}px;
   margin: 8px 0;
 
   position: relative;
 `;
 
-export const MainButtonContainer = styled.View``;
+export const MainButtonContainer = styled.View`
+  margin-top: ${RFPercentage(3)}px;
+`;
 
 export const LogoutContainer = styled.View`
   flex: 1;

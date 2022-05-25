@@ -1,20 +1,8 @@
 import React from 'react';
-import { Dimensions } from 'react-native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import styled, { css } from 'styled-components/native';
-const width = Dimensions.get('screen').width;
-
-interface ContainerProps {
-  backgroundColor: string;
-}
-
+import styled from 'styled-components/native';
 interface TextProps {
   color: string;
-}
-
-interface ButtonProps {
-  color?: string;
-  backgroundColor?: string;
 }
 
 export const Container = styled.View`
@@ -38,29 +26,8 @@ export const Avatar = styled.Image`
   margin-bottom: 32px;
 `;
 
-export const Label = styled.Text<TextProps>`
-  color: ${props => props.color};
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.2)}px;
-  align-self: flex-start;
-`;
-
 export const Title = styled.Text<TextProps>`
   color: ${props => props.color};
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;
-`;
-
-export const Subtitle = styled.Text<TextProps>`
-  color: ${props => props.color};
-  font-family: 'Poppins-Regular';
-  font-size: ${RFPercentage(2)}px;
-`;
-
-export const MainButtonContainer = styled.View``;
-
-export const LogoutContainer = styled.View`
-  flex: 1;
-  justify-content: flex-end;
-  align-items: flex-end;
 `;

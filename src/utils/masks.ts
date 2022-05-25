@@ -1,4 +1,4 @@
-import { Mask } from 'react-native-mask-input';
+import { Mask, createNumberMask } from 'react-native-mask-input';
 
 export const maskPhone = (value: string) =>
   value
@@ -24,3 +24,21 @@ export const phoneMask: Mask = [
   /\d/,
   /\d/,
 ];
+
+export const priceMask = (value: string) => {
+  let maskedPrice = value.replace(/\D/g, '');
+  maskedPrice = `${(Number(maskedPrice) / 100).toFixed(2)}`;
+  maskedPrice = maskedPrice.replace('.', ',');
+  maskedPrice = maskedPrice.replace(/(\d)(\d{3})(\d{3}),/g, '$1.$2.$3,');
+  maskedPrice = maskedPrice.replace(/(\d)(\d{3}),/g, '$1.$2,');
+  maskedPrice = `R$ ${maskedPrice}`;
+  return maskedPrice;
+};
+
+export const currencyToValue = (value: string) => {
+  return value
+    .split('R$')[1]
+    .replace(/\D/g, '')
+    .replace(',', '')
+    .replace('.', '');
+};
