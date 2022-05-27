@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../hooks/AuthContext';
 import Menu from '../../../components/Menu';
@@ -139,6 +139,14 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (creditCardState?.color) setColorState(creditCardState?.color);
+    if (creditCardState?.paymentDate)
+      setPaymentDate(new Date(creditCardState?.paymentDate));
+    if (creditCardState?.invoiceClosing)
+      setInvoiceClosing(new Date(creditCardState?.invoiceClosing));
+  }, [creditCardState]);
 
   return (
     <>

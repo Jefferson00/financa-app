@@ -170,6 +170,9 @@ export default function CreateIncome(props: IncomeProps) {
 
   const handleSubmitIncome = async (data: FormData) => {
     setIsSubmitting(true);
+
+    const interationVerified = iteration === 0 ? 1 : iteration;
+
     const incomeInput = {
       name: data.name,
       userId: user?.id,
@@ -177,17 +180,21 @@ export default function CreateIncome(props: IncomeProps) {
       category:
         IncomeCategories.find(i => i.id === Number(data.category))?.name ||
         data.category,
-      iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
+      iteration:
+        recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
       receiptDate: startDate,
       startDate,
       endDate:
-        recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
+        recurrence === 'Parcelada'
+          ? addMonths(startDate, interationVerified - 1)
+          : null,
       receiptDefault: data.receiptDefault ? data.receiptDefault : null,
     };
     try {
       if (incomeState) {
         await api.put(`incomes/${incomeState.id}`, incomeInput);
         // atualizar o nome em incomesAccount
+        await getUserIncomesOnAccount();
       } else {
         const { data } = await api.post(`incomes`, incomeInput);
 
@@ -211,7 +218,7 @@ export default function CreateIncome(props: IncomeProps) {
 
   useEffect(() => {
     if (incomeState?.iteration !== 'Mensal') {
-      setIteration(incomeState?.iteration);
+      setIteration(incomeState?.iteration || 1);
     } else {
       setRecurrence('Mensal');
     }
@@ -275,7 +282,7 @@ export default function CreateIncome(props: IncomeProps) {
               background={colors.inputBackground}
               textColor={colors.textColor}
               value={
-                iteration <= 0 || isNaN(iteration) ? '1' : String(iteration)
+                iteration < 0 || isNaN(iteration) ? '1' : String(iteration)
               }
               keyboardType="number-pad"
               maxLength={2}

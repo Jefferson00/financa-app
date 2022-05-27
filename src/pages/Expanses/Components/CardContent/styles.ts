@@ -138,3 +138,24 @@ export const DeleteButton = styled(RectButton)`
 
   right: ${RFPercentage(1)}px;
 `;
+
+export const EditCardButton = styled.TouchableOpacity`
+  height: ${RFPercentage(6)}px;
+  width: ${RFPercentage(6)}px;
+  border-radius: ${RFPercentage(3)}px;
+  background-color: #fff;
+
+  justify-content: center;
+  align-items: center;
+`;
+
+export const DeleteCardButton = styled.TouchableOpacity`
+  height: ${RFPercentage(6)}px;
+  width: ${RFPercentage(6)}px;
+  border-radius: ${RFPercentage(3)}px;
+  background-color: #fff;
+  margin-left: ${RFPercentage(2)}px;
+
+  justify-content: center;
+  align-items: center;
+`;

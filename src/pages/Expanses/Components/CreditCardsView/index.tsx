@@ -17,7 +17,7 @@ import { useAuth } from '../../../../hooks/AuthContext';
 export default function CreditCardsView() {
   const navigation = useNavigation<Nav>();
   const { theme } = useTheme();
-  const { creditCards } = useAccount();
+  const { creditCards, getUserCreditCards } = useAccount();
   const { user } = useAuth();
   const colors = getExpansesColors(theme);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -46,6 +46,7 @@ export default function CreditCardsView() {
       setIsSubmitting(true);
       try {
         await api.delete(`creditCards/${creditCardSelected.id}/${user?.id}`);
+        await getUserCreditCards();
       } catch (error: any) {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);

@@ -92,7 +92,6 @@ export const DeleteButton = styled.TouchableOpacity`
 export const SelectOption = styled.TouchableOpacity<SelectOptionProps>`
   background-color: ${props =>
     props.backgroundColor ? props.backgroundColor : '#E2EDF0'};
-  opacity: ${props => (props.checked ? 1 : 0.6)};
 
   flex-direction: row;
   align-items: center;

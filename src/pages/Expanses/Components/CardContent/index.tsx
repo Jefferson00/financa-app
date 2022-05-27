@@ -142,6 +142,20 @@ export default function CardContent({
     }
   }, [selectedDate, expanses, creditCard]);
 
+  const handlePayInvoice = useCallback(
+    async (invoice: Invoice) => {
+      try {
+        await api.put(`invoices/${invoice.id}`, {
+          paid: !invoice.paid,
+        });
+        await getUserCreditCards();
+      } catch (error) {
+        console.log(error);
+      }
+    },
+    [getUserCreditCards],
+  );
+
   const handleRemove = useCallback(
     async (expanse: any) => {
       setIsDeleteModalVisible(false);
@@ -150,7 +164,7 @@ export default function CardContent({
 
       try {
         if (expanse?.expanseId) {
-          await api.delete(`expanses/${expanse.expanseId}/${user?.id}`);
+          // await api.delete(`expanses/${expanse.expanseId}/${user?.id}`);
           await api.delete(`expanses/onInvoice/${expanse.id}/onInvoice`);
           await getUserExpanses();
           await getUserCreditCards();
@@ -184,16 +198,29 @@ export default function CardContent({
             <S.Title color="#fff">{creditCard.name}</S.Title>
 
             <S.Row>
+              <S.EditCardButton
+                onPress={() =>
+                  navigation.navigate('CreateCreditCard', {
+                    card: creditCard,
+                  })
+                }>
+                <Ionicons
+                  name="create"
+                  size={RFPercentage(4)}
+                  color={creditCard.color}
+                  style={{ marginHorizontal: RFPercentage(1) }}
+                />
+              </S.EditCardButton>
               {!creditCard.Invoice.find(
                 inv => inv.ExpanseOnInvoice.length > 0,
               ) && (
-                <TouchableOpacity onPress={onDelete}>
+                <S.DeleteCardButton onPress={onDelete}>
                   <Ionicons
                     name="trash"
                     size={RFPercentage(4)}
                     color="#CC3728"
                   />
-                </TouchableOpacity>
+                </S.DeleteCardButton>
               )}
             </S.Row>
           </S.Header>
@@ -210,7 +237,7 @@ export default function CardContent({
               <View>
                 <S.Row>
                   {currentInvoice?.closed && (
-                    <TouchableOpacity onPress={onDelete}>
+                    <TouchableOpacity>
                       <Ionicons
                         name="alert-circle"
                         size={RFPercentage(3)}
@@ -223,7 +250,12 @@ export default function CardContent({
                     <S.Subtitle color="#fff">Pagar fatura</S.Subtitle>
                   )}
                 </S.Row>
-                {currentInvoice?.closed && !currentInvoice.paid && <Switch />}
+                {currentInvoice?.closed && !currentInvoice.paid && (
+                  <Switch
+                    value={currentInvoice.paid}
+                    onChange={() => handlePayInvoice(currentInvoice)}
+                  />
+                )}
               </View>
             </S.Row>
 

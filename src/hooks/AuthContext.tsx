@@ -95,6 +95,7 @@ export const AuthProvider: React.FC = ({ children }) => {
                 setUser({
                   ...data,
                   phone: data.phone ? data.phone.replace('+55', '') : null,
+                  avatar: data.avatar ? data.avatar : photoURL,
                 });
                 return;
               }
