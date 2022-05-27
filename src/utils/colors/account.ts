@@ -43,6 +43,11 @@ export const getAccountColors = (theme: ColorSchemeName) => {
     TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
+
   return {
     inputBackground,
     deleteButtonColor,
@@ -51,5 +56,6 @@ export const getAccountColors = (theme: ColorSchemeName) => {
     thumbColor,
     trackColor,
     saveButtonColors,
+    modalBackground,
   };
 };

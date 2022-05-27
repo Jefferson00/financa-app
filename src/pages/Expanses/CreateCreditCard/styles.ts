@@ -23,7 +23,6 @@ export const Container = styled.View`
   flex: 1;
   align-items: center;
   padding: 16px 24px;
-  padding-bottom: 96px;
 `;
 
 export const EmptyAvatar = styled.View`

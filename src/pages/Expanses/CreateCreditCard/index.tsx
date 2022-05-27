@@ -157,7 +157,10 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingBottom: RFPercentage(15),
+          }}>
           <S.Title color={colors.titleColor}>
             {creditCardState ? `Editar Cartão` : `Novo Cartão`}
           </S.Title>
@@ -195,7 +198,11 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
               <S.SelectOption
                 backgroundColor={colors.inputBackground}
                 onPress={() => setColorSelectModal(true)}>
-                <Icon name="color-palette" size={RFPercentage(4)} />
+                <Icon
+                  name="color-palette"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
                 <View
                   style={{
                     marginHorizontal: RFPercentage(2),
@@ -216,8 +223,14 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 backgroundColor={colors.inputBackground}
                 onPress={() => setSelectPaymentDateModal(true)}
                 style={{ width: RFPercentage(20) }}>
-                <Icon name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+                <Icon
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  style={{ marginHorizontal: RFPercentage(2) }}
+                  color={colors.textColor}>
                   {isToday(paymentDate)
                     ? 'Hoje'
                     : getDayOfTheMounth(paymentDate)}
@@ -233,8 +246,14 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 backgroundColor={colors.inputBackground}
                 onPress={() => setSelectInvoiceClosingModal(true)}
                 style={{ width: RFPercentage(20) }}>
-                <Icon name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+                <Icon
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  style={{ marginHorizontal: RFPercentage(2) }}
+                  color={colors.textColor}>
                   {isToday(invoiceClosing)
                     ? 'Hoje'
                     : getDayOfTheMounth(invoiceClosing)}
@@ -309,6 +328,8 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           type="select"
           visible={colorSelectModal}
           transparent
+          backgroundColor={colors.inputBackground}
+          color={colors.textColor}
           selectTitle="Selecione a cor do cartão"
           animationType="slide"
           selectList={ColorsList}
@@ -327,7 +348,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                   borderRadius: 10,
                   backgroundColor: item.color,
                   borderWidth: colorState === item.color ? 3 : 0,
-                  borderColor: '#000',
+                  borderColor: colors.textColor,
                 }}
               />
             </TouchableOpacity>
@@ -336,13 +357,18 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
 
         <ModalComponent
           type="loading"
+          backgroundColor={colors.inputBackground}
+          color={colors.textColor}
           visible={isSubmitting}
           transparent
           title={creditCardState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"
+          theme={theme}
         />
         <ModalComponent
           type="error"
+          backgroundColor={colors.inputBackground}
+          color={colors.textColor}
           visible={hasError}
           handleCancel={() => setHasError(false)}
           onRequestClose={() => setHasError(false)}
@@ -350,9 +376,12 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+          theme={theme}
         />
         <ModalComponent
           type="success"
+          backgroundColor={colors.inputBackground}
+          color={colors.textColor}
           visible={editSucessfully}
           transparent
           title={
@@ -363,6 +392,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
           onSucessOkButton={handleOkSucess}
+          theme={theme}
         />
       </S.Container>
       <Menu />

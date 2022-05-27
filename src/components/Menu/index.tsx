@@ -177,6 +177,7 @@ export default function Menu() {
         animationType="slide"
         transparent
         handleCancel={() => setAlertModalVisible(false)}
+        theme={theme}
       />
     </>
   );

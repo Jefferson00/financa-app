@@ -20,6 +20,14 @@ interface AccountItemProps {
   selected?: boolean;
 }
 
+interface ContentProps {
+  backgroundColor?: string;
+}
+
+interface TextProps {
+  color?: string;
+}
+
 export const Container = styled.View<ModalProps>`
   flex: 1;
   justify-content: center;
@@ -36,19 +44,22 @@ export const Wrapper = styled.View`
   padding: 0 28px;
 `;
 
-export const Content = styled.View`
-  background: #fff;
+export const Content = styled.View<ContentProps>`
+  background: ${props =>
+    props.backgroundColor ? props.backgroundColor : '#fff'};
   align-items: center;
   padding: 34px 22px;
   border-radius: 20px;
   width: 100%;
 `;
 
-export const Title = styled.Text`
+export const Title = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   margin-top: ${RFPercentage(2.2)}px;
   font-size: ${RFPercentage(2.2)}px;
   text-align: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
 export const OkButton = styled.TouchableOpacity`
@@ -98,7 +109,9 @@ export const AccountItem = styled.TouchableOpacity<AccountItemProps>`
     `}
 `;
 
-export const AccountName = styled.Text`
+export const AccountName = styled.Text<TextProps>`
   font-family: 'Poppins-Regular';
   font-size: ${RFPercentage(2)}px;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;

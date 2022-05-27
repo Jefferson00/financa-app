@@ -168,6 +168,9 @@ export default function EditProfile({ id }: ProfileProps) {
           transparent
           title="Atualizando..."
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="error"
@@ -178,6 +181,9 @@ export default function EditProfile({ id }: ProfileProps) {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="success"
@@ -187,6 +193,9 @@ export default function EditProfile({ id }: ProfileProps) {
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
           onSucessOkButton={() => setEditSucessfully(false)}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
       </S.Container>
       <Menu />

@@ -233,7 +233,10 @@ export default function CreateIncome(props: IncomeProps) {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingBottom: RFPercentage(15),
+          }}>
           <S.Title color={colors.titleColor}>
             {incomeState ? `Editar Entrada` : `Nova Entrada`}
           </S.Title>
@@ -264,18 +267,30 @@ export default function CreateIncome(props: IncomeProps) {
           <S.Label color={colors.textColor}>Recorrência</S.Label>
           <S.Row>
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Mensal')}
+              color={colors.textColor}
               checked={recurrence === 'Mensal'}>
-              <S.Option>Mensal</S.Option>
-              <IonIcons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Mensal</S.Option>
+              <IonIcons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Parcelada')}
               checked={recurrence === 'Parcelada'}
+              color={colors.textColor}
               style={{ marginHorizontal: RFPercentage(2) }}>
-              <S.Option>Parcelada</S.Option>
-              <IonIcons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Parcelada</S.Option>
+              <IonIcons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <Input
@@ -296,9 +311,18 @@ export default function CreateIncome(props: IncomeProps) {
           <S.Row>
             <S.Col>
               <S.Label color={colors.textColor}>Data de recebimento</S.Label>
-              <S.SelectOption onPress={() => setSelectStartDateModal(true)}>
-                <IonIcons name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+              <S.SelectOption
+                backgroundColor={colors.inputBackground}
+                color={colors.textColor}
+                onPress={() => setSelectStartDateModal(true)}>
+                <IonIcons
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  color={colors.textColor}
+                  style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
               </S.SelectOption>
@@ -385,6 +409,9 @@ export default function CreateIncome(props: IncomeProps) {
           transparent
           title={incomeState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="error"
@@ -395,6 +422,9 @@ export default function CreateIncome(props: IncomeProps) {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="success"
@@ -408,6 +438,9 @@ export default function CreateIncome(props: IncomeProps) {
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
           onSucessOkButton={handleOkSucess}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
       </S.Container>
       <Menu />

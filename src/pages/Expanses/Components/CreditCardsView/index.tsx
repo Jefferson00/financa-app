@@ -104,6 +104,9 @@ export default function CreditCardsView() {
         transparent
         title={loadingMessage}
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -115,6 +118,9 @@ export default function CreditCardsView() {
         title="Tem certeza que deseja excluir essa despesa em definitivo?"
         animationType="slide"
         handleConfirm={() => handleRemoveCreditCard()}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -126,34 +132,10 @@ export default function CreditCardsView() {
         title={errorMessage}
         subtitle="Tente novamente mais tarde"
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
     </>
   );
-}
-
-{
-  /* <S.ExpandableCard key={card.id} onPress={() => setOpen(o => !o)}>
-            <S.CardView backgroundColor={card.color}>
-              {open && (
-                <S.HiddenContent
-                  entering={FadeInUp}
-                  exiting={FadeOutUp}
-                  layout={Layout}>
-                  <View collapsable={false}>
-                    <S.ItemView>
-                      <S.DateTitle color="#fff">05 Nov</S.DateTitle>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                    </S.ItemView>
-                    <S.ItemView>
-                      <S.DateTitle color="#fff">06 Nov</S.DateTitle>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                    </S.ItemView>
-                  </View>
-                </S.HiddenContent>
-              )}
-            </S.CardView>
-          </S.ExpandableCard> */
 }

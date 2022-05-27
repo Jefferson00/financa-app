@@ -14,6 +14,14 @@ interface ButtonProps {
   backgroundColor: string;
 }
 
+interface ContentProps {
+  backgroundColor?: string;
+}
+
+interface TextProps {
+  color?: string;
+}
+
 export const Container = styled.View<ModalProps>`
   flex: 1;
   justify-content: center;
@@ -30,26 +38,31 @@ export const Wrapper = styled.Pressable`
   padding: 0 28px;
 `;
 
-export const Content = styled.View`
-  background: #fff;
+export const Content = styled.View<ContentProps>`
+  background: ${props =>
+    props.backgroundColor ? props.backgroundColor : '#fff'};
   align-items: center;
   padding: 34px 22px;
   border-radius: 20px;
   width: 100%;
 `;
 
-export const Title = styled.Text`
+export const Title = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   margin-top: ${RFPercentage(2.2)}px;
   font-size: ${RFPercentage(2.2)}px;
   text-align: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
-export const Subtitle = styled.Text`
+export const Subtitle = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   margin-top: ${RFPercentage(1)}px;
   font-size: ${RFPercentage(1.8)}px;
   text-align: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
 export const OkButton = styled.TouchableOpacity`
@@ -81,16 +94,21 @@ export const Button = styled.TouchableOpacity<ButtonProps>`
   border-radius: 8px;
 `;
 
-export const SelectTitle = styled.Text`
+export const SelectTitle = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   margin-top: ${RFPercentage(2.2)}px;
   font-size: ${RFPercentage(2.2)}px;
   text-align: center;
+
+  color: ${props => (props.color ? props.color : '#000')};
 `;
 
 export const SelectContent = styled.View`
   flex-direction: row;
   flex-wrap: wrap;
+
+  justify-content: center;
+  align-items: center;
 `;
 
 export const SelectItem = styled.View`

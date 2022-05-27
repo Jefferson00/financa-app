@@ -276,6 +276,9 @@ export default function Account(props: ProfileProps) {
           transparent
           title={loadingMessage}
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="error"
@@ -286,6 +289,9 @@ export default function Account(props: ProfileProps) {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="success"
@@ -295,6 +301,9 @@ export default function Account(props: ProfileProps) {
           animationType="slide"
           handleCancel={() => setEditSucessfully(false)}
           onSucessOkButton={handleOkSucess}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="confirmation"
@@ -305,6 +314,9 @@ export default function Account(props: ProfileProps) {
           title="Deseja mesmo excluir essa conta?"
           animationType="slide"
           handleConfirm={handleDelete}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
       </S.Container>
       <Menu />

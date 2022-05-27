@@ -438,6 +438,8 @@ export default function Incomes() {
                         : 'Receber'
                     }
                     mainColor={colors.primaryColor}
+                    textColor={colors.textColor}
+                    switchColors={colors.switchColors}
                     handleRemove={() => {
                       setIncomeSelected(income);
                       setIsDeleteModalVisible(true);
@@ -488,6 +490,9 @@ export default function Incomes() {
         defaulAccount={incomeSelected?.receiptDefault}
         handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
         accounts={accounts.filter(a => a.status === 'active')}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -496,6 +501,8 @@ export default function Incomes() {
         transparent
         title={loadingMessage}
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
       <ModalComponent
         type="error"
@@ -506,6 +513,8 @@ export default function Incomes() {
         title={errorMessage}
         subtitle="Tente novamente mais tarde"
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
       <ModalComponent
         type="success"
@@ -515,6 +524,8 @@ export default function Incomes() {
         animationType="slide"
         handleCancel={() => setEditSucessfully(false)}
         onSucessOkButton={handleOkSucess}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
 
       <ModalComponent
@@ -526,6 +537,8 @@ export default function Incomes() {
         title="Tem certeza que deseja excluir essa despesa em definitivo?"
         animationType="slide"
         handleConfirm={() => handleRemove(incomeSelected)}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
 
       <ModalComponent
@@ -537,6 +550,8 @@ export default function Incomes() {
         title="Tem certeza? Essa entrada será marcada como não recebida."
         animationType="slide"
         handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
       <Menu />
     </>

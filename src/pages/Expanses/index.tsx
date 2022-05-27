@@ -462,6 +462,8 @@ export default function Expanses() {
                             : 'Receber'
                         }
                         mainColor={colors.primaryColor}
+                        textColor={colors.textColor}
+                        switchColors={colors.switchColors}
                         handleRemove={() => {
                           setExpanseSelected(expanse);
                           setIsDeleteModalVisible(true);
@@ -517,6 +519,9 @@ export default function Expanses() {
         defaulAccount={expanseSelected?.receiptDefault}
         handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
         accounts={accounts.filter(a => a.status === 'active')}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -525,6 +530,9 @@ export default function Expanses() {
         transparent
         title={loadingMessage}
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
       <ModalComponent
         type="error"
@@ -535,6 +543,9 @@ export default function Expanses() {
         title={errorMessage}
         subtitle="Tente novamente mais tarde"
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
       <ModalComponent
         type="success"
@@ -544,6 +555,9 @@ export default function Expanses() {
         animationType="slide"
         handleCancel={() => setEditSucessfully(false)}
         onSucessOkButton={handleOkSucess}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -555,6 +569,9 @@ export default function Expanses() {
         title="Tem certeza que deseja excluir essa despesa em definitivo?"
         animationType="slide"
         handleConfirm={() => handleRemove(expanseSelected)}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -566,6 +583,9 @@ export default function Expanses() {
         title="Tem certeza? Essa despesa será marcada como não paga."
         animationType="slide"
         handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <Menu />

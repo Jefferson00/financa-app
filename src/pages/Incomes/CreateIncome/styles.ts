@@ -23,7 +23,6 @@ export const Container = styled.View`
   flex: 1;
   align-items: center;
   padding: 16px 24px;
-  padding-bottom: 96px;
 `;
 
 export const EmptyAvatar = styled.View`
@@ -92,7 +91,6 @@ export const DeleteButton = styled.TouchableOpacity`
 export const SelectOption = styled.TouchableOpacity<SelectOptionProps>`
   background-color: ${props =>
     props.backgroundColor ? props.backgroundColor : '#E2EDF0'};
-  opacity: ${props => (props.checked ? 1 : 0.6)};
 
   flex-direction: row;
   align-items: center;

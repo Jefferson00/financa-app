@@ -12,6 +12,10 @@ interface ActionContainer {
   backgroundColor: string;
 }
 
+interface DeleteButton {
+  backgroundColor: string;
+}
+
 interface TextColor {
   color: string;
 }
@@ -74,10 +78,10 @@ export const ActionContainer = styled.View<ActionContainer>`
   padding: 0 ${RFPercentage(3)}px;
 `;
 
-export const DeleteButton = styled(RectButton)`
+export const DeleteButton = styled(RectButton)<DeleteButton>`
   width: ${RFPercentage(20)}px;
   height: ${RFPercentage(8)}px;
-  background-color: #cc3728;
+  background-color: ${props => props.backgroundColor};
 
   justify-content: center;
   align-items: center;

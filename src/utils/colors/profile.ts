@@ -15,6 +15,10 @@ export const getProfileColors = (theme: ColorSchemeName) => {
       ? Colors.EXPANSE_PRIMARY_DARKER
       : Colors.EXPANSE_PRIMARY_LIGTHER;
   const alertColor = '#ffaea7';
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   return {
     backgroundColor,
@@ -24,6 +28,7 @@ export const getProfileColors = (theme: ColorSchemeName) => {
     textColor,
     signOutBtnColor,
     alertColor,
+    modalBackground,
   };
 };
 
@@ -46,11 +51,16 @@ export const getEditProfileColors = (theme: ColorSchemeName) => {
         : Colors.BLUE_SECONDARY_LIGHTER,
     TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   return {
     titleColor,
     inputBackground,
     textColor,
     saveButtonColors,
+    modalBackground,
   };
 };

@@ -71,6 +71,7 @@ export default function ControlledInput({
               <S.InputSelect
                 mode="dropdown"
                 selectedValue={field.value}
+                dropdownIconColor={textColor}
                 onValueChange={field.onChange}>
                 {selectItems &&
                   selectItems.map(item => (
@@ -78,7 +79,7 @@ export default function ControlledInput({
                       key={item.id}
                       label={item.name}
                       value={item.id}
-                      color={item?.color}
+                      color={textColor}
                     />
                   ))}
               </S.InputSelect>

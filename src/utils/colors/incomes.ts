@@ -19,7 +19,9 @@ export const getIncomesColors = (theme: ColorSchemeName) => {
       ? Colors.INCOME_SECONDARY_DARKER
       : Colors.INCOME_SECONDARY_LIGTHER;
   const secondaryCardLoader =
-    theme === 'dark' ? Colors.INCOME_SOFT_DARKER : Colors.INCOME_SOFT_LIGTHER;
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.INCOME_SOFT_LIGTHER;
   const titleColor =
     theme === 'dark'
       ? Colors.INCOME_PRIMARY_DARKER
@@ -33,6 +35,35 @@ export const getIncomesColors = (theme: ColorSchemeName) => {
       ? Colors.EXPANSE_PRIMARY_DARKER
       : Colors.EXPANSE_PRIMARY_LIGTHER;
 
+  const switchColors = {
+    background:
+      theme === 'dark'
+        ? Colors.ORANGE_SECONDARY_DARKER
+        : Colors.ORANGE_SECONDARY_LIGHTER,
+    trackColor: {
+      true:
+        theme === 'dark'
+          ? Colors.INCOME_SECONDARY_DARKER
+          : Colors.INCOME_SECONDARY_LIGTHER,
+      false: theme === 'dark' ? '#737373' : '#d2d2d2',
+    },
+    thumbColor: {
+      true:
+        theme === 'dark'
+          ? Colors.INCOME_PRIMARY_DARKER
+          : Colors.INCOME_PRIMARY_LIGTHER,
+      false:
+        theme === 'dark'
+          ? Colors.INCOME_SECONDARY_DARKER
+          : Colors.INCOME_SECONDARY_LIGTHER,
+    },
+  };
+
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
+
   return {
     primaryColor,
     secondaryColor,
@@ -43,6 +74,8 @@ export const getIncomesColors = (theme: ColorSchemeName) => {
     dateTitleColor,
     textColor,
     alertColor,
+    switchColors,
+    modalBackground,
   };
 };
 
@@ -54,7 +87,9 @@ export const getCreateIncomesColors = (theme: ColorSchemeName) => {
   const textColor =
     theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
   const inputBackground =
-    theme === 'dark' ? Colors.INCOME_SOFT_DARKER : Colors.INCOME_SOFT_LIGTHER;
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.INCOME_SOFT_LIGTHER;
   const deleteButtonColor =
     theme === 'dark'
       ? Colors.EXPANSE_PRIMARY_DARKER
@@ -66,6 +101,10 @@ export const getCreateIncomesColors = (theme: ColorSchemeName) => {
         : Colors.INCOME_SECONDARY_LIGTHER,
     false: theme === 'dark' ? '#737373' : '#d2d2d2',
   };
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   const thumbColor = {
     true:
@@ -98,5 +137,6 @@ export const getCreateIncomesColors = (theme: ColorSchemeName) => {
     trackColor,
     thumbColor,
     saveButtonColors,
+    modalBackground,
   };
 };

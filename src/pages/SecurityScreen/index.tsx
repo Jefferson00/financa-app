@@ -291,6 +291,9 @@ export default function SecurityScreen() {
             defaultPinView.current.clearAll();
             setFirstEnteredPinComplete(false);
           }}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
           type="error"
@@ -301,6 +304,9 @@ export default function SecurityScreen() {
           title={errorMessage}
           subtitle="Tente novamente mais tarde"
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
 
         <ModalComponent
@@ -311,6 +317,9 @@ export default function SecurityScreen() {
           animationType="slide"
           transparent
           handleCancel={closeAlertModal}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
       </S.Container>
       <Menu />

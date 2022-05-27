@@ -5,6 +5,18 @@ import FeatherIcons from 'react-native-vector-icons/Feather';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
 
+interface SwitchColors {
+  background: string;
+  trackColor: {
+    true: string;
+    false: string;
+  };
+  thumbColor: {
+    true: string;
+    false: string;
+  };
+}
+
 interface ItemCardProps {
   icon: React.FC;
   title?: string;
@@ -16,6 +28,7 @@ interface ItemCardProps {
   switchValue?: boolean;
   received?: boolean;
   receivedMessage?: string;
+  switchColors?: SwitchColors;
   onRedirect?: () => void;
   onSwitchChange?: () => void;
   value: number;
@@ -32,6 +45,7 @@ export default function ItemCard({
   backgroundColor,
   received,
   receivedMessage,
+  switchColors,
   onSwitchChange,
   handleRemove,
   onRedirect,
@@ -42,7 +56,9 @@ export default function ItemCard({
       renderRightActions={() => (
         <Animated.View>
           <View>
-            <S.DeleteButton onPress={handleRemove}>
+            <S.DeleteButton
+              backgroundColor={switchColors?.background || '#000'}
+              onPress={handleRemove}>
               <FeatherIcons name="trash" size={32} color="#fff" />
             </S.DeleteButton>
           </View>
@@ -64,14 +80,22 @@ export default function ItemCard({
           </S.ValueContainer>
         </S.Main>
 
-        <S.ActionContainer backgroundColor="#FF981E">
-          <S.SubtitleText color={textColor ? textColor : '#000'}>
+        <S.ActionContainer
+          backgroundColor={switchColors ? switchColors.background : '#FF981E'}>
+          <S.SubtitleText color="#262626">
             {received ? receivedMessage : 'Receber'}
           </S.SubtitleText>
 
           <Switch
-            trackColor={{ true: textColor, false: textColor }}
-            thumbColor={textColor}
+            trackColor={{
+              true: switchColors?.trackColor.true,
+              false: switchColors?.trackColor.false,
+            }}
+            thumbColor={
+              received
+                ? switchColors?.thumbColor.true
+                : switchColors?.thumbColor.false
+            }
             value={received}
             onChange={onSwitchChange}
           />
