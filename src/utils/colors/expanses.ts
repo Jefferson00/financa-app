@@ -177,10 +177,16 @@ export const getCreateCreditCardColors = (theme: ColorSchemeName) => {
     TEXT: theme === 'dark' ? '#d8d8d8' : '#fff',
   };
 
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
+
   return {
     inputBackground,
     titleColor,
     textColor,
     saveButtonColors,
+    modalBackground,
   };
 };

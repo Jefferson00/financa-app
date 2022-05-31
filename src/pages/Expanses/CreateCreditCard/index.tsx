@@ -28,7 +28,7 @@ import {
   getCreateExpansesColors,
 } from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
-import { Modal, TouchableOpacity, View } from 'react-native';
+import { Modal, NativeModules, TouchableOpacity, View } from 'react-native';
 import { currencyToValue } from '../../../utils/masks';
 
 interface CreateCreditCardProps {
@@ -133,7 +133,9 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
+        if (error?.response?.data?.message === 'Access Denied')
+          return NativeModules.DevSettings.reload();
+      setErrorMessage(error?.response?.data?.message);
       setHasError(true);
     } finally {
       setIsSubmitting(false);
@@ -328,7 +330,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           type="select"
           visible={colorSelectModal}
           transparent
-          backgroundColor={colors.inputBackground}
+          backgroundColor={colors.modalBackground}
           color={colors.textColor}
           selectTitle="Selecione a cor do cartão"
           animationType="slide"
@@ -357,7 +359,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
 
         <ModalComponent
           type="loading"
-          backgroundColor={colors.inputBackground}
+          backgroundColor={colors.modalBackground}
           color={colors.textColor}
           visible={isSubmitting}
           transparent
@@ -367,7 +369,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
         />
         <ModalComponent
           type="error"
-          backgroundColor={colors.inputBackground}
+          backgroundColor={colors.modalBackground}
           color={colors.textColor}
           visible={hasError}
           handleCancel={() => setHasError(false)}
@@ -380,7 +382,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
         />
         <ModalComponent
           type="success"
-          backgroundColor={colors.inputBackground}
+          backgroundColor={colors.modalBackground}
           color={colors.textColor}
           visible={editSucessfully}
           transparent

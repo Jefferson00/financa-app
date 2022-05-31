@@ -322,7 +322,18 @@ export default function Expanses() {
       if (isBefore(selectedDate, currentMonth)) {
         setEstimateTotalExpanses(currentTotal);
       } else {
-        setEstimateTotalExpanses(getEstimateIncomes(currentExpanses));
+        const expansesWithoutAccount = currentExpanses.filter(
+          i =>
+            !currentExpansesOnAccount.find(
+              expOnAccount => expOnAccount.expanseId === i.id,
+            ),
+        );
+        setEstimateTotalExpanses(
+          [...expansesWithoutAccount, ...currentExpansesOnAccount].reduce(
+            (a, b) => a + (b['value'] || 0),
+            0,
+          ),
+        );
       }
     }
   }, [currentExpansesOnAccount, currentExpanses, selectedDate]);

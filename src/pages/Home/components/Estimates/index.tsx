@@ -23,7 +23,8 @@ interface IEstimate {
 
 const Estimates = () => {
   const { theme } = useTheme();
-  const { incomes, expanses, accounts } = useAccount();
+  const { incomes, expanses, accounts, incomesOnAccounts, expansesOnAccounts } =
+    useAccount();
   const [estimates, setEstimates] = useState<IEstimate[]>([]);
 
   const colors = getEstimateColors(theme);
@@ -66,6 +67,22 @@ const Estimates = () => {
               isSameMonth(new Date(i.startDate), currentMonth)),
       );
 
+      const incomesOnAccountInThisMonth = incomesOnAccounts.filter(i =>
+        isSameMonth(new Date(i.month), currentMonth),
+      );
+
+      const incomesWithoutAccount = incomesInThisMonth.filter(
+        i =>
+          !incomesOnAccountInThisMonth.find(
+            inOnAccount => inOnAccount.incomeId === i.id,
+          ),
+      );
+
+      const estimateIncomes = [
+        ...incomesWithoutAccount,
+        ...incomesOnAccountInThisMonth,
+      ].reduce((a, b) => a + (b['value'] || 0), 0);
+
       const expansesInThisMonth = expanses.filter(i =>
         i.endDate
           ? (isBefore(currentMonth, new Date(i.endDate)) ||
@@ -77,14 +94,21 @@ const Estimates = () => {
               isSameMonth(new Date(i.startDate), currentMonth)),
       );
 
-      const estimateIncomes = incomesInThisMonth.reduce(
-        (a, b) => a + (b['value'] || 0),
-        0,
+      const expansesOnAccountInThisMonth = expansesOnAccounts.filter(exp =>
+        isSameMonth(new Date(exp.month), currentMonth),
       );
-      const estimateExpanses = expansesInThisMonth.reduce(
-        (a, b) => a + (b['value'] || 0),
-        0,
+
+      const expansesWithoutAccount = expansesInThisMonth.filter(
+        i =>
+          !expansesOnAccountInThisMonth.find(
+            expOnAccount => expOnAccount.expanseId === i.id,
+          ),
       );
+
+      const estimateExpanses = [
+        ...expansesOnAccountInThisMonth,
+        ...expansesWithoutAccount,
+      ].reduce((a, b) => a + (b['value'] || 0), 0);
 
       balanceInThisMonth =
         balanceInThisMonth + (estimateIncomes - estimateExpanses);

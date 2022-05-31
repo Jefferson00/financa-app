@@ -50,6 +50,12 @@ interface AccountContextData {
   ) => Promise<void>;
   handleClearCache: () => void;
   getUserCreditCards: () => Promise<void>;
+  setIncomes: React.Dispatch<React.SetStateAction<Income[]>>;
+  setIncomesOnAccounts: React.Dispatch<React.SetStateAction<IncomeOnAccount[]>>;
+  setExpanses: React.Dispatch<React.SetStateAction<Expanse[]>>;
+  setExpansesOnAccounts: React.Dispatch<
+    React.SetStateAction<ExpanseOnAccount[]>
+  >;
   accounts: Account[];
   incomes: Income[];
   expanses: Expanse[];
@@ -202,7 +208,7 @@ export const AccountProvider: React.FC = ({ children }) => {
         //console.log('update balance: ', data);
       } else {
         const { data } = await api.post(`accounts/balance`, {
-          month: selectedDate,
+          month: new Date(),
           value: account?.initialValue
             ? type === 'Income'
               ? account?.initialValue + value
@@ -533,6 +539,8 @@ export const AccountProvider: React.FC = ({ children }) => {
   useEffect(() => {
     if (accounts.length > 0 && accounts.find(acc => acc.status === 'active')) {
       setHasAccount(true);
+    } else {
+      setHasAccount(false);
     }
   }, [accounts]);
 
@@ -550,6 +558,10 @@ export const AccountProvider: React.FC = ({ children }) => {
         getUserExpanses,
         handleClearCache,
         getUserCreditCards,
+        setIncomes,
+        setIncomesOnAccounts,
+        setExpanses,
+        setExpansesOnAccounts,
         expansesOnAccounts,
         accounts,
         isLoadingCards,

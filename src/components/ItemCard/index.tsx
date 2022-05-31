@@ -4,6 +4,8 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
+import { isSameMonth } from 'date-fns';
+import { useDate } from '../../hooks/DateContext';
 
 interface SwitchColors {
   background: string;
@@ -51,6 +53,8 @@ export default function ItemCard({
   onRedirect,
   ...rest
 }: ItemCardProps) {
+  const { selectedDate } = useDate();
+
   return (
     <Swipeable
       renderRightActions={() => (
@@ -81,24 +85,34 @@ export default function ItemCard({
         </S.Main>
 
         <S.ActionContainer
-          backgroundColor={switchColors ? switchColors.background : '#FF981E'}>
-          <S.SubtitleText color="#262626">
-            {received ? receivedMessage : 'Receber'}
-          </S.SubtitleText>
+          backgroundColor={
+            isSameMonth(new Date(), selectedDate)
+              ? switchColors
+                ? switchColors.background
+                : '#FF981E'
+              : 'transparent'
+          }>
+          {isSameMonth(new Date(), selectedDate) && (
+            <>
+              <S.SubtitleText color="#262626">
+                {received ? receivedMessage : 'Receber'}
+              </S.SubtitleText>
 
-          <Switch
-            trackColor={{
-              true: switchColors?.trackColor.true,
-              false: switchColors?.trackColor.false,
-            }}
-            thumbColor={
-              received
-                ? switchColors?.thumbColor.true
-                : switchColors?.thumbColor.false
-            }
-            value={received}
-            onChange={onSwitchChange}
-          />
+              <Switch
+                trackColor={{
+                  true: switchColors?.trackColor.true,
+                  false: switchColors?.trackColor.false,
+                }}
+                thumbColor={
+                  received
+                    ? switchColors?.thumbColor.true
+                    : switchColors?.thumbColor.false
+                }
+                value={received}
+                onChange={onSwitchChange}
+              />
+            </>
+          )}
         </S.ActionContainer>
       </S.Container>
     </Swipeable>

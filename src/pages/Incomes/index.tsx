@@ -319,7 +319,18 @@ export default function Incomes() {
       if (isBefore(selectedDate, currentMonth)) {
         setEstimateTotalIncomes(currentTotal);
       } else {
-        setEstimateTotalIncomes(getEstimateIncomes(currentIncomes));
+        const incomesWithoutAccount = currentIncomes.filter(
+          i =>
+            !currentIncomesOnAccount.find(
+              inOnAccount => inOnAccount.incomeId === i.id,
+            ),
+        );
+        setEstimateTotalIncomes(
+          [...incomesWithoutAccount, ...currentIncomesOnAccount].reduce(
+            (a, b) => a + (b['value'] || 0),
+            0,
+          ),
+        );
       }
     }
   }, [currentIncomesOnAccount, currentIncomes, selectedDate]);

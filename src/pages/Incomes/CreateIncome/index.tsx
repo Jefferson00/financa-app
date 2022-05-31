@@ -34,7 +34,10 @@ import Input from '../../../components/Input';
 import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
-import { getDayOfTheMounth } from '../../../utils/dateFormats';
+import {
+  getDayOfTheMounth,
+  getPreviousMonth,
+} from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
 import { IncomeCategories } from '../../../utils/categories';
 import { getCreateIncomesColors } from '../../../utils/colors/incomes';
@@ -152,7 +155,7 @@ export default function CreateIncome(props: IncomeProps) {
       const account = accounts.find(acc => acc.id === input.accountId);
 
       const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), selectedDate)) {
+        if (isSameMonth(new Date(balance.month), new Date())) {
           return balance;
         }
       });
@@ -393,8 +396,8 @@ export default function CreateIncome(props: IncomeProps) {
           date={startDate}
           title="Selecione a data de recebimento"
           mode="date"
-          minimumDate={startOfMonth(selectedDate)}
-          maximumDate={lastDayOfMonth(selectedDate)}
+          minimumDate={startOfMonth(getPreviousMonth(new Date(selectedDate)))}
+          maximumDate={lastDayOfMonth(addMonths(new Date(selectedDate), 1))}
           onConfirm={date => {
             setSelectStartDateModal(false);
             setStartDate(date);

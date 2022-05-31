@@ -157,7 +157,7 @@ export default function CreateExpanse(props: ExpanseProps) {
       const account = accounts.find(acc => acc.id === input.accountId);
 
       const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), selectedDate)) {
+        if (isSameMonth(new Date(balance.month), new Date())) {
           return balance;
         }
       });

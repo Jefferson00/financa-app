@@ -56,6 +56,7 @@ export default function CardContent({
   const { selectedDate } = useDate();
   const { user } = useAuth();
   const { expanses, getUserExpanses, getUserCreditCards } = useAccount();
+  const [daysState, setDaysState] = useState<number[]>([]);
   const [currentInvoice, setCurrentInvoice] = useState<Invoice>();
   const aref = useAnimatedRef<View>();
   const open = useSharedValue(false);
@@ -91,6 +92,14 @@ export default function CardContent({
 
     if (invoiceThisMonth) {
       setCurrentInvoice(invoiceThisMonth);
+
+      const days: number[] = [];
+
+      invoiceThisMonth.ExpanseOnInvoice.map(exp => {
+        if (!days.find(d => d === exp.day)) days.push(exp.day);
+      });
+
+      setDaysState(days);
     } else {
       const expansesInThisMonth = expanses.filter(i =>
         i.endDate
@@ -109,6 +118,7 @@ export default function CardContent({
 
       const expanseOnInvoice: ExpanseOnInvoice[] = [];
       let invoiceValue = 0;
+      const days: number[] = [];
 
       expansesInThisCard.map((exp, index) => {
         const expanseOnInvoiceObject: ExpanseOnInvoice = {
@@ -117,13 +127,17 @@ export default function CardContent({
           name: exp.name,
           value: exp.value,
           invoiceId: 'any',
-          day: new Date(exp.startDate).getDay(),
+          day: new Date(exp.startDate).getUTCDate(),
         };
 
         expanseOnInvoice.push(expanseOnInvoiceObject);
+
+        if (!days.find(d => d === expanseOnInvoiceObject.day))
+          days.push(expanseOnInvoiceObject.day);
         invoiceValue = invoiceValue + exp.value;
       });
 
+      setDaysState(days);
       const paymentDate = new Date(creditCard.paymentDate);
       paymentDate.setMonth(selectedDate.getMonth());
 
@@ -295,51 +309,55 @@ export default function CardContent({
             },
           }) => (height.value = h)}>
           {currentInvoice &&
-            currentInvoice?.ExpanseOnInvoice.map(expanse => (
-              <S.ItemView key={expanse.id}>
+            daysState.map((d, index) => (
+              <S.ItemView key={index}>
                 <S.DateTitle color="#fff">
-                  {expanse.day} de{' '}
-                  {getMonthName(new Date(currentInvoice.month))}
+                  {d} de {getMonthName(new Date(currentInvoice.month))}
                 </S.DateTitle>
-                <Swipeable
-                  renderRightActions={() => (
-                    <Animated.View>
-                      <View>
-                        <S.DeleteButton
-                          onPress={() => {
-                            setExpanseSelected(expanse);
-                            setIsDeleteModalVisible(true);
-                          }}>
-                          <FeatherIcons name="trash" size={32} color="#fff" />
-                        </S.DeleteButton>
-                      </View>
-                    </Animated.View>
-                  )}>
-                  <S.ItemCard
-                    onPress={() =>
-                      navigation.navigate('CreateExpanse', {
-                        expanse: expanses.find(
-                          exp =>
-                            exp.id === expanse.id ||
-                            exp.id === expanse.expanseId,
-                        ),
-                      })
-                    }>
-                    <S.DollarSign>
-                      <FoundationIcons
-                        name="dollar"
-                        size={RFPercentage(7)}
-                        color={backgroundColor}
-                      />
-                    </S.DollarSign>
-                    <S.ItemInfo>
-                      <S.ItemTitle>{expanse.name}</S.ItemTitle>
-                      <S.ItemValue>
-                        {getCurrencyFormat(expanse.value)}
-                      </S.ItemValue>
-                    </S.ItemInfo>
-                  </S.ItemCard>
-                </Swipeable>
+                {currentInvoice?.ExpanseOnInvoice.filter(
+                  exp => exp.day === d,
+                ).map(expanse => (
+                  <Swipeable
+                    key={expanse.id}
+                    renderRightActions={() => (
+                      <Animated.View>
+                        <View>
+                          <S.DeleteButton
+                            onPress={() => {
+                              setExpanseSelected(expanse);
+                              setIsDeleteModalVisible(true);
+                            }}>
+                            <FeatherIcons name="trash" size={32} color="#fff" />
+                          </S.DeleteButton>
+                        </View>
+                      </Animated.View>
+                    )}>
+                    <S.ItemCard
+                      onPress={() =>
+                        navigation.navigate('CreateExpanse', {
+                          expanse: expanses.find(
+                            exp =>
+                              exp.id === expanse.id ||
+                              exp.id === expanse.expanseId,
+                          ),
+                        })
+                      }>
+                      <S.DollarSign>
+                        <FoundationIcons
+                          name="dollar"
+                          size={RFPercentage(7)}
+                          color={backgroundColor}
+                        />
+                      </S.DollarSign>
+                      <S.ItemInfo>
+                        <S.ItemTitle>{expanse.name}</S.ItemTitle>
+                        <S.ItemValue>
+                          {getCurrencyFormat(expanse.value)}
+                        </S.ItemValue>
+                      </S.ItemInfo>
+                    </S.ItemCard>
+                  </Swipeable>
+                ))}
               </S.ItemView>
             ))}
           {!currentInvoice ||
