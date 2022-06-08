@@ -45,9 +45,9 @@ export default function Expanses() {
     expansesOnAccounts,
     getUserExpanses,
     handleCreateExpanseOnAccount,
-    accounts,
+    activeAccounts,
     accountSelected,
-    handleUpdateAccountBalance,
+    handleDeleteExpanseOnAccount,
     getUserExpansesOnAccount,
   } = useAccount();
   const { user } = useAuth();
@@ -139,24 +139,7 @@ export default function Expanses() {
           setLoadingMessage('Excluindo pagamento...');
           setIsSubmitting(true);
           try {
-            await api.delete(`expanses/onAccount/${expanse.id}/${user.id}`);
-
-            const account = accounts.find(acc => acc.id === expanse.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              expanse.value,
-              account,
-              'Income',
-            );
-
-            await getUserExpansesOnAccount();
+            await handleDeleteExpanseOnAccount(expanse.id);
             setConfirmUnreceivedVisible(false);
             return;
           } catch (error: any) {
@@ -189,20 +172,6 @@ export default function Expanses() {
           try {
             await handleCreateExpanseOnAccount(input);
 
-            const account = accounts.find(acc => acc.id === input.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              input.value,
-              account,
-              'Expanse',
-            );
             await getUserExpansesOnAccount();
             setEditSucessfully(true);
           } catch (error: any) {
@@ -216,7 +185,7 @@ export default function Expanses() {
       }
     },
     [
-      accounts,
+      activeAccounts,
       handleCreateExpanseOnAccount,
       accountSelected,
       selectedDate,
@@ -237,7 +206,7 @@ export default function Expanses() {
     );
 
     const expansesInAccounts = expansesInThisMonth.filter(expanse =>
-      accounts.find(acc => acc.id === expanse.receiptDefault),
+      activeAccounts.find(acc => acc.id === expanse.receiptDefault),
     );
 
     setCurrentExpanses(expansesInThisMonth);
@@ -306,7 +275,7 @@ export default function Expanses() {
 
     setExpanseByDate(expansesOrderedByDay.sort((a, b) => a.day - b.day));
     setIsLoading(false);
-  }, [expanses, expansesOnAccounts, selectedDate, accounts]);
+  }, [expanses, expansesOnAccounts, selectedDate, activeAccounts]);
 
   useEffect(() => {
     loadData();
@@ -466,7 +435,7 @@ export default function Expanses() {
                             ? `Recebido em ${getDayOfTheMounth(
                                 new Date(expanse.paymentDate),
                               )} - ${
-                                accounts.find(
+                                activeAccounts.find(
                                   acc => acc.id === expanse.accountId,
                                 )?.name
                               }`
@@ -529,7 +498,7 @@ export default function Expanses() {
         animationType="slide"
         defaulAccount={expanseSelected?.receiptDefault}
         handleConfirm={() => handleToggleExpanseOnAccount(expanseSelected)}
-        accounts={accounts.filter(a => a.status === 'active')}
+        accounts={activeAccounts}
         backgroundColor={colors.modalBackground}
         color={colors.textColor}
         theme={theme}

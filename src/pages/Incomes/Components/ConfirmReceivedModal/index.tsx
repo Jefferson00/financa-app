@@ -2,7 +2,7 @@ import React from 'react';
 import { ModalBaseProps, Modal, ColorSchemeName } from 'react-native';
 import * as S from './styles';
 import { Colors } from '../../../../styles/global';
-import { Account } from '../../../../interfaces/Account';
+import { IAccount } from '../../../../interfaces/Account';
 import { useAccount } from '../../../../hooks/AccountContext';
 
 interface IModalProps extends ModalBaseProps {
@@ -11,7 +11,7 @@ interface IModalProps extends ModalBaseProps {
   backgroundColor?: string;
   color?: string;
   theme?: ColorSchemeName;
-  accounts: Account[];
+  accounts: IAccount[];
   handleConfirm?: () => Promise<void>;
   handleCancel?: () => void;
 }
@@ -51,13 +51,19 @@ export default function ConfirmReceivedModalComponent({
             {accounts.map(acc => (
               <S.AccountItem
                 backgroundColor={
-                  acc.id === defaulAccount || acc.id === accountSelected?.id
+                  accountSelected
+                    ? acc.id === accountSelected?.id
+                      ? selectColor
+                      : unselectColor
+                    : acc.id === defaulAccount
                     ? selectColor
                     : unselectColor
                 }
                 key={acc.id}
                 selected={
-                  acc.id === defaulAccount || acc.id === accountSelected?.id
+                  accountSelected
+                    ? acc.id === accountSelected?.id
+                    : acc.id === defaulAccount
                 }
                 borderColor={borderColor}
                 onPress={() => handleSelectAccount(acc)}>

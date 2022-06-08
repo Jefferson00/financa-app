@@ -53,7 +53,7 @@ const schema = yup.object({
 export default function CreateCreditCard(props: CreateCreditCardProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { accounts, getUserCreditCards } = useAccount();
+  const { activeAccounts, getUserCreditCards } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,9 +81,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       limit: creditCardState?.limit
         ? getCurrencyFormat(creditCardState?.limit)
         : getCurrencyFormat(0),
-      receiptDefault:
-        creditCardState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: creditCardState?.receiptDefault || activeAccounts[0].id,
     },
     resolver: yupResolver(schema),
   });
@@ -276,7 +274,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 ? creditCardState.receiptDefault
                 : ''
             }
-            selectItems={accounts.filter(a => a.status === 'active')}
+            selectItems={activeAccounts}
           />
 
           <S.ButtonContainer>

@@ -42,10 +42,10 @@ export default function Incomes() {
   const {
     incomes,
     handleCreateIncomeOnAccount,
-    accounts,
+    activeAccounts,
     incomesOnAccounts,
     accountSelected,
-    handleUpdateAccountBalance,
+    handleDeleteIncomeOnAccount,
     getUserIncomesOnAccount,
     getUserIncomes,
     handleClearCache,
@@ -137,24 +137,7 @@ export default function Incomes() {
           setLoadingMessage('Excluindo recebimento...');
           setIsSubmitting(true);
           try {
-            await api.delete(`incomes/onAccount/${income.id}/${user.id}`);
-
-            const account = accounts.find(acc => acc.id === income.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              income.value,
-              account,
-              'Expanse',
-            );
-
-            await getUserIncomesOnAccount();
+            await handleDeleteIncomeOnAccount(income.id);
             setConfirmUnreceivedVisible(false);
             return;
           } catch (error: any) {
@@ -169,7 +152,7 @@ export default function Incomes() {
           setIsSubmitting(true);
           const input: CreateIncomeOnAccount = {
             userId: user.id,
-            accountId: income.receiptDefault || accountSelected?.id,
+            accountId: accountSelected?.id || income.receiptDefault,
             incomeId: income?.id,
             month: selectedDate,
             value: income.value,
@@ -186,21 +169,6 @@ export default function Incomes() {
           try {
             await handleCreateIncomeOnAccount(input);
 
-            const account = accounts.find(acc => acc.id === input.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              input.value,
-              account,
-              'Income',
-            );
-
             await getUserIncomesOnAccount();
             setEditSucessfully(true);
           } catch (error: any) {
@@ -214,7 +182,7 @@ export default function Incomes() {
       }
     },
     [
-      accounts,
+      activeAccounts,
       handleCreateIncomeOnAccount,
       accountSelected,
       selectedDate,
@@ -442,8 +410,9 @@ export default function Incomes() {
                         ? `Recebido em ${getDayOfTheMounth(
                             new Date(income.paymentDate),
                           )} - ${reduceString(
-                            accounts.find(acc => acc.id === income.accountId)
-                              ?.name,
+                            activeAccounts.find(
+                              acc => acc.id === income.accountId,
+                            )?.name,
                             16,
                           )}`
                         : 'Receber'
@@ -500,7 +469,7 @@ export default function Incomes() {
         animationType="slide"
         defaulAccount={incomeSelected?.receiptDefault}
         handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
-        accounts={accounts.filter(a => a.status === 'active')}
+        accounts={activeAccounts.filter(a => a.status === 'active')}
         backgroundColor={colors.modalBackground}
         color={colors.textColor}
         theme={theme}

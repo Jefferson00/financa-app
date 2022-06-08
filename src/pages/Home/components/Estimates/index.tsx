@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { addMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 
@@ -13,6 +13,7 @@ import {
   getPreviousMonth,
   getMounthAndYear,
 } from '../../../../utils/dateFormats';
+import AsyncStorage from '@react-native-community/async-storage';
 
 interface IEstimate {
   id: string | number;
@@ -23,35 +24,28 @@ interface IEstimate {
 
 const Estimates = () => {
   const { theme } = useTheme();
-  const { incomes, expanses, accounts, incomesOnAccounts, expansesOnAccounts } =
-    useAccount();
+  const {
+    incomes,
+    expanses,
+    activeAccounts,
+    incomesOnAccounts,
+    expansesOnAccounts,
+  } = useAccount();
   const [estimates, setEstimates] = useState<IEstimate[]>([]);
 
   const colors = getEstimateColors(theme);
+  const controller = new AbortController();
 
-  useEffect(() => {
-    let estimatesArr = [];
+  const calculateEstimateBalances = useCallback(() => {
     let count = 0;
     let currentMonth = new Date();
-    const prevMonth = getPreviousMonth(new Date());
     let sumBalanceLastMonth = 0;
 
-    accounts.map(account => {
-      if (account.status === 'active') {
-        if (account.balances) {
-          const balanceLastMonth = account.balances.find(balance =>
-            isSameMonth(new Date(balance.month), prevMonth),
-          );
-
-          if (balanceLastMonth) {
-            sumBalanceLastMonth = sumBalanceLastMonth + balanceLastMonth.value;
-          } else {
-            sumBalanceLastMonth = sumBalanceLastMonth + account.initialValue;
-          }
-        }
-      }
+    activeAccounts.map(account => {
+      sumBalanceLastMonth = sumBalanceLastMonth + account.balance;
     });
 
+    let estimatesArr = [];
     let balanceInThisMonth = sumBalanceLastMonth;
     let values = [];
 
@@ -78,10 +72,10 @@ const Estimates = () => {
           ),
       );
 
-      const estimateIncomes = [
-        ...incomesWithoutAccount,
-        ...incomesOnAccountInThisMonth,
-      ].reduce((a, b) => a + (b['value'] || 0), 0);
+      const estimateIncomes = incomesWithoutAccount.reduce(
+        (a, b) => a + (b['value'] || 0),
+        0,
+      );
 
       const expansesInThisMonth = expanses.filter(i =>
         i.endDate
@@ -105,10 +99,10 @@ const Estimates = () => {
           ),
       );
 
-      const estimateExpanses = [
-        ...expansesOnAccountInThisMonth,
-        ...expansesWithoutAccount,
-      ].reduce((a, b) => a + (b['value'] || 0), 0);
+      const estimateExpanses = expansesWithoutAccount.reduce(
+        (a, b) => a + (b['value'] || 0),
+        0,
+      );
 
       balanceInThisMonth =
         balanceInThisMonth + (estimateIncomes - estimateExpanses);
@@ -144,7 +138,22 @@ const Estimates = () => {
       };
     });
     setEstimates(estimatesArr);
-  }, [accounts, incomes, expanses]);
+    console.log('estimados');
+  }, [
+    activeAccounts,
+    incomes,
+    expanses,
+    incomesOnAccounts,
+    expansesOnAccounts,
+  ]);
+
+  useEffect(() => {
+    calculateEstimateBalances();
+
+    return () => {
+      controller.abort();
+    };
+  }, [calculateEstimateBalances]);
 
   return (
     <S.EstimateView

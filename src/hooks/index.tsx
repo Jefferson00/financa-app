@@ -3,6 +3,7 @@ import { AccountProvider } from './AccountContext';
 
 import { AuthProvider } from './AuthContext';
 import { DateProvider } from './DateContext';
+import { NotificationProvider } from './NotificationContext';
 import { SecurityProvider } from './SecurityContext';
 import { ThemeProvider } from './ThemeContext';
 
@@ -11,7 +12,9 @@ const AppProvider: React.FC = ({ children }) => (
     <ThemeProvider>
       <AuthProvider>
         <DateProvider>
-          <AccountProvider>{children}</AccountProvider>
+          <NotificationProvider>
+            <AccountProvider>{children}</AccountProvider>
+          </NotificationProvider>
         </DateProvider>
       </AuthProvider>
     </ThemeProvider>

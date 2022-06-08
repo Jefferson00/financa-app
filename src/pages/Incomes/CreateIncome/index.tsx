@@ -68,12 +68,11 @@ export default function CreateIncome(props: IncomeProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const {
-    accounts,
+    activeAccounts,
     getUserIncomes,
     handleClearCache,
     handleCreateIncomeOnAccount,
     getUserIncomesOnAccount,
-    handleUpdateAccountBalance,
   } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
@@ -101,9 +100,7 @@ export default function CreateIncome(props: IncomeProps) {
         ? getCurrencyFormat(incomeState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault:
-        incomeState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: incomeState?.receiptDefault || activeAccounts[0].id,
       category: IncomeCategories.find(c => c.name === incomeState?.category)
         ? IncomeCategories.find(c => c.name === incomeState?.category)?.id
         : IncomeCategories[0].name,
@@ -151,21 +148,6 @@ export default function CreateIncome(props: IncomeProps) {
       };
 
       await handleCreateIncomeOnAccount(input);
-
-      const account = accounts.find(acc => acc.id === input.accountId);
-
-      const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), new Date())) {
-          return balance;
-        }
-      });
-
-      await handleUpdateAccountBalance(
-        accountLastBalance,
-        input.value,
-        account,
-        'Income',
-      );
 
       await getUserIncomesOnAccount();
     }
@@ -364,7 +346,7 @@ export default function CreateIncome(props: IncomeProps) {
             value={
               incomeState?.receiptDefault ? incomeState.receiptDefault : ''
             }
-            selectItems={accounts.filter(acc => acc.status === 'active')}
+            selectItems={activeAccounts}
           />
 
           <ControlledInput

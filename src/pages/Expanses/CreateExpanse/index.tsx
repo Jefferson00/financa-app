@@ -64,13 +64,12 @@ export default function CreateExpanse(props: ExpanseProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
   const {
-    accounts,
+    activeAccounts,
     creditCards,
     getUserExpanses,
     getUserCreditCards,
     handleCreateExpanseOnAccount,
     getUserExpansesOnAccount,
-    handleUpdateAccountBalance,
   } = useAccount();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
@@ -102,9 +101,7 @@ export default function CreateExpanse(props: ExpanseProps) {
         ? getCurrencyFormat(expanseState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault:
-        expanseState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: expanseState?.receiptDefault || activeAccounts[0].id,
       category: ExpanseCategories.find(c => c.name === expanseState?.category)
         ? ExpanseCategories.find(c => c.name === expanseState?.category)?.id
         : ExpanseCategories[0].name,
@@ -154,20 +151,6 @@ export default function CreateExpanse(props: ExpanseProps) {
 
       await handleCreateExpanseOnAccount(input);
 
-      const account = accounts.find(acc => acc.id === input.accountId);
-
-      const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), new Date())) {
-          return balance;
-        }
-      });
-
-      await handleUpdateAccountBalance(
-        accountLastBalance,
-        input.value,
-        account,
-        'Expanse',
-      );
       await getUserExpansesOnAccount();
     }
   };
@@ -372,7 +355,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               expanseState?.receiptDefault ? expanseState.receiptDefault : ''
             }
             selectItems={[
-              ...accounts.filter(a => a.status === 'active'),
+              ...activeAccounts,
               ...creditCards.map(e => {
                 return { ...e, name: `Cartão - ${e.name}` };
               }),

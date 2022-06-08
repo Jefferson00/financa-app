@@ -56,7 +56,7 @@ type FormData = {
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const { getUserAccounts, incomesOnAccounts, expansesOnAccounts } =
+  const { getActiveUserAccounts, incomesOnAccounts, expansesOnAccounts } =
     useAccount();
   const { theme } = useTheme();
   const colors = getAccountColors(theme);
@@ -138,7 +138,7 @@ export default function Account(props: ProfileProps) {
         setSucessMessage('Conta criada com sucesso!');
       }
 
-      await getUserAccounts();
+      await getActiveUserAccounts();
       setEditSucessfully(true);
     } catch (error: any) {
       if (error?.response?.data?.message)
@@ -155,13 +155,13 @@ export default function Account(props: ProfileProps) {
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
-        await Promise.all(
+        /* await Promise.all(
           accountState.balances.map(async (balance: any) => {
             await api.delete(`accounts/${balance.id}`);
           }),
-        );
+        ); */
         await api.delete(`accounts/${accountState.id}/${user.id}`);
-        await getUserAccounts();
+        await getActiveUserAccounts();
         setSucessMessage('Conta excluída com sucesso!');
         setEditSucessfully(true);
       } catch (error: any) {

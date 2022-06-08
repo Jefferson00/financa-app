@@ -6,7 +6,7 @@ import React, {
   useState,
 } from 'react';
 import api from '../services/api';
-import { Account } from '../interfaces/Account';
+import { IAccount } from '../interfaces/Account';
 import { useAuth } from './AuthContext';
 import { useDate } from './DateContext';
 import { Income } from '../interfaces/Income';
@@ -31,6 +31,7 @@ import { CreditCards } from '../interfaces/CreditCards';
 
 interface AccountContextData {
   getUserAccounts: () => Promise<void>;
+  getActiveUserAccounts: () => Promise<void>;
   getUserIncomes: () => Promise<void>;
   getUserIncomesOnAccount: () => Promise<void>;
   getUserExpansesOnAccount: () => Promise<void>;
@@ -38,13 +39,7 @@ interface AccountContextData {
   handleCreateIncomeOnAccount: (
     createIncomeOnAccount: CreateIncomeOnAccount,
   ) => Promise<void>;
-  handleSelectAccount: (account: Account) => void;
-  handleUpdateAccountBalance: (
-    accountLastBalance: AccountBalance | undefined,
-    value: number,
-    account: Account | undefined,
-    type: 'Income' | 'Expanse',
-  ) => Promise<void>;
+  handleSelectAccount: (account: IAccount) => void;
   handleCreateExpanseOnAccount: (
     createExpanseOnAccount: CreateExpanseOnAccount,
   ) => Promise<void>;
@@ -56,7 +51,10 @@ interface AccountContextData {
   setExpansesOnAccounts: React.Dispatch<
     React.SetStateAction<ExpanseOnAccount[]>
   >;
-  accounts: Account[];
+  handleDeleteIncomeOnAccount: (incomeId: string) => Promise<void>;
+  handleDeleteExpanseOnAccount: (expanseId: string) => Promise<void>;
+  accounts: IAccount[];
+  activeAccounts: IAccount[];
   incomes: Income[];
   expanses: Expanse[];
   incomesOnAccounts: IncomeOnAccount[];
@@ -67,7 +65,7 @@ interface AccountContextData {
   accountCards: any[];
   totalEstimateBalance: number;
   totalCurrentBalance: number;
-  accountSelected: Account | undefined;
+  accountSelected: IAccount | undefined;
   creditCards: CreditCards[];
 }
 
@@ -86,8 +84,9 @@ const defaultAccountCard = {
 export const AccountProvider: React.FC = ({ children }) => {
   const { user } = useAuth();
   const { selectedDate } = useDate();
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [accountSelected, setAccountSelected] = useState<Account>();
+  const [accounts, setAccounts] = useState<IAccount[]>([]);
+  const [activeAccounts, setActiveAccounts] = useState<IAccount[]>([]);
+  const [accountSelected, setAccountSelected] = useState<IAccount>();
   const [totalEstimateBalance, setTotalEstimateBalance] = useState(0);
   const [totalCurrentBalance, setTotalCurrentBalance] = useState(0);
   const [accountCards, setAccountCards] = useState([defaultAccountCard]);
@@ -106,17 +105,28 @@ export const AccountProvider: React.FC = ({ children }) => {
   const [hasAccount, setHasAccount] = useState(false);
   const controller = new AbortController();
 
-  const handleSelectAccount = useCallback((account: Account) => {
+  const handleSelectAccount = useCallback((account: IAccount) => {
     setAccountSelected(account);
   }, []);
+
+  const getActiveUserAccounts = useCallback(async () => {
+    if (user) {
+      try {
+        const { data } = await api.get(`accounts/active/user/${user.id}`);
+        setActiveAccounts(data);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, [user]);
 
   const getUserAccounts = useCallback(async () => {
     if (user) {
       try {
-        const { data } = await api.get(`accounts/user/${user.id}`);
+        const { data } = await api.get(`accounts/all/user/${user.id}`);
 
         await Promise.all(
-          data.map(async (account: Account) => {
+          data.map(async (account: IAccount) => {
             const response = await api.get(`accounts/balance/${account.id}`);
 
             Object.assign(account, {
@@ -168,7 +178,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   const getUserIncomesOnAccount = useCallback(async () => {
     if (user) {
       try {
-        const { data } = await api.get(`incomes/onAccount/${user.id}`);
+        const { data } = await api.get(`incomesOnAccount/user/${user.id}`);
         setIncomesOnAccounts(data);
       } catch (error) {
         console.log(error);
@@ -179,7 +189,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   const getUserExpansesOnAccount = useCallback(async () => {
     if (user) {
       try {
-        const { data } = await api.get(`expanses/onAccount/${user.id}`);
+        const { data } = await api.get(`expansesOnAccount/user/${user.id}`);
         setExpansesOnAccounts(data);
       } catch (error) {
         console.log(error);
@@ -187,50 +197,15 @@ export const AccountProvider: React.FC = ({ children }) => {
     }
   }, [user]);
 
-  const handleUpdateAccountBalance = useCallback(
-    async (
-      accountLastBalance: AccountBalance | undefined,
-      value: number,
-      account: Account | undefined,
-      type: 'Income' | 'Expanse',
-    ) => {
-      if (accountLastBalance) {
-        const { data } = await api.put(
-          `accounts/balance/${accountLastBalance.id}`,
-          {
-            value:
-              type === 'Income'
-                ? accountLastBalance.value + value
-                : accountLastBalance.value - value,
-            accountId: account?.id,
-          },
-        );
-        //console.log('update balance: ', data);
-      } else {
-        const { data } = await api.post(`accounts/balance`, {
-          month: new Date(),
-          value: account?.initialValue
-            ? type === 'Income'
-              ? account?.initialValue + value
-              : account?.initialValue - value
-            : value,
-          accountId: account?.id,
-        });
-        //console.log('create balance: ', data);
-      }
-      await getUserAccounts();
-    },
-    [selectedDate, getUserAccounts],
-  );
-
   const handleCreateIncomeOnAccount = useCallback(
     async (createIncomeOnAccount: CreateIncomeOnAccount) => {
       if (user) {
         try {
           const { data } = await api.post(
-            `incomes/onAccount`,
+            `incomesOnAccount`,
             createIncomeOnAccount,
           );
+          getActiveUserAccounts();
         } catch (error) {
           console.log(error);
         }
@@ -244,9 +219,10 @@ export const AccountProvider: React.FC = ({ children }) => {
       if (user) {
         try {
           const { data } = await api.post(
-            `expanses/onAccount`,
+            `expansesOnAccount`,
             createExpanseOnAccount,
           );
+          getActiveUserAccounts();
         } catch (error) {
           console.log(error);
         }
@@ -255,65 +231,35 @@ export const AccountProvider: React.FC = ({ children }) => {
     [user],
   );
 
-  const getAccountCurrentBalance = useCallback(
-    (account: Account) => {
-      let currentBalance = 0;
-
-      const incomesInThisMonth = incomesOnAccounts.filter(i =>
-        isSameMonth(new Date(i.month), selectedDate),
-      );
-      const expansesInThisMonth = expansesOnAccounts.filter(i =>
-        isSameMonth(new Date(i.month), selectedDate),
-      );
-
-      const incomesInThisAccount = incomesInThisMonth.filter(
-        i => i.accountId === account.id,
-      );
-      const expansesInThisAccount = expansesInThisMonth.filter(
-        i => i.accountId === account.id,
-      );
-
-      const selectedMonth = new Date(selectedDate);
-
-      const accountBalanceLastMonth = account?.balances?.find(b =>
-        isSameMonth(new Date(b.month), getPreviousMonth(selectedMonth)),
-      );
-
-      const currentMonth = lastDayOfMonth(new Date());
-      currentMonth.setUTCHours(23, 59, 59, 999);
-
-      const isAfterCurrentMonth = isAfter(selectedDate, currentMonth);
-
-      if (isAfterCurrentMonth) {
-        const accountBalanceLastMonth = account?.balances?.find(b =>
-          isSameMonth(new Date(b.month), getPreviousMonth(currentMonth)),
-        );
-
-        currentBalance = accountBalanceLastMonth
-          ? accountBalanceLastMonth.value +
-            getCurrentBalance(incomesInThisAccount, expansesInThisAccount)
-          : account.initialValue +
-            getCurrentBalance(incomesInThisAccount, expansesInThisAccount);
-      } else {
-        currentBalance = accountBalanceLastMonth
-          ? accountBalanceLastMonth.value +
-            getCurrentBalance(incomesInThisAccount, expansesInThisAccount)
-          : account.initialValue +
-            getCurrentBalance(incomesInThisAccount, expansesInThisAccount);
+  const handleDeleteIncomeOnAccount = useCallback(
+    async (incomeId: string) => {
+      if (user) {
+        await api.delete(`incomesOnAccount/${incomeId}/${user.id}`);
+        await getUserIncomesOnAccount();
+        await getActiveUserAccounts();
       }
-
-      return {
-        currentBalance,
-        incomesInThisAccount,
-        expansesInThisAccount,
-      };
     },
-    [incomesOnAccounts, expansesOnAccounts, selectedDate],
+    [user],
+  );
+
+  const handleDeleteExpanseOnAccount = useCallback(
+    async (expanseId: string) => {
+      if (user) {
+        try {
+          await api.delete(`expansesOnAccount/${expanseId}/${user.id}`);
+          await getActiveUserAccounts();
+          await getUserExpansesOnAccount();
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    },
+    [user],
   );
 
   const getAccountEstimateBalance = useCallback(
     async (
-      account: Account,
+      account: IAccount,
       currentBalance: number,
       incomesOnAccountInThisMonth: IncomeOnAccount[],
       expansesOnAccountInThisMonth: ExpanseOnAccount[],
@@ -395,68 +341,74 @@ export const AccountProvider: React.FC = ({ children }) => {
     let sumTotalCurrentBalance = 0;
     let sumTotalEstimateBalance = 0;
 
+    // em todas as contas eu verificaria:
+    // o saldo da conta
+    // e o saldo previsto que seria: saldo da conta + saldo dos não recebidos (mês atual)
+    // (mês futuro) saldo previsto mês anterior + saldo previsto mês atual
+
     await Promise.all(
-      accounts.map(async (account, index) => {
-        if (account.status === 'active') {
-          const {
-            currentBalance,
-            expansesInThisAccount,
-            incomesInThisAccount,
-          } = getAccountCurrentBalance(account);
+      activeAccounts.map(async (account, index) => {
+        const currentBalance = account.balance;
 
-          const isTheSameMonth = isSameMonth(new Date(), selectedDate);
+        const incomesInThisMonth = account.incomesOnAccount.filter(i =>
+          isSameMonth(new Date(i.month), selectedDate),
+        );
+        const expansesInThisMonth = account.expansesOnAccount.filter(exp =>
+          isSameMonth(new Date(exp.month), selectedDate),
+        );
 
-          const lastMonthEstimateBalance = await AsyncStorage.getItem(
-            `@FinancaAppBeta:LastMonthEstimateBalance@${account.id}`,
-          );
+        const isTheSameMonth = isSameMonth(new Date(), selectedDate);
 
-          //console.log('lastMonthEstimateBalance', lastMonthEstimateBalance);
-          //console.log('balances', account?.balances);
+        const lastMonthEstimateBalance = await AsyncStorage.getItem(
+          `@FinancaAppBeta:LastMonthEstimateBalance@${account.id}`,
+        );
 
-          const estimateBalance = isTheSameMonth
-            ? await getAccountEstimateBalance(
-                account,
-                currentBalance,
-                incomesInThisAccount,
-                expansesInThisAccount,
-              )
-            : await getAccountEstimateBalance(
-                account,
-                Number(lastMonthEstimateBalance),
-                incomesInThisAccount,
-                expansesInThisAccount,
-              );
+        //console.log('lastMonthEstimateBalance', lastMonthEstimateBalance);
+        //console.log('balances', account?.balances);
 
-          // console.log('estimateBalance', estimateBalance);
-          const currentMonthEstimateBalance = await AsyncStorage.getItem(
-            `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
-          );
-
-          if (!currentMonthEstimateBalance) {
-            await AsyncStorage.setItem(
-              `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
-              String(estimateBalance),
+        const estimateBalance = isTheSameMonth
+          ? await getAccountEstimateBalance(
+              account,
+              currentBalance,
+              incomesInThisMonth,
+              expansesInThisMonth,
+            )
+          : await getAccountEstimateBalance(
+              account,
+              Number(lastMonthEstimateBalance),
+              incomesInThisMonth,
+              expansesInThisMonth,
             );
-          }
 
-          sumTotalCurrentBalance = sumTotalCurrentBalance + currentBalance;
-          sumTotalEstimateBalance =
-            isTheSameMonth || !currentMonthEstimateBalance
-              ? sumTotalEstimateBalance + estimateBalance
-              : sumTotalEstimateBalance + Number(currentMonthEstimateBalance);
+        // console.log('estimateBalance', estimateBalance);
+        const currentMonthEstimateBalance = await AsyncStorage.getItem(
+          `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
+        );
 
-          cardsArray.push({
-            id: index + 1,
-            title: account.name,
-            type: account.type,
-            current_balance: currentBalance,
-            estimate_balance:
-              isTheSameMonth || !currentMonthEstimateBalance
-                ? estimateBalance
-                : currentMonthEstimateBalance,
-            account,
-          });
+        if (!currentMonthEstimateBalance) {
+          await AsyncStorage.setItem(
+            `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
+            String(estimateBalance),
+          );
         }
+
+        sumTotalCurrentBalance = sumTotalCurrentBalance + currentBalance;
+        sumTotalEstimateBalance =
+          isTheSameMonth || !currentMonthEstimateBalance
+            ? sumTotalEstimateBalance + estimateBalance
+            : sumTotalEstimateBalance + Number(currentMonthEstimateBalance);
+
+        cardsArray.push({
+          id: index + 1,
+          title: account.name,
+          type: account.type,
+          current_balance: currentBalance,
+          estimate_balance:
+            isTheSameMonth || !currentMonthEstimateBalance
+              ? estimateBalance
+              : currentMonthEstimateBalance,
+          account,
+        });
       }),
     );
     cardsArray.push({
@@ -470,7 +422,7 @@ export const AccountProvider: React.FC = ({ children }) => {
     setTotalEstimateBalance(sumTotalEstimateBalance);
     setAccountCards(cardsArray);
     setIsLoadingCards(false);
-  }, [accounts, getAccountCurrentBalance, getAccountEstimateBalance]);
+  }, [activeAccounts, getAccountEstimateBalance]);
 
   const handleClearCache = useCallback(() => {
     setCacheCleared(false);
@@ -506,7 +458,7 @@ export const AccountProvider: React.FC = ({ children }) => {
       });
     });
     setIsLoadingData(true);
-    getUserAccounts().finally(() =>
+    getActiveUserAccounts().finally(() =>
       getUserIncomes().finally(() => {
         getUserIncomesOnAccount().finally(() =>
           getUserExpanses().finally(() =>
@@ -522,7 +474,7 @@ export const AccountProvider: React.FC = ({ children }) => {
       controller.abort();
     };
   }, [
-    getUserAccounts,
+    getActiveUserAccounts,
     getUserIncomes,
     getUserIncomesOnAccount,
     getUserExpansesOnAccount,
@@ -534,15 +486,15 @@ export const AccountProvider: React.FC = ({ children }) => {
     if (cacheCleared && !isLoadingData) {
       handleAccountCardMount();
     }
-  }, [accounts, handleAccountCardMount, cacheCleared, isLoadingData]);
+  }, [handleAccountCardMount, cacheCleared, isLoadingData]);
 
   useEffect(() => {
-    if (accounts.length > 0 && accounts.find(acc => acc.status === 'active')) {
+    if (activeAccounts.length > 0) {
       setHasAccount(true);
     } else {
       setHasAccount(false);
     }
-  }, [accounts]);
+  }, [activeAccounts]);
 
   return (
     <AccountContext.Provider
@@ -552,7 +504,6 @@ export const AccountProvider: React.FC = ({ children }) => {
         getUserIncomesOnAccount,
         handleCreateIncomeOnAccount,
         handleSelectAccount,
-        handleUpdateAccountBalance,
         handleCreateExpanseOnAccount,
         getUserExpansesOnAccount,
         getUserExpanses,
@@ -562,8 +513,12 @@ export const AccountProvider: React.FC = ({ children }) => {
         setIncomesOnAccounts,
         setExpanses,
         setExpansesOnAccounts,
+        handleDeleteExpanseOnAccount,
+        handleDeleteIncomeOnAccount,
+        getActiveUserAccounts,
         expansesOnAccounts,
         accounts,
+        activeAccounts,
         isLoadingCards,
         incomes,
         expanses,
