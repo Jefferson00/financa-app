@@ -32,14 +32,19 @@ import { useState } from 'react';
 import { addMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 import { useDate } from '../../../../hooks/DateContext';
 import { getDayOfTheMounth, getMonthName } from '../../../../utils/dateFormats';
-import { useAccount } from '../../../../hooks/AccountContext';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import ModalComponent from '../../../../components/Modal';
-import api from '../../../../services/api';
 import { useAuth } from '../../../../hooks/AuthContext';
 import { Nav } from '../../../../routes';
 import { useNavigation } from '@react-navigation/native';
+import ConfirmReceivedModalComponent from '../ConfirmReceivedModal';
+import { getExpansesColors } from '../../../../utils/colors/expanses';
+import { useTheme } from '../../../../hooks/ThemeContext';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../../interfaces/State';
+import { payInvoice } from '../../../../store/modules/CreditCards/fetchActions';
+import { deleteExpanseOnInvoice } from '../../../../store/modules/Expanses/fetchActions';
 
 interface CardContentProps {
   backgroundColor?: string;
@@ -52,12 +57,22 @@ export default function CardContent({
   backgroundColor,
   onDelete,
 }: CardContentProps) {
+  const dispatch = useDispatch<any>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { expanses } = useSelector((state: State) => state.expanses);
+
   const navigation = useNavigation<Nav>();
   const { selectedDate } = useDate();
+  const { theme } = useTheme();
   const { user } = useAuth();
-  const { expanses, getUserExpanses, getUserCreditCards } = useAccount();
+
   const [daysState, setDaysState] = useState<number[]>([]);
+  const [paidInvoiceDaysState, setPaidInvoiceDaysState] = useState<number[]>(
+    [],
+  );
   const [currentInvoice, setCurrentInvoice] = useState<Invoice>();
+  const [currentPaidInvoiceState, setCurrentPaidInvoiceState] =
+    useState<Invoice>();
   const aref = useAnimatedRef<View>();
   const open = useSharedValue(false);
   const progress = useDerivedValue(() =>
@@ -72,118 +87,139 @@ export default function CardContent({
     height: height.value * progress.value + 1,
     opacity: progress.value === 0 ? 0 : 1,
   }));
+
+  const colors = getExpansesColors(theme);
+
   const [expanseSelected, setExpanseSelected] = useState<any>();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [paidSucessfully, setPaidSucessfully] = useState(false);
+  const [confirmPaymentModalVisible, setConfirmPaymentModalVisible] =
+    useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
 
-  useEffect(() => {
-    const today = new Date(selectedDate);
-    const nextMonth = addMonths(today, 1);
-    const invoiceThisMonth = creditCard.Invoice.find(
+  const toggleConfirmPaymentModalVisibility = () => {
+    setConfirmPaymentModalVisible(pervState => !pervState);
+  };
+
+  const handleOkSucess = () => {
+    setPaidSucessfully(false);
+  };
+
+  const getCurrentPaidInvoice = useCallback(() => {
+    const currentPaidInvoice = creditCard.Invoice.find(
       invoice =>
-        isSameMonth(new Date(invoice.month), selectedDate) ||
-        isSameMonth(new Date(invoice.month), nextMonth),
+        isSameMonth(new Date(invoice.month), new Date()) && invoice.paid,
     );
+    setCurrentPaidInvoiceState(currentPaidInvoice);
 
-    if (invoiceThisMonth) {
-      setCurrentInvoice(invoiceThisMonth);
-
+    if (currentPaidInvoice) {
       const days: number[] = [];
 
-      invoiceThisMonth.ExpanseOnInvoice.map(exp => {
+      currentPaidInvoice.ExpanseOnInvoice.map(exp => {
         if (!days.find(d => d === exp.day)) days.push(exp.day);
       });
 
-      setDaysState(days);
-    } else {
-      const expansesInThisMonth = expanses.filter(i =>
-        i.endDate
-          ? (isBefore(selectedDate, new Date(i.endDate)) ||
-              isSameMonth(new Date(i.endDate), selectedDate)) &&
-            (isAfter(selectedDate, new Date(i.startDate)) ||
-              isSameMonth(new Date(i.startDate), selectedDate))
-          : i.endDate === null &&
-            (isAfter(selectedDate, new Date(i.startDate)) ||
-              isSameMonth(new Date(i.startDate), selectedDate)),
-      );
-
-      const expansesInThisCard = expansesInThisMonth.filter(
-        exp => exp.receiptDefault === creditCard.id,
-      );
-
-      const expanseOnInvoice: ExpanseOnInvoice[] = [];
-      let invoiceValue = 0;
-      const days: number[] = [];
-
-      expansesInThisCard.map((exp, index) => {
-        const expanseOnInvoiceObject: ExpanseOnInvoice = {
-          id: String(index),
-          expanseId: exp.id,
-          name: exp.name,
-          value: exp.value,
-          invoiceId: 'any',
-          day: new Date(exp.startDate).getUTCDate(),
-        };
-
-        expanseOnInvoice.push(expanseOnInvoiceObject);
-
-        if (!days.find(d => d === expanseOnInvoiceObject.day))
-          days.push(expanseOnInvoiceObject.day);
-        invoiceValue = invoiceValue + exp.value;
-      });
-
-      setDaysState(days);
-      const paymentDate = new Date(creditCard.paymentDate);
-      paymentDate.setMonth(selectedDate.getMonth());
-
-      setCurrentInvoice({
-        accountId: creditCard.receiptDefault,
-        closed: true,
-        id: 'any',
-        paid: true,
-        value: invoiceValue,
-        paymentDate: paymentDate.toISOString(),
-        closingDate: creditCard.invoiceClosing,
-        creditCardId: creditCard.id,
-        month: selectedDate.toISOString(),
-        ExpanseOnInvoice: expanseOnInvoice,
-      });
+      setPaidInvoiceDaysState(days);
     }
-  }, [selectedDate, expanses, creditCard]);
+  }, [creditCard]);
 
-  const handlePayInvoice = useCallback(
-    async (invoice: Invoice) => {
+  const getInvoiceInThisMonth = useCallback(() => {
+    const currentDate = new Date(selectedDate);
+    const nextMonth = addMonths(currentDate, 1);
+
+    const invoiceInThisMonth = creditCard.Invoice.find(
+      invoice =>
+        isSameMonth(new Date(invoice.month), selectedDate) && !invoice.paid,
+    );
+
+    const invoiceInNextMonth = creditCard.Invoice.find(invoice =>
+      isSameMonth(new Date(invoice.month), nextMonth),
+    );
+
+    return invoiceInThisMonth ? invoiceInThisMonth : invoiceInNextMonth;
+  }, [selectedDate, creditCard]);
+
+  const getCurrentInvoice = useCallback((invoiceInThisMonth: Invoice) => {
+    setCurrentInvoice(invoiceInThisMonth);
+
+    const days: number[] = [];
+
+    invoiceInThisMonth.ExpanseOnInvoice.map(exp => {
+      if (!days.find(d => d === exp.day)) days.push(exp.day);
+    });
+
+    setDaysState(days);
+  }, []);
+
+  const getEstimateInvoice = useCallback(() => {
+    const expansesInThisMonth = expanses.filter(i =>
+      i.endDate
+        ? (isBefore(selectedDate, new Date(i.endDate)) ||
+            isSameMonth(new Date(i.endDate), selectedDate)) &&
+          (isAfter(selectedDate, new Date(i.startDate)) ||
+            isSameMonth(new Date(i.startDate), selectedDate))
+        : i.endDate === null &&
+          (isAfter(selectedDate, new Date(i.startDate)) ||
+            isSameMonth(new Date(i.startDate), selectedDate)),
+    );
+
+    const expansesInThisCard = expansesInThisMonth.filter(
+      exp => exp.receiptDefault === creditCard.id,
+    );
+
+    const expanseOnInvoice: ExpanseOnInvoice[] = [];
+    let invoiceValue = 0;
+    const days: number[] = [];
+
+    expansesInThisCard.map((exp, index) => {
+      const expanseOnInvoiceObject: ExpanseOnInvoice = {
+        id: String(index),
+        expanseId: exp.id,
+        name: exp.name,
+        value: exp.value,
+        invoiceId: 'any',
+        day: new Date(exp.startDate).getUTCDate(),
+      };
+
+      expanseOnInvoice.push(expanseOnInvoiceObject);
+
+      if (!days.find(d => d === expanseOnInvoiceObject.day))
+        days.push(expanseOnInvoiceObject.day);
+      invoiceValue = invoiceValue + exp.value;
+    });
+
+    setDaysState(days);
+    const paymentDate = new Date(creditCard.paymentDate);
+    paymentDate.setMonth(selectedDate.getMonth());
+
+    setCurrentInvoice({
+      accountId: creditCard.receiptDefault,
+      closed: true,
+      id: 'any',
+      paid: true,
+      value: invoiceValue,
+      paymentDate: paymentDate.toISOString(),
+      closingDate: creditCard.invoiceClosing,
+      creditCardId: creditCard.id,
+      month: selectedDate.toISOString(),
+      ExpanseOnInvoice: expanseOnInvoice,
+      updatedAt: '',
+    });
+  }, [expanses, selectedDate, creditCard]);
+
+  const handlePayInvoice = useCallback(async () => {
+    setLoadingMessage('Pagando fatura...');
+    setIsSubmitting(true);
+    toggleConfirmPaymentModalVisibility();
+
+    if (user && currentInvoice && !currentInvoice.paid) {
       try {
-        await api.put(`invoices/${invoice.id}`, {
-          paid: !invoice.paid,
-        });
-        await getUserCreditCards();
-      } catch (error) {
-        console.log(error);
-      }
-    },
-    [getUserCreditCards],
-  );
-
-  const handleRemove = useCallback(
-    async (expanse: any) => {
-      setIsDeleteModalVisible(false);
-      setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
-
-      try {
-        if (expanse?.expanseId) {
-          // await api.delete(`expanses/${expanse.expanseId}/${user?.id}`);
-          await api.delete(`expanses/onInvoice/${expanse.id}/onInvoice`);
-          await getUserExpanses();
-          await getUserCreditCards();
-          return;
-        }
+        dispatch(payInvoice(currentInvoice.id, user.id));
       } catch (error: any) {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);
@@ -191,9 +227,46 @@ export default function CardContent({
       } finally {
         setIsSubmitting(false);
       }
+    }
+  }, [currentInvoice, dispatch, user]);
+
+  const handleRemove = useCallback(
+    async (expanse: any) => {
+      setIsDeleteModalVisible(false);
+      setLoadingMessage('Excluindo...');
+      setIsSubmitting(true);
+
+      if (user) {
+        try {
+          if (expanse?.expanseId) {
+            dispatch(
+              deleteExpanseOnInvoice(expanse.id, expanse.expanseId, user.id),
+            );
+
+            return;
+          }
+        } catch (error: any) {
+          if (error?.response?.data?.message)
+            setErrorMessage(error?.response?.data?.message);
+          setHasError(true);
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
     },
-    [user],
+    [user, dispatch],
   );
+
+  useEffect(() => {
+    const invoiceInThisMonth = getInvoiceInThisMonth();
+    getCurrentPaidInvoice();
+
+    if (invoiceInThisMonth) {
+      getCurrentInvoice(invoiceInThisMonth);
+    } else {
+      getEstimateInvoice();
+    }
+  }, [getInvoiceInThisMonth, getCurrentInvoice, getEstimateInvoice]);
 
   return (
     <>
@@ -250,7 +323,7 @@ export default function CardContent({
 
               <View>
                 <S.Row>
-                  {currentInvoice?.closed && (
+                  {currentInvoice?.closed && !currentInvoice.paid && (
                     <TouchableOpacity>
                       <Ionicons
                         name="alert-circle"
@@ -267,7 +340,7 @@ export default function CardContent({
                 {currentInvoice?.closed && !currentInvoice.paid && (
                   <Switch
                     value={currentInvoice.paid}
-                    onChange={() => handlePayInvoice(currentInvoice)}
+                    onChange={toggleConfirmPaymentModalVisibility}
                   />
                 )}
               </View>
@@ -370,8 +443,75 @@ export default function CardContent({
                 </S.ItemCard>
               </S.ItemView>
             ))}
+
+          {currentPaidInvoiceState && isSameMonth(selectedDate, new Date()) && (
+            <S.HighlightContainer>
+              <S.ItemView>
+                <S.Subtitle color="#fff">
+                  Fatura de{' '}
+                  {getMonthName(new Date(currentPaidInvoiceState?.month))} paga
+                  em{' '}
+                  {getDayOfTheMounth(
+                    new Date(currentPaidInvoiceState?.updatedAt),
+                  )}
+                </S.Subtitle>
+              </S.ItemView>
+              {paidInvoiceDaysState.map(d => (
+                <S.ItemView key={Math.random()}>
+                  <S.DateTitle color="#fff">
+                    {d} de{' '}
+                    {getMonthName(new Date(currentPaidInvoiceState.month))}
+                  </S.DateTitle>
+                  {currentPaidInvoiceState?.ExpanseOnInvoice.filter(
+                    exp => exp.day === d,
+                  ).map(expanse => (
+                    <S.ItemCard
+                      key={expanse.id}
+                      onPress={() =>
+                        navigation.navigate('CreateExpanse', {
+                          expanse: expanses.find(
+                            exp =>
+                              exp.id === expanse.id ||
+                              exp.id === expanse.expanseId,
+                          ),
+                        })
+                      }>
+                      <S.DollarSign>
+                        <FoundationIcons
+                          name="dollar"
+                          size={RFPercentage(7)}
+                          color={backgroundColor}
+                        />
+                      </S.DollarSign>
+                      <S.ItemInfo>
+                        <S.ItemTitle>{expanse.name}</S.ItemTitle>
+                        <S.ItemValue>
+                          {getCurrencyFormat(expanse.value)}
+                        </S.ItemValue>
+                      </S.ItemInfo>
+                    </S.ItemCard>
+                  ))}
+                </S.ItemView>
+              ))}
+            </S.HighlightContainer>
+          )}
         </View>
       </S.HiddenContent>
+
+      <ConfirmReceivedModalComponent
+        visible={confirmPaymentModalVisible}
+        handleCancel={toggleConfirmPaymentModalVisibility}
+        onRequestClose={toggleConfirmPaymentModalVisibility}
+        transparent
+        title="Em qual conta a fatura será paga?"
+        animationType="slide"
+        defaulAccount={currentInvoice?.accountId}
+        handleConfirm={handlePayInvoice}
+        accounts={accounts}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
+      />
 
       <ModalComponent
         type="confirmation"
@@ -400,6 +540,18 @@ export default function CardContent({
         title={errorMessage}
         subtitle="Tente novamente mais tarde"
         animationType="slide"
+      />
+      <ModalComponent
+        type="success"
+        visible={paidSucessfully}
+        transparent
+        title="Fatura paga com sucesso!"
+        animationType="slide"
+        handleCancel={() => setPaidSucessfully(false)}
+        onSucessOkButton={handleOkSucess}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
     </>
   );

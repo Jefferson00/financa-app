@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Carousel, { Pagination } from 'react-native-snap-carousel';
@@ -19,20 +19,56 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { Nav } from '../../routes';
 import { getHomeColors } from '../../utils/colors/home';
 import AsyncStorage from '@react-native-community/async-storage';
+import { useDispatch, useSelector } from 'react-redux';
+import { useAuth } from '../../hooks/AuthContext';
+import { listAccounts } from '../../store/modules/Accounts/fetchActions';
+import {
+  listExpanses,
+  listExpansesOnAccount,
+} from '../../store/modules/Expanses/fetchActions';
+import {
+  listIncomes,
+  listIncomesOnAccount,
+} from '../../store/modules/Incomes/fetchActions';
+import { listCreditCards } from '../../store/modules/CreditCards/fetchActions';
+import State from '../../interfaces/State';
+import { isSameMonth } from 'date-fns';
+import { useDate } from '../../hooks/DateContext';
+import { getAccountEstimateBalance } from '../../utils/getAccountBalance';
+
+const defaultAccountCard = {
+  id: 0,
+  title: 'Adicionar uma nova conta',
+  type: 'ADD',
+  current_balance: 0,
+  estimate_balance: 0,
+  account: null,
+};
 
 export default function Home() {
+  const dispatch = useDispatch<any>();
+  const { accounts, loading } = useSelector((state: State) => state.accounts);
+  const { incomes, loading: loadingIncomes } = useSelector(
+    (state: State) => state.incomes,
+  );
+  const { expanses, loading: loadingExpanses } = useSelector(
+    (state: State) => state.expanses,
+  );
+  const { creditCards, loading: loadingCreditCards } = useSelector(
+    (state: State) => state.creditCards,
+  );
   const navigation = useNavigation<Nav>();
-  const {
-    isLoadingData,
-    isLoadingCards,
-    accountCards,
-    totalCurrentBalance,
-    totalEstimateBalance,
-  } = useAccount();
+
+  const { user } = useAuth();
   const { theme } = useTheme();
+  const { selectedDate } = useDate();
   const width = Dimensions.get('screen').width;
 
   const [activeSlide, setActiveSlide] = useState(0);
+  const [accountCards, setAccountCards] = useState([defaultAccountCard]);
+  const [totalEstimateBalance, setTotalEstimateBalance] = useState(0);
+  const [totalCurrentBalance, setTotalCurrentBalance] = useState(0);
+  const [isLoadingCards, setIsLoadingCards] = useState(true);
 
   const colors = getHomeColors(theme);
 
@@ -47,6 +83,110 @@ export default function Home() {
     });
   }, []);
 
+  const loadingAllData = () => {
+    return (
+      !loading &&
+      !loadingIncomes &&
+      !loadingExpanses &&
+      !loadingCreditCards &&
+      !isLoadingCards
+    );
+  };
+
+  const listAccountCards = useCallback(async () => {
+    setIsLoadingCards(true);
+    let sumTotalCurrentBalance = 0;
+    let sumTotalEstimateBalance = 0;
+
+    const cardsArray: any[] = [];
+    const isTheSameMonth = isSameMonth(new Date(), selectedDate);
+
+    await Promise.all(
+      accounts.map(async (account, index) => {
+        const currentBalance = account.balance;
+
+        const lastMonthEstimateBalance = await AsyncStorage.getItem(
+          `@FinancaAppBeta:LastMonthEstimateBalance@${account.id}`,
+        );
+
+        const estimateBalance = isTheSameMonth
+          ? getAccountEstimateBalance(
+              account,
+              currentBalance,
+              incomes,
+              expanses,
+              selectedDate,
+              creditCards,
+            )
+          : getAccountEstimateBalance(
+              account,
+              Number(lastMonthEstimateBalance),
+              incomes,
+              expanses,
+              selectedDate,
+              creditCards,
+            );
+
+        const currentMonthEstimateBalance = await AsyncStorage.getItem(
+          `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
+        );
+
+        if (!currentMonthEstimateBalance) {
+          await AsyncStorage.setItem(
+            `@FinancaAppBeta:CurrentMonthEstimateBalance@${account.id}@${selectedDate}`,
+            String(estimateBalance),
+          );
+        }
+
+        sumTotalCurrentBalance = sumTotalCurrentBalance + currentBalance;
+        sumTotalEstimateBalance =
+          isTheSameMonth || !currentMonthEstimateBalance
+            ? sumTotalEstimateBalance + estimateBalance
+            : sumTotalEstimateBalance + Number(currentMonthEstimateBalance);
+
+        cardsArray.push({
+          id: index + 1,
+          title: account.name,
+          type: account.type,
+          current_balance: currentBalance,
+          estimate_balance:
+            isTheSameMonth || !currentMonthEstimateBalance
+              ? estimateBalance
+              : currentMonthEstimateBalance,
+          account,
+        });
+      }),
+    );
+
+    cardsArray.push({
+      id: accounts.length + 1,
+      title: 'Adicionar uma nova conta',
+      type: 'ADD',
+      current_balance: 0,
+      estimate_balance: 0,
+    });
+
+    setTotalCurrentBalance(sumTotalCurrentBalance);
+    setTotalEstimateBalance(sumTotalEstimateBalance);
+    setAccountCards(cardsArray);
+    setIsLoadingCards(false);
+  }, [selectedDate, accounts, incomes, expanses, creditCards]);
+
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(listAccounts(user.id));
+      dispatch(listExpanses(user.id));
+      dispatch(listExpansesOnAccount(user.id));
+      dispatch(listIncomes(user.id));
+      dispatch(listIncomesOnAccount(user.id));
+      dispatch(listCreditCards(user.id));
+    }
+  }, [dispatch, user]);
+
+  useEffect(() => {
+    listAccountCards();
+  }, [listAccountCards]);
+
   return (
     <>
       <ScrollView
@@ -56,7 +196,7 @@ export default function Home() {
         showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
-          {(isLoadingData || isLoadingCards) && (
+          {!loadingAllData() ? (
             <ContentLoader
               viewBox="0 0 269 140"
               height={140}
@@ -67,8 +207,7 @@ export default function Home() {
               foregroundColor="rgb(255, 255, 255)">
               <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
             </ContentLoader>
-          )}
-          {!isLoadingData && !isLoadingCards && (
+          ) : (
             <>
               <Carousel
                 data={accountCards}
@@ -162,7 +301,7 @@ export default function Home() {
               <S.BalanceText color={colors.primaryColor}>
                 Saldo atual
               </S.BalanceText>
-              {isLoadingData ? (
+              {!loadingAllData() ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
@@ -183,7 +322,7 @@ export default function Home() {
               <S.BalanceText color={colors.primaryColor}>
                 Saldo previsto
               </S.BalanceText>
-              {isLoadingData ? (
+              {!loadingAllData() ? (
                 <ContentLoader
                   viewBox={`0 0 116 32`}
                   height={32}
@@ -205,7 +344,7 @@ export default function Home() {
             <S.BalanceText color={colors.primaryColor}>
               Estimativas
             </S.BalanceText>
-            {isLoadingData ? (
+            {!loadingAllData() ? (
               <ContentLoader
                 viewBox={`0 0 ${width} 150`}
                 height={150}

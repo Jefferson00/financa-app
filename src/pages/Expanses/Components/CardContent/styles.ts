@@ -67,9 +67,13 @@ export const HiddenContent = styled(Animated.View)<CardProps>`
 `;
 
 export const ItemView = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
+  margin: 0 ${RFPercentage(3.2)}px;
 
-  padding-bottom: ${RFPercentage(3.2)}px;
+  margin-bottom: ${RFPercentage(3.2)}px;
+`;
+
+export const HighlightContainer = styled.View`
+  background-color: #ffffff5a;
 `;
 
 export const ItemCard = styled.Pressable`

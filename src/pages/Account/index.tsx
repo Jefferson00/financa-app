@@ -26,6 +26,13 @@ import { currencyToValue } from '../../utils/masks';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { getAccountColors } from '../../utils/colors/account';
 import { accountTypes } from '../../utils/accountTypes';
+import {
+  createAccount,
+  deleteAccount,
+  updateAccount,
+} from '../../store/modules/Accounts/fetchActions';
+import { useDispatch } from 'react-redux';
+import { ICreateAccount, IUpdateAccount } from '../../interfaces/Account';
 interface ProfileProps {
   route?: {
     key: string;
@@ -55,6 +62,7 @@ type FormData = {
 
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
+  const dispatch = useDispatch<any>();
   const { user } = useAuth();
   const { getActiveUserAccounts, incomesOnAccounts, expansesOnAccounts } =
     useAccount();
@@ -112,40 +120,46 @@ export default function Account(props: ProfileProps) {
   };
 
   const handleSubmitAccount = async (data: FormData) => {
-    const accountInput = {
-      userId: user?.id,
-      status: data.status,
-      name: data.name,
-      type:
-        accountTypes.find(type => type.id === Number(data.type))?.name ||
-        data.type,
-    };
-    try {
-      if (accountState) {
-        setLoadingMessage('Atualizando...');
-        setIsSubmitting(true);
-        await api.put(`accounts/${accountState.id}`, accountInput);
-        setSucessMessage('Conta atualizada com sucesso!');
-      } else {
-        setLoadingMessage('Criando...');
-        setIsSubmitting(true);
-        await api.post(`accounts`, {
-          ...accountInput,
-          initialValue: data.initialValue
-            ? Number(currencyToValue(data.initialValue))
-            : 0,
-        });
-        setSucessMessage('Conta criada com sucesso!');
-      }
+    if (user) {
+      try {
+        if (accountState) {
+          setLoadingMessage('Atualizando...');
+          setIsSubmitting(true);
+          const accountToUpdate: IUpdateAccount = {
+            ...data,
+            type:
+              accountTypes.find(type => type.id === Number(data.type))?.name ||
+              data.type,
+            userId: user.id,
+          };
+          await dispatch(updateAccount(accountToUpdate, accountState.id));
+          setSucessMessage('Conta atualizada com sucesso!');
+        } else {
+          setLoadingMessage('Criando...');
+          setIsSubmitting(true);
+          const accountToCreate: ICreateAccount = {
+            ...data,
+            type:
+              accountTypes.find(type => type.id === Number(data.type))?.name ||
+              data.type,
+            initialValue: data.initialValue
+              ? Number(currencyToValue(data.initialValue))
+              : 0,
+            userId: user.id,
+          };
+          dispatch(createAccount(accountToCreate));
+          setSucessMessage('Conta criada com sucesso!');
+        }
 
-      await getActiveUserAccounts();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
-      setIsSubmitting(false);
+        await getActiveUserAccounts();
+        setEditSucessfully(true);
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          setErrorMessage(error?.response?.data?.message);
+        setHasError(true);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -155,13 +169,7 @@ export default function Account(props: ProfileProps) {
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
-        /* await Promise.all(
-          accountState.balances.map(async (balance: any) => {
-            await api.delete(`accounts/${balance.id}`);
-          }),
-        ); */
-        await api.delete(`accounts/${accountState.id}/${user.id}`);
-        await getActiveUserAccounts();
+        await dispatch(deleteAccount(accountState.id, user.id));
         setSucessMessage('Conta excluída com sucesso!');
         setEditSucessfully(true);
       } catch (error: any) {

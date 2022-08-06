@@ -11,7 +11,6 @@ import ControlledInput from '../../../components/ControlledInput';
 import Button from '../../../components/Button';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../../services/api';
 import ModalComponent from '../../../components/Modal';
 import { useTheme } from '../../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
@@ -19,17 +18,19 @@ import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 import { isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
-import {
-  getCreateCreditCardColors,
-  getCreateExpansesColors,
-} from '../../../utils/colors/expanses';
+import { getCreateCreditCardColors } from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
-import { Modal, NativeModules, TouchableOpacity, View } from 'react-native';
+import { NativeModules, TouchableOpacity, View } from 'react-native';
 import { currencyToValue } from '../../../utils/masks';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createCreditCard,
+  updateCreditCard,
+} from '../../../store/modules/CreditCards/fetchActions';
 
 interface CreateCreditCardProps {
   route?: {
@@ -51,9 +52,12 @@ const schema = yup.object({
 });
 
 export default function CreateCreditCard(props: CreateCreditCardProps) {
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+
   const { user } = useAuth();
-  const { activeAccounts, getUserCreditCards } = useAccount();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -81,7 +85,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       limit: creditCardState?.limit
         ? getCurrencyFormat(creditCardState?.limit)
         : getCurrencyFormat(0),
-      receiptDefault: creditCardState?.receiptDefault || activeAccounts[0].id,
+      receiptDefault: creditCardState?.receiptDefault || accounts[0].id,
     },
     resolver: yupResolver(schema),
   });
@@ -110,33 +114,33 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
 
   const handleSubmitCreditCard = async (data: FormData) => {
     setIsSubmitting(true);
-    const creditCardInput = {
-      name: data.name,
-      userId: user?.id,
-      limit: Number(currencyToValue(data.limit)),
-      paymentDate,
-      invoiceClosing,
-      color: colorState,
-      receiptDefault: data.receiptDefault,
-    };
+    if (user) {
+      const creditCardInput = {
+        name: data.name,
+        userId: user?.id,
+        limit: Number(currencyToValue(data.limit)),
+        paymentDate,
+        invoiceClosing,
+        color: colorState,
+        receiptDefault: data.receiptDefault,
+      };
 
-    try {
-      if (creditCardState) {
-        await api.put(`creditCards/${creditCardState.id}`, creditCardInput);
-      } else {
-        await api.post(`creditCards`, creditCardInput);
+      try {
+        if (creditCardState) {
+          dispatch(updateCreditCard(creditCardInput, creditCardState.id));
+        } else {
+          dispatch(createCreditCard(creditCardInput));
+        }
+        setEditSucessfully(true);
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          if (error?.response?.data?.message === 'Access Denied')
+            return NativeModules.DevSettings.reload();
+        setErrorMessage(error?.response?.data?.message);
+        setHasError(true);
+      } finally {
+        setIsSubmitting(false);
       }
-
-      await getUserCreditCards();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        if (error?.response?.data?.message === 'Access Denied')
-          return NativeModules.DevSettings.reload();
-      setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -274,7 +278,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 ? creditCardState.receiptDefault
                 : ''
             }
-            selectItems={activeAccounts}
+            selectItems={accounts}
           />
 
           <S.ButtonContainer>

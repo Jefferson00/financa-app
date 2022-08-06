@@ -8,16 +8,22 @@ import * as S from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../../../routes';
 import CardContent from '../CardContent';
-import { useAccount } from '../../../../hooks/AccountContext';
 import { CreditCards } from '../../../../interfaces/CreditCards';
 import ModalComponent from '../../../../components/Modal';
-import api from '../../../../services/api';
 import { useAuth } from '../../../../hooks/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../../interfaces/State';
+import { deleteCreditCard } from '../../../../store/modules/CreditCards/fetchActions';
 
 export default function CreditCardsView() {
+  const dispatch = useDispatch<any>();
+  const { creditCards, loading } = useSelector(
+    (state: State) => state.creditCards,
+  );
+
   const navigation = useNavigation<Nav>();
   const { theme } = useTheme();
-  const { creditCards, getUserCreditCards } = useAccount();
+
   const { user } = useAuth();
   const colors = getExpansesColors(theme);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -40,13 +46,14 @@ export default function CreditCardsView() {
   }, []);
 
   const handleRemoveCreditCard = useCallback(async () => {
-    if (creditCardSelected) {
+    if (user && creditCardSelected) {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
-        await api.delete(`creditCards/${creditCardSelected.id}/${user?.id}`);
-        await getUserCreditCards();
+        dispatch(deleteCreditCard(creditCardSelected.id, user.id));
+
+        setCreditCardSelected(null);
       } catch (error: any) {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);

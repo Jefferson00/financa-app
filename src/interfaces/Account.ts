@@ -1,4 +1,5 @@
 import { AccountBalance } from './AccountBalance';
+import { Invoice } from './CreditCards';
 import { Expanse } from './Expanse';
 import { Income } from './Income';
 
@@ -44,4 +45,20 @@ export interface IAccount {
   userId: string;
   incomesOnAccount: IIncomesOnAccount[];
   expansesOnAccount: IExpansesOnAccount[];
+  Invoice: Invoice[];
+}
+
+export interface ICreateAccount {
+  name: string;
+  type: string | number;
+  status: string;
+  initialValue: number;
+  userId: string;
+}
+
+export interface IUpdateAccount {
+  userId: string;
+  type?: string | number;
+  status?: string;
+  name?: string;
 }

@@ -24,3 +24,13 @@ export interface IncomeOnAccount {
     category: string;
   };
 }
+
+export interface ICreateIncomeOnAccount {
+  userId: string;
+  incomeId: string;
+  accountId: string;
+  name: string;
+  month: Date;
+  value: number;
+  recurrence: string;
+}

@@ -146,7 +146,6 @@ export const AccountProvider: React.FC = ({ children }) => {
       try {
         const { data } = await api.get(`creditCards/user/${user.id}`);
         setCreditCards(data);
-        console.log('invoices', data[0].Invoice.length);
       } catch (error) {
         console.log(error);
       }
@@ -356,6 +355,16 @@ export const AccountProvider: React.FC = ({ children }) => {
         const expansesInThisMonth = account.expansesOnAccount.filter(exp =>
           isSameMonth(new Date(exp.month), selectedDate),
         );
+
+        const invoicesInThisMonth = account.Invoice.filter(inv =>
+          isSameMonth(new Date(inv.month), selectedDate),
+        );
+
+        invoicesInThisMonth.map(invoice => {
+          invoice.ExpanseOnInvoice.map(expanse => {
+            expansesInThisMonth.push(expanse as any);
+          });
+        });
 
         const isTheSameMonth = isSameMonth(new Date(), selectedDate);
 

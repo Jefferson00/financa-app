@@ -8,7 +8,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import {
   addMonths,
-  differenceInMonths,
   isSameMonth,
   isToday,
   lastDayOfMonth,
@@ -21,7 +20,6 @@ import * as S from './styles';
 
 import { useAuth } from '../../../hooks/AuthContext';
 import { useTheme } from '../../../hooks/ThemeContext';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 
 import Menu from '../../../components/Menu';
@@ -31,7 +29,6 @@ import Button from '../../../components/Button';
 import ModalComponent from '../../../components/Modal';
 import Input from '../../../components/Input';
 
-import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import {
@@ -42,8 +39,14 @@ import { currencyToValue } from '../../../utils/masks';
 import { IncomeCategories } from '../../../utils/categories';
 import { getCreateIncomesColors } from '../../../utils/colors/incomes';
 import { Switch } from 'react-native';
-import { CreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
-import { Income } from '../../../interfaces/Income';
+import { ICreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createIncome,
+  createIncomeOnAccount,
+  updateIncome,
+} from '../../../store/modules/Incomes/fetchActions';
 
 interface IncomeProps {
   route?: {
@@ -65,15 +68,12 @@ const schema = yup.object({
 });
 
 export default function CreateIncome(props: IncomeProps) {
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { incomeCreated } = useSelector((state: State) => state.incomes);
   const { user } = useAuth();
-  const {
-    activeAccounts,
-    getUserIncomes,
-    handleClearCache,
-    handleCreateIncomeOnAccount,
-    getUserIncomesOnAccount,
-  } = useAccount();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const colors = getCreateIncomesColors(theme);
@@ -100,7 +100,7 @@ export default function CreateIncome(props: IncomeProps) {
         ? getCurrencyFormat(incomeState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: incomeState?.receiptDefault || activeAccounts[0].id,
+      receiptDefault: incomeState?.receiptDefault || accounts[0].id,
       category: IncomeCategories.find(c => c.name === incomeState?.category)
         ? IncomeCategories.find(c => c.name === incomeState?.category)?.id
         : IncomeCategories[0].name,
@@ -122,7 +122,7 @@ export default function CreateIncome(props: IncomeProps) {
     name: string;
     value: string;
     status: boolean;
-    receiptDefault?: string;
+    receiptDefault: string;
     category: string | number;
   };
 
@@ -131,73 +131,43 @@ export default function CreateIncome(props: IncomeProps) {
     setTimeout(() => navigation.navigate('Incomes'), 300);
   };
 
-  const receiveIncome = async (income: Income) => {
-    if (user) {
-      const input: CreateIncomeOnAccount = {
-        userId: user.id,
-        accountId: income.receiptDefault,
-        incomeId: income?.id,
-        month: selectedDate,
-        value: income.value,
-        name: income.name,
-        recurrence: income.endDate
-          ? `${
-              differenceInMonths(selectedDate, new Date(income.startDate)) + 1
-            }/${differenceInMonths(selectedDate, new Date(income.endDate)) + 1}`
-          : 'mensal',
-      };
-
-      await handleCreateIncomeOnAccount(input);
-
-      await getUserIncomesOnAccount();
-    }
-  };
-
   const handleSubmitIncome = async (data: FormData) => {
     setIsSubmitting(true);
 
     const interationVerified = iteration === 0 ? 1 : iteration;
 
-    const incomeInput = {
-      name: data.name,
-      userId: user?.id,
-      value: Number(currencyToValue(data.value)),
-      category:
-        IncomeCategories.find(i => i.id === Number(data.category))?.name ||
-        data.category,
-      iteration:
-        recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
-      receiptDate: startDate,
-      startDate,
-      endDate:
-        recurrence === 'Parcelada'
-          ? addMonths(startDate, interationVerified - 1)
-          : null,
-      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
-    };
-    try {
-      if (incomeState) {
-        await api.put(`incomes/${incomeState.id}`, incomeInput);
-        // atualizar o nome em incomesAccount
-        await getUserIncomesOnAccount();
-      } else {
-        const { data } = await api.post(`incomes`, incomeInput);
-
-        if (received) {
-          // se tiver marcado como recebido, criar incomeAccount
-          receiveIncome(data);
+    if (user) {
+      const incomeInput = {
+        name: data.name,
+        userId: user.id,
+        value: Number(currencyToValue(data.value)),
+        category:
+          IncomeCategories.find(i => i.id === Number(data.category))?.name ||
+          String(data.category),
+        iteration:
+          recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
+        receiptDate: startDate,
+        startDate,
+        endDate:
+          recurrence === 'Parcelada'
+            ? addMonths(startDate, interationVerified - 1)
+            : null,
+        receiptDefault: data.receiptDefault,
+      };
+      try {
+        if (incomeState) {
+          dispatch(updateIncome(incomeInput, incomeState.id));
+        } else {
+          dispatch(createIncome(incomeInput, received));
         }
+        setEditSucessfully(true);
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          setErrorMessage(error?.response?.data?.message);
+        setHasError(true);
+      } finally {
+        setIsSubmitting(false);
       }
-
-      handleClearCache();
-      await getUserIncomes();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -208,6 +178,29 @@ export default function CreateIncome(props: IncomeProps) {
       setRecurrence('Mensal');
     }
   }, [incomeState]);
+
+  useEffect(() => {
+    if (user && received && incomeCreated) {
+      const findAccount = accounts.find(
+        acc => acc.id === incomeCreated.receiptDefault,
+      );
+
+      const incomeOnAccountToCreate: ICreateIncomeOnAccount = {
+        userId: user.id,
+        accountId: incomeCreated.receiptDefault,
+        incomeId: incomeCreated.id,
+        month: new Date(),
+        value: incomeCreated.value,
+        name: incomeCreated.name,
+        recurrence: incomeCreated.iteration,
+      };
+
+      if (findAccount) {
+        dispatch(createIncomeOnAccount(incomeOnAccountToCreate, findAccount));
+        setReceived(false);
+      }
+    }
+  }, [incomeCreated, accounts, received, user, dispatch]);
 
   return (
     <>
@@ -346,7 +339,7 @@ export default function CreateIncome(props: IncomeProps) {
             value={
               incomeState?.receiptDefault ? incomeState.receiptDefault : ''
             }
-            selectItems={activeAccounts}
+            selectItems={accounts}
           />
 
           <ControlledInput

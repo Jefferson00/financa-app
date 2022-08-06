@@ -8,7 +8,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import {
   addMonths,
-  differenceInMonths,
   isSameMonth,
   isToday,
   lastDayOfMonth,
@@ -18,7 +17,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
 import { useAuth } from '../../../hooks/AuthContext';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useTheme } from '../../../hooks/ThemeContext';
 import { useDate } from '../../../hooks/DateContext';
 
@@ -30,7 +28,6 @@ import ModalComponent from '../../../components/Modal';
 import Input from '../../../components/Input';
 
 import * as S from './styles';
-import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
@@ -38,8 +35,14 @@ import { currencyToValue } from '../../../utils/masks';
 import { ExpanseCategories } from '../../../utils/categories';
 import { getCreateExpansesColors } from '../../../utils/colors/expanses';
 import { Switch } from 'react-native';
-import { Expanse } from '../../../interfaces/Expanse';
-import { CreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createExpanse,
+  createExpanseOnAccount,
+  updateExpanse,
+} from '../../../store/modules/Expanses/fetchActions';
+import { ICreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
 
 interface ExpanseProps {
   route?: {
@@ -61,16 +64,13 @@ const schema = yup.object({
 });
 
 export default function CreateExpanse(props: ExpanseProps) {
+  const dispatch = useDispatch<any>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { creditCards } = useSelector((state: State) => state.creditCards);
+  const { expanseCreated } = useSelector((state: State) => state.expanses);
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const {
-    activeAccounts,
-    creditCards,
-    getUserExpanses,
-    getUserCreditCards,
-    handleCreateExpanseOnAccount,
-    getUserExpansesOnAccount,
-  } = useAccount();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
 
@@ -91,6 +91,8 @@ export default function CreateExpanse(props: ExpanseProps) {
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
+  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
+    useState(false);
 
   const colors = getCreateExpansesColors(theme);
 
@@ -101,7 +103,7 @@ export default function CreateExpanse(props: ExpanseProps) {
         ? getCurrencyFormat(expanseState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault: expanseState?.receiptDefault || activeAccounts[0].id,
+      receiptDefault: expanseState?.receiptDefault || accounts[0].id,
       category: ExpanseCategories.find(c => c.name === expanseState?.category)
         ? ExpanseCategories.find(c => c.name === expanseState?.category)?.id
         : ExpanseCategories[0].name,
@@ -123,7 +125,7 @@ export default function CreateExpanse(props: ExpanseProps) {
     name: string;
     value: string;
     status: boolean;
-    receiptDefault?: string;
+    receiptDefault: string;
     category: string | number;
   };
 
@@ -132,79 +134,46 @@ export default function CreateExpanse(props: ExpanseProps) {
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
-  const payExpanse = async (expanse: Expanse) => {
-    if (user) {
-      const input: CreateExpanseOnAccount = {
-        userId: user.id,
-        accountId: expanse.receiptDefault,
-        expanseId: expanse?.id,
-        month: selectedDate,
-        value: expanse.value,
-        name: expanse.name,
-        recurrence: expanse.endDate
-          ? `${differenceInMonths(
-              selectedDate,
-              new Date(expanse.startDate),
-            )}/${differenceInMonths(selectedDate, new Date(expanse.endDate))}`
-          : 'mensal',
-      };
-
-      await handleCreateExpanseOnAccount(input);
-
-      await getUserExpansesOnAccount();
-    }
-  };
-
   const handleSubmitExpanse = async (data: FormData) => {
     setIsSubmitting(true);
 
     const interationVerified = iteration === 0 ? 1 : iteration;
 
-    const expanseInput = {
-      name: data.name,
-      userId: user?.id,
-      value: Number(currencyToValue(data.value)),
-      category:
-        ExpanseCategories.find(exp => exp.id === Number(data.category))?.name ||
-        data.category,
-      iteration:
-        recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
-      receiptDate: startDate,
-      startDate,
-      endDate:
-        recurrence === 'Parcelada'
-          ? addMonths(startDate, interationVerified - 1)
-          : null,
-      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
-    };
+    if (user) {
+      const expanseInput = {
+        name: data.name,
+        userId: user.id,
+        value: Number(currencyToValue(data.value)),
+        category:
+          ExpanseCategories.find(exp => exp.id === Number(data.category))
+            ?.name || String(data.category),
+        iteration:
+          recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
+        receiptDate: startDate,
+        startDate,
+        endDate:
+          recurrence === 'Parcelada'
+            ? addMonths(startDate, interationVerified - 1)
+            : null,
+        receiptDefault: data.receiptDefault,
+      };
 
-    try {
-      if (expanseState) {
-        await api.put(`expanses/${expanseState.id}`, expanseInput);
-        await getUserExpansesOnAccount();
-      } else {
-        const { data } = await api.post(`expanses`, expanseInput);
-
-        const expanseToCreditCard = creditCards.find(
-          c => c.id === data.receiptDefault,
-        );
-
-        // se tiver marcado como pago, criar expanseAccount
-        if (paid && !expanseToCreditCard) {
-          payExpanse(data);
+      try {
+        if (expanseState) {
+          dispatch(updateExpanse(expanseInput, expanseState.id, false));
+        } else {
+          dispatch(createExpanse(expanseInput, paid, false));
         }
-      }
 
-      await getUserExpanses();
-      await getUserCreditCards();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
-      setHasError(true);
-    } finally {
-      setIsSubmitting(false);
+        setEditSucessfully(true);
+      } catch (error: any) {
+        if (error?.response?.data?.message)
+          setErrorMessage(error?.response?.data?.message);
+        console.log(error?.response?.data);
+        setHasError(true);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -215,6 +184,29 @@ export default function CreateExpanse(props: ExpanseProps) {
       setRecurrence('Mensal');
     }
   }, [expanseState]);
+
+  useEffect(() => {
+    if (user && paid && expanseCreated) {
+      const findAccount = accounts.find(
+        acc => acc.id === expanseCreated.receiptDefault,
+      );
+
+      const expanseOnAccountToCreate: ICreateExpanseOnAccount = {
+        userId: user.id,
+        accountId: expanseCreated.receiptDefault,
+        expanseId: expanseCreated.id,
+        month: new Date(),
+        value: expanseCreated.value,
+        name: expanseCreated.name,
+        recurrence: expanseCreated.iteration,
+      };
+
+      if (findAccount) {
+        dispatch(createExpanseOnAccount(expanseOnAccountToCreate, findAccount));
+        setPaid(false);
+      }
+    }
+  }, [expanseCreated, accounts, paid, user, dispatch]);
 
   return (
     <>
@@ -355,7 +347,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               expanseState?.receiptDefault ? expanseState.receiptDefault : ''
             }
             selectItems={[
-              ...activeAccounts,
+              ...accounts,
               ...creditCards.map(e => {
                 return { ...e, name: `Cartão - ${e.name}` };
               }),
