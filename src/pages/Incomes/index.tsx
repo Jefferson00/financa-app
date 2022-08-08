@@ -5,12 +5,7 @@ import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
-import {
-  differenceInCalendarMonths,
-  isAfter,
-  isBefore,
-  isSameMonth,
-} from 'date-fns';
+import { differenceInCalendarMonths, isBefore } from 'date-fns';
 
 import * as S from './styles';
 
@@ -27,13 +22,9 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { useAuth } from '../../hooks/AuthContext';
 
 import { Nav } from '../../routes';
-import { IIncomes, Income, IncomeList } from '../../interfaces/Income';
-import { getCurrentIncomes } from '../../utils/getCurrentBalance';
+import { IIncomes } from '../../interfaces/Income';
 import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
-import {
-  ICreateIncomeOnAccount,
-  IncomeOnAccount,
-} from '../../interfaces/IncomeOnAccount';
+import { ICreateIncomeOnAccount } from '../../interfaces/IncomeOnAccount';
 import { getIncomesColors } from '../../utils/colors/incomes';
 import { reduceString } from '../../utils/reduceString';
 import { useDispatch, useSelector } from 'react-redux';
@@ -50,6 +41,7 @@ import {
   listByDate,
 } from '../../utils/listByDate';
 import { IIncomesOnAccount } from '../../interfaces/Account';
+import { removeMessage } from '../../store/modules/Feedbacks';
 
 interface ItemType extends IIncomes, IIncomesOnAccount {}
 
@@ -58,6 +50,7 @@ export default function Incomes() {
   const dispatch = useDispatch<any>();
 
   const { accounts } = useSelector((state: State) => state.accounts);
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const { incomes, incomesOnAccount, loading } = useSelector(
     (state: State) => state.incomes,
   );
@@ -69,30 +62,20 @@ export default function Incomes() {
     { day: number; items: ItemType[] }[]
   >([]);
   const [incomeSelected, setIncomeSelected] = useState<any>();
-  const [currentIncomes, setCurrentIncomes] = useState<Income[]>();
-  const [currentIncomesOnAccount, setCurrentIncomesOnAccount] =
-    useState<IncomeOnAccount[]>();
   const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
-  const [confirmUnreceivedVisible, setConfirmUnreceivedVisible] =
-    useState(false);
   const [
     deleteReceiveConfirmationVisible,
     setDeleteReceiveConfirmationVisible,
   ] = useState(false);
 
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [totalCurrentIncomes, setTotalCurrentIncomes] = useState(0);
   const [totalEstimateIncomes, setTotalEstimateIncomes] = useState(0);
   const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
     null,
-  );
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
   );
 
   const colors = getIncomesColors(theme);
@@ -117,26 +100,18 @@ export default function Incomes() {
     TEXT: '#fff',
   };
 
-  const handleOkSucess = () => {
-    setConfirmReceivedVisible(false);
-    setConfirmUnreceivedVisible(false);
-    setEditSucessfully(false);
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
   };
 
   const handleDelete = useCallback(async () => {
     setIsDeleteModalVisible(false);
-    setLoadingMessage('Excluindo...');
-    setIsSubmitting(true);
-    try {
-      if (user && incomeSelected) {
-        dispatch(deleteIncome(incomeSelected.id, user.id));
-        setIncomeSelected(null);
-      }
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
+    if (user && incomeSelected) {
+      setLoadingMessage('Excluindo...');
+      setIsSubmitting(true);
+      dispatch(deleteIncome(incomeSelected.id, user.id));
+      setIncomeSelected(null);
       setIsSubmitting(false);
     }
   }, [user, incomes, incomeSelected]);
@@ -258,6 +233,12 @@ export default function Incomes() {
       );
     }
   }, [incomes, incomesOnAccount, selectedDate]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -435,29 +416,28 @@ export default function Incomes() {
         backgroundColor={colors.modalBackground}
         color={colors.textColor}
       />
-      <ModalComponent
-        type="error"
-        visible={hasError}
-        handleCancel={() => setHasError(false)}
-        onRequestClose={() => setHasError(false)}
-        transparent
-        title={errorMessage}
-        subtitle="Tente novamente mais tarde"
-        animationType="slide"
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-      />
-      <ModalComponent
-        type="success"
-        visible={editSucessfully}
-        transparent
-        title="Entrada recebida com sucesso!"
-        animationType="slide"
-        handleCancel={() => setEditSucessfully(false)}
-        onSucessOkButton={handleOkSucess}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-      />
+      {messages && (
+        <ModalComponent
+          type={messages.type}
+          visible={showMessage}
+          handleCancel={handleCloseModal}
+          onRequestClose={handleCloseModal}
+          transparent
+          title={messages?.message}
+          subtitle={
+            messages?.type === 'error'
+              ? 'Tente novamente mais tarde'
+              : undefined
+          }
+          animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
+          onSucessOkButton={
+            messages?.type === 'success' ? handleCloseModal : undefined
+          }
+        />
+      )}
 
       <ModalComponent
         type="confirmation"

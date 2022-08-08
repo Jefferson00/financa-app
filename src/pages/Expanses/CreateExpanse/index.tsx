@@ -43,6 +43,7 @@ import {
   updateExpanse,
 } from '../../../store/modules/Expanses/fetchActions';
 import { ICreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
+import { removeMessage } from '../../../store/modules/Feedbacks';
 
 interface ExpanseProps {
   route?: {
@@ -68,12 +69,14 @@ export default function CreateExpanse(props: ExpanseProps) {
   const { accounts } = useSelector((state: State) => state.accounts);
   const { creditCards } = useSelector((state: State) => state.creditCards);
   const { expanseCreated } = useSelector((state: State) => state.expanses);
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
 
   const { selectedDate } = useDate();
   const { theme } = useTheme();
 
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expanseState, setExpanseState] = useState(
     props?.route?.params?.expanse,
@@ -84,15 +87,8 @@ export default function CreateExpanse(props: ExpanseProps) {
   );
   const [paid, setPaid] = useState(false);
   const [iteration, setIteration] = useState(1);
-  const [hasError, setHasError] = useState(false);
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
-  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
-    useState(false);
 
   const colors = getCreateExpansesColors(theme);
 
@@ -130,16 +126,19 @@ export default function CreateExpanse(props: ExpanseProps) {
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
+  };
+
   const handleSubmitExpanse = async (data: FormData) => {
-    setIsSubmitting(true);
-
-    const interationVerified = iteration === 0 ? 1 : iteration;
-
     if (user) {
+      setIsSubmitting(true);
+      const interationVerified = iteration === 0 ? 1 : iteration;
       const expanseInput = {
         name: data.name,
         userId: user.id,
@@ -158,22 +157,12 @@ export default function CreateExpanse(props: ExpanseProps) {
         receiptDefault: data.receiptDefault,
       };
 
-      try {
-        if (expanseState) {
-          dispatch(updateExpanse(expanseInput, expanseState.id, false));
-        } else {
-          dispatch(createExpanse(expanseInput, paid, false));
-        }
-
-        setEditSucessfully(true);
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          setErrorMessage(error?.response?.data?.message);
-        console.log(error?.response?.data);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
+      if (expanseState) {
+        dispatch(updateExpanse(expanseInput, expanseState.id, false));
+      } else {
+        dispatch(createExpanse(expanseInput, paid, false));
       }
+      setIsSubmitting(false);
     }
   };
 
@@ -207,6 +196,12 @@ export default function CreateExpanse(props: ExpanseProps) {
       }
     }
   }, [expanseCreated, accounts, paid, user, dispatch]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -403,35 +398,28 @@ export default function CreateExpanse(props: ExpanseProps) {
           color={colors.textColor}
           theme={theme}
         />
-        <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={
-            expanseState
-              ? 'Despesa atualizada com sucesso!'
-              : 'Despesa criada com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

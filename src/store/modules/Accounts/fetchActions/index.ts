@@ -1,4 +1,4 @@
-import { ICreateAccount, IUpdateAccount } from '../../../../interfaces/Account';
+import { ICreateAccount } from '../../../../interfaces/Account';
 import api from '../../../../services/api';
 import {
   addAccount,
@@ -7,6 +7,8 @@ import {
   removeAccountState,
   changeLoadingState,
 } from '..';
+import { addMessage } from '../../Feedbacks';
+import { checkApiError } from '../../../../utils/checkApiError';
 
 export const listAccounts = (userId: string) => {
   return (dispatch: any) => {
@@ -18,12 +20,12 @@ export const listAccounts = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -36,21 +38,21 @@ export const createAccount = (account: ICreateAccount) => {
       .then(res => {
         dispatch(addAccount(res.data));
 
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Conta criada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Conta criada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -63,21 +65,21 @@ export const updateAccount = (account: any, accountId: string) => {
       .then(res => {
         dispatch(updateAccountState(res.data));
 
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Conta atualizada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Conta atualizada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -90,21 +92,21 @@ export const deleteAccount = (accountId: string, userId: string) => {
       .then(res => {
         dispatch(removeAccountState(accountId));
 
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Conta excluída",
-          })
-        ); */
+            type: 'success',
+            message: 'Conta excluída',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };

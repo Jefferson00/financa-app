@@ -2,13 +2,13 @@ import React from 'react';
 import { ModalBaseProps, Modal, ColorSchemeName } from 'react-native';
 import * as S from './styles';
 import { Colors } from '../../../../styles/global';
-import { Account } from '../../../../interfaces/Account';
+import { IAccount } from '../../../../interfaces/Account';
 import { useAccount } from '../../../../hooks/AccountContext';
 
 interface IModalProps extends ModalBaseProps {
   title: string;
   defaulAccount?: string;
-  accounts: Account[];
+  accounts: IAccount[];
   backgroundColor?: string;
   color?: string;
   theme?: ColorSchemeName;

@@ -23,7 +23,7 @@ import { isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { getCreateCreditCardColors } from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
-import { NativeModules, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { currencyToValue } from '../../../utils/masks';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../../interfaces/State';
@@ -31,6 +31,7 @@ import {
   createCreditCard,
   updateCreditCard,
 } from '../../../store/modules/CreditCards/fetchActions';
+import { removeMessage } from '../../../store/modules/Feedbacks';
 
 interface CreateCreditCardProps {
   route?: {
@@ -55,16 +56,18 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
   const { accounts } = useSelector((state: State) => state.accounts);
+  const { messages } = useSelector((state: State) => state.feedbacks);
 
   const { user } = useAuth();
 
   const { selectedDate } = useDate();
   const { theme } = useTheme();
+
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creditCardState, setCreditCardState] = useState(
     props?.route?.params?.card,
   );
-  const [hasError, setHasError] = useState(false);
   const [colorState, setColorState] = useState(ColorsList[0].color);
   const [paymentDate, setPaymentDate] = useState(selectedDate);
   const [invoiceClosing, setInvoiceClosing] = useState(selectedDate);
@@ -72,10 +75,6 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   const [selectPaymentDateModal, setSelectPaymentDateModal] = useState(false);
   const [selectInvoiceClosingModal, setSelectInvoiceClosingModal] =
     useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const colors = getCreateCreditCardColors(theme);
 
@@ -108,13 +107,18 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
+  };
+
   const handleSubmitCreditCard = async (data: FormData) => {
-    setIsSubmitting(true);
     if (user) {
+      setIsSubmitting(true);
       const creditCardInput = {
         name: data.name,
         userId: user?.id,
@@ -125,22 +129,13 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
         receiptDefault: data.receiptDefault,
       };
 
-      try {
-        if (creditCardState) {
-          dispatch(updateCreditCard(creditCardInput, creditCardState.id));
-        } else {
-          dispatch(createCreditCard(creditCardInput));
-        }
-        setEditSucessfully(true);
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          if (error?.response?.data?.message === 'Access Denied')
-            return NativeModules.DevSettings.reload();
-        setErrorMessage(error?.response?.data?.message);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
+      if (creditCardState) {
+        dispatch(updateCreditCard(creditCardInput, creditCardState.id));
+      } else {
+        dispatch(createCreditCard(creditCardInput));
       }
+
+      setIsSubmitting(false);
     }
   };
 
@@ -151,6 +146,12 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
     if (creditCardState?.invoiceClosing)
       setInvoiceClosing(new Date(creditCardState?.invoiceClosing));
   }, [creditCardState]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -369,35 +370,28 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           animationType="slide"
           theme={theme}
         />
-        <ModalComponent
-          type="error"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-          theme={theme}
-        />
-        <ModalComponent
-          type="success"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          visible={editSucessfully}
-          transparent
-          title={
-            creditCardState
-              ? 'Cartão atualizado com sucesso!'
-              : 'Cartão criado com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-          theme={theme}
-        />
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

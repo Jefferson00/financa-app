@@ -13,7 +13,6 @@ import Card from '../../components/Card';
 import Estimates from './components/Estimates';
 import LastTransactions from './components/LastTransactions';
 
-import { useAccount } from '../../hooks/AccountContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { Nav } from '../../routes';

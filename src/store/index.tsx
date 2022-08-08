@@ -3,6 +3,7 @@ import accountReducer from './modules/Accounts';
 import incomesReducer from './modules/Incomes';
 import creditCardReducer from './modules/CreditCards';
 import expansesReducer from './modules/Expanses';
+import feedbacksReducer from './modules/Feedbacks';
 
 export default configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export default configureStore({
     incomes: incomesReducer,
     creditCards: creditCardReducer,
     expanses: expansesReducer,
+    feedbacks: feedbacksReducer,
   },
 });

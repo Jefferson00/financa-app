@@ -15,6 +15,8 @@ import {
 import api from '../../../../services/api';
 
 import { updateAccountState } from '../../Accounts';
+import { addMessage } from '../../Feedbacks';
+import { checkApiError } from '../../../../utils/checkApiError';
 
 export const listIncomes = (userId: string) => {
   return (dispatch: any) => {
@@ -25,12 +27,12 @@ export const listIncomes = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -44,12 +46,12 @@ export const listIncomesOnAccount = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -62,21 +64,21 @@ export const createIncome = (income: ICreateIncome, received?: boolean) => {
       .then(res => {
         dispatch(addIncome(res.data));
         if (received) dispatch(addCreatedIncome(res.data));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Entrada criada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Entrada criada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -88,21 +90,21 @@ export const updateIncome = (income: IUpdateIncome, incomeId: string) => {
       .put(`incomes/${incomeId}`, income)
       .then(res => {
         dispatch(updateIncomeState(res.data));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Entrada atualizada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Entrada atualizada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -114,21 +116,21 @@ export const deleteIncome = (incomeId: string, userId: string) => {
       .delete(`incomes/${incomeId}/${userId}`)
       .then(res => {
         dispatch(removeIncomeState(incomeId));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Entrada excluída",
-          })
-        ); */
+            type: 'success',
+            message: 'Entrada excluída',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -151,21 +153,21 @@ export const createIncomeOnAccount = (
         };
 
         dispatch(updateAccountState(accountUpdated));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Entrada recebida com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Entrada recebida com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -191,21 +193,21 @@ export const deleteIncomeOnAccount = (
         };
 
         dispatch(updateAccountState(accountUpdated));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Recebimento excluído com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Recebimento excluído com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };

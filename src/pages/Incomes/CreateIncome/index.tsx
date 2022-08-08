@@ -47,6 +47,7 @@ import {
   createIncomeOnAccount,
   updateIncome,
 } from '../../../store/modules/Incomes/fetchActions';
+import { removeMessage } from '../../../store/modules/Feedbacks';
 
 interface IncomeProps {
   route?: {
@@ -72,26 +73,23 @@ export default function CreateIncome(props: IncomeProps) {
   const navigation = useNavigation<Nav>();
   const { accounts } = useSelector((state: State) => state.accounts);
   const { incomeCreated } = useSelector((state: State) => state.incomes);
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const { user } = useAuth();
 
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const colors = getCreateIncomesColors(theme);
 
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [incomeState] = useState(props?.route?.params?.income);
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
   );
   const [iteration, setIteration] = useState(1);
-  const [hasError, setHasError] = useState(false);
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
   const [received, setReceived] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -127,8 +125,13 @@ export default function CreateIncome(props: IncomeProps) {
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Incomes'), 300);
+  };
+
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
   };
 
   const handleSubmitIncome = async (data: FormData) => {
@@ -154,21 +157,13 @@ export default function CreateIncome(props: IncomeProps) {
             : null,
         receiptDefault: data.receiptDefault,
       };
-      try {
-        if (incomeState) {
-          dispatch(updateIncome(incomeInput, incomeState.id));
-        } else {
-          dispatch(createIncome(incomeInput, received));
-        }
-        setEditSucessfully(true);
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          setErrorMessage(error?.response?.data?.message);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
+      if (incomeState) {
+        await dispatch(updateIncome(incomeInput, incomeState.id));
+      } else {
+        await dispatch(createIncome(incomeInput, received));
       }
     }
+    setIsSubmitting(false);
   };
 
   useEffect(() => {
@@ -201,6 +196,12 @@ export default function CreateIncome(props: IncomeProps) {
       }
     }
   }, [incomeCreated, accounts, received, user, dispatch]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -391,35 +392,29 @@ export default function CreateIncome(props: IncomeProps) {
           color={colors.textColor}
           theme={theme}
         />
-        <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={
-            incomeState
-              ? 'Entrada atualizada com sucesso!'
-              : 'Entrada criada com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
+
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

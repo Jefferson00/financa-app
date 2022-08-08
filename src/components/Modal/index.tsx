@@ -15,7 +15,15 @@ interface IModalProps extends ModalBaseProps {
   title?: string;
   subtitle?: string;
   icon?: React.FC;
-  type: 'success' | 'error' | 'info' | 'confirmation' | 'loading' | 'select';
+  type:
+    | 'success'
+    | 'error'
+    | 'info'
+    | 'confirmation'
+    | 'loading'
+    | 'select'
+    | 'warning'
+    | 'default';
   selectTitle?: string;
   selectList?: any[];
   backgroundColor?: string;

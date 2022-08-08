@@ -13,6 +13,8 @@ import {
   ICreateCreditCard,
   IUpdateCreditCard,
 } from '../../../../interfaces/CreditCards';
+import { addMessage } from '../../Feedbacks';
+import { checkApiError } from '../../../../utils/checkApiError';
 
 export const listCreditCards = (userId: string) => {
   return (dispatch: any) => {
@@ -23,12 +25,12 @@ export const listCreditCards = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -40,21 +42,21 @@ export const createCreditCard = (card: ICreateCreditCard) => {
       .post(`creditCards`, card)
       .then(res => {
         dispatch(addCreditCard(res.data));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Cartão criado com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Cartão criado com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -66,21 +68,21 @@ export const updateCreditCard = (card: IUpdateCreditCard, cardId: string) => {
       .put(`creditCards/${cardId}`, card)
       .then(res => {
         dispatch(updateCreditCardState(res.data));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Cartão atualizado com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Cartão atualizado com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -92,21 +94,21 @@ export const deleteCreditCard = (cardId: string, userId: string) => {
       .delete(`creditCards/${cardId}/${userId}`)
       .then(res => {
         dispatch(removeCreditCardState(cardId));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Cartão excluído",
-          })
-        ); */
+            type: 'success',
+            message: 'Cartão excluído',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -120,24 +122,23 @@ export const payInvoice = (invoiceId: string, userId: string) => {
         paid: true,
       })
       .then(res => {
-        // dispatch(updateCreditCardState(res.data));
         dispatch(listCreditCards(userId));
         dispatch(listAccounts(userId));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Fatura paga com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Fatura paga com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };

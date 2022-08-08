@@ -17,6 +17,8 @@ import api from '../../../../services/api';
 import { updateAccountState } from '../../Accounts';
 import { changeCardLoadingState } from '../../CreditCards';
 import { listCreditCards } from '../../CreditCards/fetchActions';
+import { addMessage } from '../../Feedbacks';
+import { checkApiError } from '../../../../utils/checkApiError';
 
 export const listExpanses = (userId: string) => {
   return (dispatch: any) => {
@@ -27,12 +29,12 @@ export const listExpanses = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -46,12 +48,12 @@ export const listExpansesOnAccount = (userId: string) => {
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -74,21 +76,21 @@ export const createExpanse = (
         if (fromInvoice) {
           dispatch(listCreditCards(expanse.userId));
         }
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Despesa criada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Despesa criada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -110,21 +112,21 @@ export const updateExpanse = (
         if (fromInvoice) {
           dispatch(listCreditCards(expanse.userId));
         }
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Despesa atualizada com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Despesa atualizada com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -145,12 +147,12 @@ export const deleteExpanseOnInvoice = (
       .catch(e => {
         dispatch(changeLoadingState(false));
         dispatch(changeCardLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -172,21 +174,21 @@ export const deleteExpanse = (
         if (fromInvoice) {
           dispatch(listCreditCards(userId));
         }
-        /*  dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Despesa excluída",
-          })
-        ); */
+            type: 'success',
+            message: 'Despesa excluída',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -209,21 +211,21 @@ export const createExpanseOnAccount = (
         };
 
         dispatch(updateAccountState(accountUpdated));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Despesa paga com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Despesa paga com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };
@@ -249,21 +251,21 @@ export const deleteExpanseOnAccount = (
         };
 
         dispatch(updateAccountState(accountUpdated));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "success",
-            message: "Pagamento excluído com sucesso!",
-          })
-        ); */
+            type: 'success',
+            message: 'Pagamento excluído com sucesso!',
+          }),
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));
-        /* dispatch(
+        dispatch(
           addMessage({
-            type: "error",
+            type: 'error',
             message: checkApiError(e),
-          })
-        ); */
+          }),
+        );
       });
   };
 };

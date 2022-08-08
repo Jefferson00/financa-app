@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import * as S from './styles';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { Colors } from '../../styles/global';
@@ -15,18 +15,20 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { useAccount } from '../../hooks/AccountContext';
 import { useDate } from '../../hooks/DateContext';
 import ModalComponent from '../Modal';
+import { useSelector } from 'react-redux';
+import State from '../../interfaces/State';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
   const routes = useRoute();
   const routeName = routes.name;
-  const { hasAccount } = useAccount();
   const { theme } = useTheme();
   const { setCurrentMonth } = useDate();
 
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const [hasAccount, setHasAccount] = useState(false);
   const [alertModalVisible, setAlertModalVisible] = useState(false);
 
   const iconColor =
@@ -99,6 +101,14 @@ export default function Menu() {
     },
     [hasAccount],
   );
+
+  useEffect(() => {
+    if (accounts.length > 0) {
+      setHasAccount(true);
+    } else {
+      setHasAccount(false);
+    }
+  }, [accounts]);
 
   return (
     <>
