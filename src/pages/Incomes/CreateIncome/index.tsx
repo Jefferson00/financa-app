@@ -72,7 +72,9 @@ export default function CreateIncome(props: IncomeProps) {
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
   const { accounts } = useSelector((state: State) => state.accounts);
-  const { incomeCreated } = useSelector((state: State) => state.incomes);
+  const { incomeCreated, loading } = useSelector(
+    (state: State) => state.incomes,
+  );
   const { messages } = useSelector((state: State) => state.feedbacks);
   const { user } = useAuth();
 
@@ -135,8 +137,6 @@ export default function CreateIncome(props: IncomeProps) {
   };
 
   const handleSubmitIncome = async (data: FormData) => {
-    setIsSubmitting(true);
-
     const interationVerified = iteration === 0 ? 1 : iteration;
 
     if (user) {
@@ -157,14 +157,19 @@ export default function CreateIncome(props: IncomeProps) {
             : null,
         receiptDefault: data.receiptDefault,
       };
+      setIsSubmitting(true);
       if (incomeState) {
         await dispatch(updateIncome(incomeInput, incomeState.id));
       } else {
         await dispatch(createIncome(incomeInput, received));
       }
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   };
+
+  useEffect(() => {
+    console.log('isSubmitting', isSubmitting);
+  }, [isSubmitting]);
 
   useEffect(() => {
     if (incomeState?.iteration !== 'Mensal') {
@@ -384,7 +389,7 @@ export default function CreateIncome(props: IncomeProps) {
         />
         <ModalComponent
           type="loading"
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={incomeState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"

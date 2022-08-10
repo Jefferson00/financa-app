@@ -92,13 +92,16 @@ export default function Home() {
     );
   };
 
-  const listAccountCards = useCallback(async () => {
+  const listAccountCards = async () => {
     setIsLoadingCards(true);
     let sumTotalCurrentBalance = 0;
     let sumTotalEstimateBalance = 0;
 
     const cardsArray: any[] = [];
     const isTheSameMonth = isSameMonth(new Date(), selectedDate);
+
+    const slide = await AsyncStorage.getItem(`@FinancaAppBeta:ActiveSlide`);
+    setActiveSlide(Number(slide));
 
     await Promise.all(
       accounts.map(async (account, index) => {
@@ -168,8 +171,7 @@ export default function Home() {
     setTotalCurrentBalance(sumTotalCurrentBalance);
     setTotalEstimateBalance(sumTotalEstimateBalance);
     setAccountCards(cardsArray);
-    setIsLoadingCards(false);
-  }, [selectedDate, accounts, incomes, expanses, creditCards]);
+  };
 
   useEffect(() => {
     if (user?.id) {
@@ -184,7 +186,13 @@ export default function Home() {
 
   useEffect(() => {
     listAccountCards();
-  }, [listAccountCards]);
+  }, [selectedDate, accounts, incomes, expanses]);
+
+  useEffect(() => {
+    if (!loading && accounts.length === accountCards.length - 1) {
+      setIsLoadingCards(false);
+    }
+  }, [loading, accounts, accountCards]);
 
   return (
     <>
@@ -195,104 +203,101 @@ export default function Home() {
         showsVerticalScrollIndicator={false}>
         <Header />
         <S.Container>
-          {!loadingAllData() ? (
-            <ContentLoader
-              viewBox="0 0 269 140"
-              height={140}
-              style={{
-                marginBottom: 32,
-              }}
-              backgroundColor={colors.secondaryCardColor}
-              foregroundColor="rgb(255, 255, 255)">
-              <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
-            </ContentLoader>
-          ) : (
-            <>
-              <Carousel
-                data={accountCards}
-                onSnapToItem={index => handleSetActiveSlide(index)}
-                sliderWidth={width}
-                itemWidth={width}
-                itemHeight={149}
-                firstItem={activeSlide}
-                enableSnap
-                renderItem={({ item }) => (
-                  <Card
-                    id={String(item.id)}
-                    colors={{
-                      PRIMARY_BACKGROUND: colors.primaryCardColor,
-                      SECOND_BACKGROUND: colors.secondaryCardColor,
-                    }}
-                    icon={() => {
-                      if (item.type === 'ADD') {
-                        return (
-                          <Icon
-                            name="add-circle"
-                            size={RFPercentage(6)}
-                            color="#fff"
-                          />
-                        );
-                      } else {
-                        return (
-                          <Icon
-                            name="business"
-                            size={RFPercentage(4)}
-                            color={colors.secondaryCardColor}
-                          />
-                        );
-                      }
-                    }}
-                    title={item.title}
-                    values={{
-                      current: item.current_balance,
-                      estimate: item.estimate_balance,
-                    }}
-                    type={(item.type as 'ADD') || null}
-                    handleNavigate={() =>
-                      navigation.navigate('Account', {
-                        account: item.type !== 'ADD' ? item.account : null,
-                      })
+          <Carousel
+            data={accountCards}
+            onSnapToItem={index => handleSetActiveSlide(index)}
+            sliderWidth={width}
+            itemWidth={width}
+            itemHeight={149}
+            firstItem={activeSlide}
+            enableSnap
+            renderItem={({ item }) =>
+              !loadingAllData() ? (
+                <ContentLoader
+                  viewBox="0 0 269 140"
+                  height={140}
+                  style={{
+                    marginBottom: 32,
+                  }}
+                  backgroundColor={colors.secondaryCardColor}
+                  foregroundColor="rgb(255, 255, 255)">
+                  <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
+                </ContentLoader>
+              ) : (
+                <Card
+                  id={String(item.id)}
+                  colors={{
+                    PRIMARY_BACKGROUND: colors.primaryCardColor,
+                    SECOND_BACKGROUND: colors.secondaryCardColor,
+                  }}
+                  icon={() => {
+                    if (item.type === 'ADD') {
+                      return (
+                        <Icon
+                          name="add-circle"
+                          size={RFPercentage(6)}
+                          color="#fff"
+                        />
+                      );
+                    } else {
+                      return (
+                        <Icon
+                          name="business"
+                          size={RFPercentage(4)}
+                          color={colors.secondaryCardColor}
+                        />
+                      );
                     }
-                  />
-                )}
-              />
+                  }}
+                  title={item.title}
+                  values={{
+                    current: item.current_balance,
+                    estimate: item.estimate_balance,
+                  }}
+                  type={(item.type as 'ADD') || null}
+                  handleNavigate={() =>
+                    navigation.navigate('Account', {
+                      account: item.type !== 'ADD' ? item.account : null,
+                    })
+                  }
+                />
+              )
+            }
+          />
 
-              <Pagination
-                dotsLength={accountCards.length}
-                activeDotIndex={activeSlide}
-                dotContainerStyle={{
-                  height: 0,
-                }}
-                containerStyle={{
-                  height: 0,
-                  position: 'relative',
-                  top: -10,
-                }}
-                dotStyle={{
-                  width: RFPercentage(2),
-                  height: RFPercentage(2),
-                  borderRadius: RFPercentage(1),
-                  marginHorizontal: 4,
-                  backgroundColor: colors.primaryCardColor,
-                }}
-                inactiveDotStyle={{
-                  width: RFPercentage(2),
-                  height: RFPercentage(2),
-                  borderRadius: RFPercentage(1),
-                  marginHorizontal: 4,
-                  backgroundColor: '#f9c33c',
-                }}
-                inactiveDotOpacity={0.4}
-                inactiveDotScale={0.8}
-              />
+          <Pagination
+            dotsLength={accountCards.length}
+            activeDotIndex={activeSlide}
+            dotContainerStyle={{
+              height: 0,
+            }}
+            containerStyle={{
+              height: 0,
+              position: 'relative',
+              top: -10,
+            }}
+            dotStyle={{
+              width: RFPercentage(2),
+              height: RFPercentage(2),
+              borderRadius: RFPercentage(1),
+              marginHorizontal: 4,
+              backgroundColor: colors.primaryCardColor,
+            }}
+            inactiveDotStyle={{
+              width: RFPercentage(2),
+              height: RFPercentage(2),
+              borderRadius: RFPercentage(1),
+              marginHorizontal: 4,
+              backgroundColor: '#f9c33c',
+            }}
+            inactiveDotOpacity={0.4}
+            inactiveDotScale={0.8}
+          />
 
-              {accountCards.length === 1 && (
-                <S.EmptyAccountAlert color={colors.alertColor}>
-                  Cadastre uma conta para poder começar a organizar suas
-                  finanças
-                </S.EmptyAccountAlert>
-              )}
-            </>
+          {accountCards.length === 1 && loadingAllData() && (
+            <S.EmptyAccountAlert color={colors.alertColor}>
+              Cadastre uma conta para poder começar a organizar suas finanças
+            </S.EmptyAccountAlert>
           )}
 
           <S.BalanceContainer>
