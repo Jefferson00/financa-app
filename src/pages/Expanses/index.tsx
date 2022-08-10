@@ -392,7 +392,7 @@ export default function Expanses() {
                     {item.items.map(expanse => (
                       <ItemCard
                         key={expanse.id}
-                        icon={MoneyIcon}
+                        category={expanse.category}
                         title={expanse?.name || ''}
                         value={expanse.value}
                         received={!!expanse?.paymentDate}

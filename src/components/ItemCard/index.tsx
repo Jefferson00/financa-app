@@ -6,6 +6,7 @@ import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
 import { isSameMonth } from 'date-fns';
 import { useDate } from '../../hooks/DateContext';
+import { getCategoryIcon } from '../../utils/getCategoryIcon';
 
 interface SwitchColors {
   background: string;
@@ -20,7 +21,7 @@ interface SwitchColors {
 }
 
 interface ItemCardProps {
-  icon: React.FC;
+  icon?: React.FC;
   title?: string;
   mainColor?: string;
   backgroundColor?: string;
@@ -35,6 +36,8 @@ interface ItemCardProps {
   onSwitchChange?: () => void;
   value: number;
   handleRemove: () => void;
+  recurrence?: string;
+  category: string;
 }
 
 export default function ItemCard({
@@ -48,6 +51,8 @@ export default function ItemCard({
   received,
   receivedMessage,
   switchColors,
+  recurrence,
+  category,
   onSwitchChange,
   handleRemove,
   onRedirect,
@@ -71,9 +76,13 @@ export default function ItemCard({
       <S.Container backgroundColor={backgroundColor || '#fff'}>
         <S.Main onPress={onRedirect}>
           <S.TitleContainer>
-            <Icon />
+            {Icon ? (
+              <Icon />
+            ) : (
+              getCategoryIcon(category, mainColor || '#fff', 24)
+            )}
             <S.TitleText color={textColor ? textColor : '#000'}>
-              {title}
+              {title} {recurrence && ` - ${recurrence}`}
             </S.TitleText>
           </S.TitleContainer>
 

@@ -168,10 +168,6 @@ export default function CreateIncome(props: IncomeProps) {
   };
 
   useEffect(() => {
-    console.log('isSubmitting', isSubmitting);
-  }, [isSubmitting]);
-
-  useEffect(() => {
     if (incomeState?.iteration !== 'Mensal') {
       setIteration(incomeState?.iteration || 1);
     } else {

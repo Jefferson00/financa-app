@@ -42,6 +42,7 @@ import {
 } from '../../utils/listByDate';
 import { IIncomesOnAccount } from '../../interfaces/Account';
 import { removeMessage } from '../../store/modules/Feedbacks';
+import { getCategoryIcon } from '../../utils/getCategoryIcon';
 
 interface ItemType extends IIncomes, IIncomesOnAccount {}
 
@@ -240,6 +241,23 @@ export default function Incomes() {
     }
   }, [messages]);
 
+  const verifyRecurrence = (income: ItemType) => {
+    let currentPart = null;
+    if (income.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(income.endDate),
+        selectedDate,
+      );
+    }
+    if (income.iteration && income.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, income.iteration);
+    }
+    if (income.recurrence && income.recurrence.toLowerCase() !== 'mensal') {
+      return income.recurrence;
+    }
+    return '';
+  };
+
   return (
     <>
       <Header />
@@ -338,10 +356,11 @@ export default function Incomes() {
                 {item.items.map(income => (
                   <ItemCard
                     key={income.id}
-                    icon={MoneyIcon}
+                    category={income.category}
                     title={income.name}
                     value={income.value}
                     received={!!income?.paymentDate}
+                    recurrence={verifyRecurrence(income)}
                     receivedMessage={
                       income.paymentDate
                         ? `Recebido em ${getDayOfTheMounth(
