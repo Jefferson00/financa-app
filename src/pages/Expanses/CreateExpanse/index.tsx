@@ -44,6 +44,9 @@ import {
 } from '../../../store/modules/Expanses/fetchActions';
 import { ICreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
 import { removeMessage } from '../../../store/modules/Feedbacks';
+import { useNotification } from '../../../hooks/NotificationContext';
+import AsyncStorage from '@react-native-community/async-storage';
+import { addCreatedExpanse } from '../../../store/modules/Expanses';
 
 interface ExpanseProps {
   route?: {
@@ -68,10 +71,14 @@ export default function CreateExpanse(props: ExpanseProps) {
   const dispatch = useDispatch<any>();
   const { accounts } = useSelector((state: State) => state.accounts);
   const { creditCards } = useSelector((state: State) => state.creditCards);
-  const { expanseCreated } = useSelector((state: State) => state.expanses);
+  const { expanseCreated, loading } = useSelector(
+    (state: State) => state.expanses,
+  );
   const { messages } = useSelector((state: State) => state.feedbacks);
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
+  const { onCreateTriggerNotification, getTriggerNotification } =
+    useNotification();
 
   const { selectedDate } = useDate();
   const { theme } = useTheme();
@@ -135,6 +142,65 @@ export default function CreateExpanse(props: ExpanseProps) {
     dispatch(removeMessage());
   };
 
+  const createExpanseNotification = async (
+    expanseId: string,
+    expanseName: string,
+    startDate: any,
+    endDate: any,
+  ) => {
+    const date = new Date(startDate);
+
+    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseEndDate:${expanseId}`,
+      String(endDate),
+    );
+    /*    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseName:${expanseId}`,
+      String(expanseName),
+    ); */
+
+    const data = {
+      expanseId,
+    };
+
+    onCreateTriggerNotification(
+      'Lembrete de despesa',
+      `A despesa ${expanseName} está próxima do vencimento, não se esqueça de pagar`,
+      date,
+      data,
+    );
+  };
+
+  const updateExpanseNotification = async (
+    expanseId: string,
+    expanseName: string,
+    startDate: any,
+    endDate: any,
+  ) => {
+    const date = new Date(startDate);
+
+    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseEndDate:${expanseId}`,
+      String(endDate),
+    );
+
+    const data = {
+      expanseId,
+    };
+
+    const notification = await getTriggerNotification(expanseId);
+
+    if (notification) {
+      onCreateTriggerNotification(
+        'Lembrete de despesa',
+        `A despesa ${expanseName} está próxima do vencimento, não se esqueça de pagar`,
+        date,
+        data,
+        notification.notification.id,
+      );
+    }
+  };
+
   const handleSubmitExpanse = async (data: FormData) => {
     if (user) {
       setIsSubmitting(true);
@@ -159,6 +225,12 @@ export default function CreateExpanse(props: ExpanseProps) {
 
       if (expanseState) {
         dispatch(updateExpanse(expanseInput, expanseState.id, false));
+        await updateExpanseNotification(
+          expanseState.id,
+          expanseInput.name,
+          expanseInput.startDate,
+          expanseInput.endDate,
+        );
       } else {
         dispatch(createExpanse(expanseInput, paid, false));
       }
@@ -196,6 +268,18 @@ export default function CreateExpanse(props: ExpanseProps) {
       }
     }
   }, [expanseCreated, accounts, paid, user, dispatch]);
+
+  useEffect(() => {
+    if (expanseCreated) {
+      createExpanseNotification(
+        expanseCreated.id,
+        expanseCreated.name,
+        expanseCreated.startDate,
+        expanseCreated.endDate,
+      );
+      dispatch(addCreatedExpanse(null));
+    }
+  }, [expanseCreated]);
 
   useEffect(() => {
     if (messages) {
@@ -390,7 +474,7 @@ export default function CreateExpanse(props: ExpanseProps) {
         />
         <ModalComponent
           type="loading"
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={expanseState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"

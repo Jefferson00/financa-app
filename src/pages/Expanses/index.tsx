@@ -44,6 +44,9 @@ import {
 } from '../../store/modules/Expanses/fetchActions';
 import { getCurrentIteration } from '../../utils/getCurrentIteration';
 import { removeMessage } from '../../store/modules/Feedbacks';
+import AsyncStorage from '@react-native-community/async-storage';
+import notifee from '@notifee/react-native';
+import { useNotification } from '../../hooks/NotificationContext';
 
 interface ItemType extends IExpanses, IExpansesOnAccount {}
 
@@ -59,6 +62,8 @@ export default function Expanses() {
   const { user } = useAuth();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
+  const { getTriggerNotification } = useNotification();
+
   const [expanseByDate, setExpanseByDate] = useState<
     { day: number; items: ItemType[] }[]
   >([]);
@@ -134,12 +139,23 @@ export default function Expanses() {
     setExpanseSelected(expanse);
   };
 
+  const handleRemoveNotification = async (expanseId: string) => {
+    await AsyncStorage.removeItem(
+      `@FinancaAppBeta:expanseEndDate:${expanseId}`,
+    );
+    const notification = await getTriggerNotification(expanseId);
+    if (notification?.notification?.id) {
+      await notifee.cancelNotification(notification.notification.id);
+    }
+  };
+
   const handleRemove = useCallback(async () => {
     if (user && expanseSelected) {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       dispatch(deleteExpanse(expanseSelected.id, user.id));
+      await handleRemoveNotification(expanseSelected.id);
       setExpanseSelected(null);
       setIsSubmitting(false);
     }

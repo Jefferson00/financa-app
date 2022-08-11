@@ -72,7 +72,8 @@ export const createExpanse = (
       .post(`expanses`, expanse)
       .then(res => {
         dispatch(addExpanse(res.data));
-        if (received) dispatch(addCreatedExpanse(res.data));
+        dispatch(addCreatedExpanse(res.data));
+        //if (received) ;
         if (fromInvoice) {
           dispatch(listCreditCards(expanse.userId));
         }
@@ -174,12 +175,12 @@ export const deleteExpanse = (
         if (fromInvoice) {
           dispatch(listCreditCards(userId));
         }
-        dispatch(
+        /* dispatch(
           addMessage({
             type: 'success',
             message: 'Despesa excluída',
           }),
-        );
+        ); */
       })
       .catch(e => {
         dispatch(changeLoadingState(false));

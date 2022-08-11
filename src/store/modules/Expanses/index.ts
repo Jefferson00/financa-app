@@ -20,7 +20,9 @@ export const changeLoadingState = createAction<boolean>(
   'CHANGE_EXPANSES_LOADING_STATE',
 );
 export const addExpanse = createAction<IExpanses>('ADD_EXPANSE');
-export const addCreatedExpanse = createAction<IExpanses>('ADD_CREATED_EXPANSE');
+export const addCreatedExpanse = createAction<IExpanses | null>(
+  'ADD_CREATED_EXPANSE',
+);
 export const addExpanses = createAction<IExpanses[]>('ADD_EXPANSES');
 export const updateExpanseState = createAction<IExpanses>(
   'UPDATE_EXPANSE_STATE',
@@ -78,6 +80,7 @@ export default createReducer(INITIAL_STATE, {
     ...state,
     loading: false,
     expanses: state.expanses.filter(s => s.id !== action.payload),
+    expanseCreated: null,
   }),
   [removeExpanseOnAccountState.type]: (state, action) => ({
     ...state,
@@ -85,5 +88,6 @@ export default createReducer(INITIAL_STATE, {
     expansesOnAccount: state.expansesOnAccount.filter(
       s => s.id !== action.payload,
     ),
+    expanseCreated: null,
   }),
 });
