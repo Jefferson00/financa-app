@@ -28,13 +28,27 @@ export const Container = styled(Animated.View)`
 `;
 
 export const MenuButton = styled.Pressable<ButtonProps>`
-  width: 30px;
+  opacity: ${props => (props.isActive ? 1 : 0.5)};
+`;
+
+export const MenuView = styled.View`
+  width: ${RFPercentage(4)}px;
   flex: 1;
   justify-content: center;
   align-items: center;
   padding-top: ${RFPercentage(2.5)}px;
 
-  opacity: ${props => (props.isActive ? 1 : 0.5)};
+  position: relative;
 `;
 
 export const AnimatedView = styled(Animated.View)``;
+
+export const Dot = styled.View`
+  width: ${RFPercentage(2)}px;
+  height: ${RFPercentage(2)}px;
+  background-color: #4876ac;
+  position: absolute;
+  border-radius: ${RFPercentage(1)}px;
+  top: 25%;
+  right: 20%;
+`;
