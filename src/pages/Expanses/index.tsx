@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
@@ -93,16 +92,6 @@ export default function Expanses() {
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
-  };
-
-  const MoneyIcon = () => {
-    return (
-      <MaterialIcon
-        name="attach-money"
-        size={RFPercentage(6)}
-        color={colors.primaryColor}
-      />
-    );
   };
 
   const buttonColors = {
@@ -221,6 +210,31 @@ export default function Expanses() {
       setConfirmReceivedVisible(false);
       setExpanseSelected(null);
     }
+  };
+
+  const verifyRecurrence = (expanse: ItemType) => {
+    let currentPart = null;
+    if (expanse.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(expanse.endDate),
+        selectedDate,
+      );
+    } else if (expanse.expanse && expanse.expanse.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(expanse.expanse.endDate),
+        selectedDate,
+      );
+    }
+    if (expanse.iteration && expanse.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, expanse.iteration);
+    }
+    if (
+      expanse.expanse &&
+      expanse.expanse.iteration.toLowerCase() !== 'mensal'
+    ) {
+      return getCurrentIteration(currentPart, expanse.expanse.iteration);
+    }
+    return '';
   };
 
   useEffect(() => {
@@ -412,6 +426,7 @@ export default function Expanses() {
                         title={expanse?.name || ''}
                         value={expanse.value}
                         received={!!expanse?.paymentDate}
+                        recurrence={verifyRecurrence(expanse)}
                         receivedMessage={
                           expanse.paymentDate
                             ? `Recebido em ${getDayOfTheMounth(

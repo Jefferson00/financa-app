@@ -116,12 +116,12 @@ export const deleteIncome = (incomeId: string, userId: string) => {
       .delete(`incomes/${incomeId}/${userId}`)
       .then(res => {
         dispatch(removeIncomeState(incomeId));
-        dispatch(
+        /*  dispatch(
           addMessage({
             type: 'success',
             message: 'Entrada excluída',
           }),
-        );
+        ); */
       })
       .catch(e => {
         dispatch(changeLoadingState(false));

@@ -82,7 +82,7 @@ export default function ItemCard({
               getCategoryIcon(category, mainColor || '#fff', 24)
             )}
             <S.TitleText color={textColor ? textColor : '#000'}>
-              {title} {recurrence && ` - ${recurrence}`}
+              {title} {recurrence && ` ${recurrence}`}
             </S.TitleText>
           </S.TitleContainer>
 

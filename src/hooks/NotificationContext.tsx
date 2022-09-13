@@ -322,10 +322,10 @@ export const NotificationProvider: React.FC = ({ children }) => {
             const expanseEndDate = await AsyncStorage.getItem(
               `@FinancaAppBeta:expanseEndDate:${detail.notification?.data?.expanseId}`,
             );
+            const nextMonth = addMonths(new Date(), 1);
+            nextMonth.setDate(1);
+            nextMonth.setHours(0, 0, 0, 0);
             if (expanseEndDate) {
-              const nextMonth = addMonths(new Date(), 1);
-              nextMonth.setDate(1);
-              nextMonth.setHours(0, 0, 0, 0);
               if (isBefore(nextMonth, new Date(expanseEndDate))) {
                 const dateTrigger = new Date(nextMonth);
                 const endDate = new Date(expanseEndDate);
@@ -357,6 +357,7 @@ export const NotificationProvider: React.FC = ({ children }) => {
                   trigger,
                 );
               }
+            } else {
             }
           }
           break;

@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
@@ -42,7 +41,6 @@ import {
 } from '../../utils/listByDate';
 import { IIncomesOnAccount } from '../../interfaces/Account';
 import { removeMessage } from '../../store/modules/Feedbacks';
-import { getCategoryIcon } from '../../utils/getCategoryIcon';
 
 interface ItemType extends IIncomes, IIncomesOnAccount {}
 
@@ -83,16 +81,6 @@ export default function Incomes() {
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
-  };
-
-  const MoneyIcon = () => {
-    return (
-      <MaterialIcon
-        name="attach-money"
-        size={RFPercentage(6)}
-        color={colors.primaryColor}
-      />
-    );
   };
 
   const buttonColors = {
@@ -248,12 +236,17 @@ export default function Incomes() {
         new Date(income.endDate),
         selectedDate,
       );
+    } else if (income.income && income.income.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(income.income.endDate),
+        selectedDate,
+      );
     }
     if (income.iteration && income.iteration.toLowerCase() !== 'mensal') {
       return getCurrentIteration(currentPart, income.iteration);
     }
-    if (income.recurrence && income.recurrence.toLowerCase() !== 'mensal') {
-      return income.recurrence;
+    if (income.income && income.income.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, income.income.iteration);
     }
     return '';
   };

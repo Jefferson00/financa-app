@@ -1,7 +1,6 @@
-import { AccountBalance } from './AccountBalance';
 import { Invoice } from './CreditCards';
-import { Expanse } from './Expanse';
-import { Income } from './Income';
+import { IExpanses } from './Expanse';
+import { IIncomes } from './Income';
 
 export enum AccountTypes {
   'Conta Corrente',
@@ -19,7 +18,7 @@ export interface IIncomesOnAccount {
   incomeId: string;
   accountId: string;
   name: string;
-  income: Income;
+  income: IIncomes;
 }
 
 export interface IExpansesOnAccount {
@@ -32,7 +31,7 @@ export interface IExpansesOnAccount {
   expanseId: string;
   accountId: string;
   name: string;
-  expanse: Expanse;
+  expanse: IExpanses;
 }
 
 export interface IAccount {
