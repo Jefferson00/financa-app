@@ -4,6 +4,7 @@ import {
   Modal,
   ActivityIndicator,
   TouchableWithoutFeedback,
+  ColorSchemeName,
 } from 'react-native';
 import * as S from './styles';
 import Icons from 'react-native-vector-icons/Ionicons';
@@ -14,9 +15,20 @@ interface IModalProps extends ModalBaseProps {
   title?: string;
   subtitle?: string;
   icon?: React.FC;
-  type: 'success' | 'error' | 'info' | 'confirmation' | 'loading' | 'select';
+  type:
+    | 'success'
+    | 'error'
+    | 'info'
+    | 'confirmation'
+    | 'loading'
+    | 'select'
+    | 'warning'
+    | 'default';
   selectTitle?: string;
   selectList?: any[];
+  backgroundColor?: string;
+  color?: string;
+  theme?: ColorSchemeName;
   renderItem?: (item: any) => Element;
   handleConfirm?: () => Promise<void>;
   handleCancel?: () => void;
@@ -30,16 +42,23 @@ export default function ModalComponent({
   type,
   selectTitle,
   selectList,
+  backgroundColor,
+  color,
+  theme,
   renderItem,
   handleCancel,
   handleConfirm,
   onSucessOkButton,
   ...rest
 }: IModalProps) {
-  const successColor = Colors.SUCCESS_LIGHTER;
-  const loadingColor = Colors.LOADING_LIGTHER;
-  const errorColor = Colors.ERROR_LIGTHER;
-  const warningColor = Colors.WARNIGN_LIGTHER;
+  const successColor =
+    theme === 'dark' ? Colors.SUCCESS_DARKER : Colors.SUCCESS_LIGHTER;
+  const loadingColor =
+    theme === 'dark' ? Colors.LOADING_DARKER : Colors.LOADING_LIGTHER;
+  const errorColor =
+    theme === 'dark' ? Colors.ERROR_DARKER : Colors.ERROR_LIGTHER;
+  const warningColor =
+    theme === 'dark' ? Colors.WARNIGN_DARKER : Colors.WARNIGN_LIGTHER;
 
   const primaryColor = Colors.BLUE_PRIMARY_LIGHTER;
 
@@ -48,7 +67,7 @@ export default function ModalComponent({
       <Modal {...rest}>
         <S.Wrapper onPress={handleCancel}>
           <TouchableWithoutFeedback>
-            <S.Content>
+            <S.Content backgroundColor={backgroundColor || '#fff'}>
               {type === 'loading' && (
                 <ActivityIndicator size="large" color={loadingColor} />
               )}
@@ -62,8 +81,8 @@ export default function ModalComponent({
                 <Icons name="checkmark-circle" size={36} color={successColor} />
               )}
 
-              {title && <S.Title>{title}</S.Title>}
-              {subtitle && <S.Subtitle>{subtitle}</S.Subtitle>}
+              {title && <S.Title color={color}>{title}</S.Title>}
+              {subtitle && <S.Subtitle color={color}>{subtitle}</S.Subtitle>}
 
               {type === 'error' && handleCancel && (
                 <S.OkButton>
@@ -117,7 +136,7 @@ export default function ModalComponent({
 
               {type === 'select' && (
                 <>
-                  <S.SelectTitle>{selectTitle}</S.SelectTitle>
+                  <S.SelectTitle color={color}>{selectTitle}</S.SelectTitle>
                   <S.SelectContent>
                     {selectList &&
                       selectList.map((item, index) => (

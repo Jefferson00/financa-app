@@ -1,14 +1,17 @@
 import React from 'react';
-import { ModalBaseProps, Modal } from 'react-native';
+import { ModalBaseProps, Modal, ColorSchemeName } from 'react-native';
 import * as S from './styles';
 import { Colors } from '../../../../styles/global';
-import { Account } from '../../../../interfaces/Account';
+import { IAccount } from '../../../../interfaces/Account';
 import { useAccount } from '../../../../hooks/AccountContext';
 
 interface IModalProps extends ModalBaseProps {
   title: string;
   defaulAccount?: string;
-  accounts: Account[];
+  backgroundColor?: string;
+  color?: string;
+  theme?: ColorSchemeName;
+  accounts: IAccount[];
   handleConfirm?: () => Promise<void>;
   handleCancel?: () => void;
 }
@@ -17,39 +20,54 @@ export default function ConfirmReceivedModalComponent({
   title,
   accounts,
   defaulAccount = '',
+  backgroundColor,
+  color,
+  theme,
   handleCancel,
   handleConfirm,
   ...rest
 }: IModalProps) {
   const { handleSelectAccount, accountSelected } = useAccount();
 
-  const cancelColor = Colors.ERROR_LIGTHER;
-  const unselectColor = Colors.BLUE_SOFT_LIGHTER;
-  const selectColor = '#ABCBF1';
-  const borderColor = Colors.BLUE_SECONDARY_LIGHTER;
-  const primaryColor = Colors.BLUE_PRIMARY_LIGHTER;
+  const cancelColor =
+    theme === 'dark' ? Colors.ERROR_LIGTHER : Colors.ERROR_LIGTHER;
+  const unselectColor =
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+  const selectColor = theme === 'dark' ? '#2a333f' : '#ABCBF1';
+  const borderColor =
+    theme === 'dark'
+      ? Colors.BLUE_SECONDARY_DARKER
+      : Colors.BLUE_SECONDARY_LIGHTER;
+  const primaryColor =
+    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
 
   return (
     <S.Container visible={rest.visible || false}>
       <Modal {...rest}>
         <S.Wrapper>
-          <S.Content>
-            <S.Title>{title}</S.Title>
+          <S.Content backgroundColor={backgroundColor}>
+            <S.Title color={color}>{title}</S.Title>
 
             {accounts.map(acc => (
               <S.AccountItem
                 backgroundColor={
-                  acc.id === defaulAccount || acc.id === accountSelected?.id
+                  accountSelected
+                    ? acc.id === accountSelected?.id
+                      ? selectColor
+                      : unselectColor
+                    : acc.id === defaulAccount
                     ? selectColor
                     : unselectColor
                 }
                 key={acc.id}
                 selected={
-                  acc.id === defaulAccount || acc.id === accountSelected?.id
+                  accountSelected
+                    ? acc.id === accountSelected?.id
+                    : acc.id === defaulAccount
                 }
                 borderColor={borderColor}
                 onPress={() => handleSelectAccount(acc)}>
-                <S.AccountName>{acc.name}</S.AccountName>
+                <S.AccountName color={color}>{acc.name}</S.AccountName>
               </S.AccountItem>
             ))}
 

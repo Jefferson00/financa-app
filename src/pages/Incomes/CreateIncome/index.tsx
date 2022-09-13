@@ -8,7 +8,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import {
   addMonths,
-  differenceInMonths,
   isSameMonth,
   isToday,
   lastDayOfMonth,
@@ -21,7 +20,6 @@ import * as S from './styles';
 
 import { useAuth } from '../../../hooks/AuthContext';
 import { useTheme } from '../../../hooks/ThemeContext';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 
 import Menu from '../../../components/Menu';
@@ -31,16 +29,25 @@ import Button from '../../../components/Button';
 import ModalComponent from '../../../components/Modal';
 import Input from '../../../components/Input';
 
-import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
-import { getDayOfTheMounth } from '../../../utils/dateFormats';
+import {
+  getDayOfTheMounth,
+  getPreviousMonth,
+} from '../../../utils/dateFormats';
 import { currencyToValue } from '../../../utils/masks';
 import { IncomeCategories } from '../../../utils/categories';
 import { getCreateIncomesColors } from '../../../utils/colors/incomes';
 import { Switch } from 'react-native';
-import { CreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
-import { Income } from '../../../interfaces/Income';
+import { ICreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createIncome,
+  createIncomeOnAccount,
+  updateIncome,
+} from '../../../store/modules/Incomes/fetchActions';
+import { removeMessage } from '../../../store/modules/Feedbacks';
 
 interface IncomeProps {
   route?: {
@@ -62,34 +69,29 @@ const schema = yup.object({
 });
 
 export default function CreateIncome(props: IncomeProps) {
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { incomeCreated, loading } = useSelector(
+    (state: State) => state.incomes,
+  );
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const { user } = useAuth();
-  const {
-    accounts,
-    getUserIncomes,
-    handleClearCache,
-    handleCreateIncomeOnAccount,
-    getUserIncomesOnAccount,
-    handleUpdateAccountBalance,
-  } = useAccount();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const colors = getCreateIncomesColors(theme);
 
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [incomeState] = useState(props?.route?.params?.income);
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
   );
   const [iteration, setIteration] = useState(1);
-  const [hasError, setHasError] = useState(false);
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
   const [received, setReceived] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -98,9 +100,7 @@ export default function CreateIncome(props: IncomeProps) {
         ? getCurrencyFormat(incomeState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault:
-        incomeState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: incomeState?.receiptDefault || accounts[0].id,
       category: IncomeCategories.find(c => c.name === incomeState?.category)
         ? IncomeCategories.find(c => c.name === incomeState?.category)?.id
         : IncomeCategories[0].name,
@@ -122,100 +122,87 @@ export default function CreateIncome(props: IncomeProps) {
     name: string;
     value: string;
     status: boolean;
-    receiptDefault?: string;
+    receiptDefault: string;
     category: string | number;
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Incomes'), 300);
   };
 
-  const receiveIncome = async (income: Income) => {
-    if (user) {
-      const input: CreateIncomeOnAccount = {
-        userId: user.id,
-        accountId: income.receiptDefault,
-        incomeId: income?.id,
-        month: selectedDate,
-        value: income.value,
-        name: income.name,
-        recurrence: income.endDate
-          ? `${
-              differenceInMonths(selectedDate, new Date(income.startDate)) + 1
-            }/${differenceInMonths(selectedDate, new Date(income.endDate)) + 1}`
-          : 'mensal',
-      };
-
-      await handleCreateIncomeOnAccount(input);
-
-      const account = accounts.find(acc => acc.id === input.accountId);
-
-      const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), selectedDate)) {
-          return balance;
-        }
-      });
-
-      await handleUpdateAccountBalance(
-        accountLastBalance,
-        input.value,
-        account,
-        'Income',
-      );
-
-      await getUserIncomesOnAccount();
-    }
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
   };
 
   const handleSubmitIncome = async (data: FormData) => {
-    setIsSubmitting(true);
-    const incomeInput = {
-      name: data.name,
-      userId: user?.id,
-      value: Number(currencyToValue(data.value)),
-      category:
-        IncomeCategories.find(i => i.id === Number(data.category))?.name ||
-        data.category,
-      iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
-      receiptDate: startDate,
-      startDate,
-      endDate:
-        recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
-      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
-    };
-    try {
+    const interationVerified = iteration === 0 ? 1 : iteration;
+
+    if (user) {
+      const incomeInput = {
+        name: data.name,
+        userId: user.id,
+        value: Number(currencyToValue(data.value)),
+        category:
+          IncomeCategories.find(i => i.id === Number(data.category))?.name ||
+          String(data.category),
+        iteration:
+          recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
+        receiptDate: startDate,
+        startDate,
+        endDate:
+          recurrence === 'Parcelada'
+            ? addMonths(startDate, interationVerified - 1)
+            : null,
+        receiptDefault: data.receiptDefault,
+      };
+      setIsSubmitting(true);
       if (incomeState) {
-        await api.put(`incomes/${incomeState.id}`, incomeInput);
-        // atualizar o nome em incomesAccount
+        await dispatch(updateIncome(incomeInput, incomeState.id));
       } else {
-        const { data } = await api.post(`incomes`, incomeInput);
-
-        if (received) {
-          // se tiver marcado como recebido, criar incomeAccount
-          receiveIncome(data);
-        }
+        await dispatch(createIncome(incomeInput, received));
       }
-
-      handleClearCache();
-      await getUserIncomes();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   useEffect(() => {
     if (incomeState?.iteration !== 'Mensal') {
-      setIteration(incomeState?.iteration);
+      setIteration(incomeState?.iteration || 1);
     } else {
       setRecurrence('Mensal');
     }
   }, [incomeState]);
+
+  useEffect(() => {
+    if (user && received && incomeCreated) {
+      const findAccount = accounts.find(
+        acc => acc.id === incomeCreated.receiptDefault,
+      );
+
+      const incomeOnAccountToCreate: ICreateIncomeOnAccount = {
+        userId: user.id,
+        accountId: incomeCreated.receiptDefault,
+        incomeId: incomeCreated.id,
+        month: new Date(),
+        value: incomeCreated.value,
+        name: incomeCreated.name,
+        recurrence: incomeCreated.iteration,
+      };
+
+      if (findAccount) {
+        dispatch(createIncomeOnAccount(incomeOnAccountToCreate, findAccount));
+        setReceived(false);
+      }
+    }
+  }, [incomeCreated, accounts, received, user, dispatch]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -226,7 +213,10 @@ export default function CreateIncome(props: IncomeProps) {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingBottom: RFPercentage(15),
+          }}>
           <S.Title color={colors.titleColor}>
             {incomeState ? `Editar Entrada` : `Nova Entrada`}
           </S.Title>
@@ -257,25 +247,37 @@ export default function CreateIncome(props: IncomeProps) {
           <S.Label color={colors.textColor}>Recorrência</S.Label>
           <S.Row>
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Mensal')}
+              color={colors.textColor}
               checked={recurrence === 'Mensal'}>
-              <S.Option>Mensal</S.Option>
-              <IonIcons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Mensal</S.Option>
+              <IonIcons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <S.SelectOption
+              backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Parcelada')}
               checked={recurrence === 'Parcelada'}
+              color={colors.textColor}
               style={{ marginHorizontal: RFPercentage(2) }}>
-              <S.Option>Parcelada</S.Option>
-              <IonIcons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Parcelada</S.Option>
+              <IonIcons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <Input
               background={colors.inputBackground}
               textColor={colors.textColor}
               value={
-                iteration <= 0 || isNaN(iteration) ? '1' : String(iteration)
+                iteration < 0 || isNaN(iteration) ? '1' : String(iteration)
               }
               keyboardType="number-pad"
               maxLength={2}
@@ -289,9 +291,18 @@ export default function CreateIncome(props: IncomeProps) {
           <S.Row>
             <S.Col>
               <S.Label color={colors.textColor}>Data de recebimento</S.Label>
-              <S.SelectOption onPress={() => setSelectStartDateModal(true)}>
-                <IonIcons name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+              <S.SelectOption
+                backgroundColor={colors.inputBackground}
+                color={colors.textColor}
+                onPress={() => setSelectStartDateModal(true)}>
+                <IonIcons
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  color={colors.textColor}
+                  style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
               </S.SelectOption>
@@ -330,7 +341,7 @@ export default function CreateIncome(props: IncomeProps) {
             value={
               incomeState?.receiptDefault ? incomeState.receiptDefault : ''
             }
-            selectItems={accounts.filter(acc => acc.status === 'active')}
+            selectItems={accounts}
           />
 
           <ControlledInput
@@ -362,8 +373,8 @@ export default function CreateIncome(props: IncomeProps) {
           date={startDate}
           title="Selecione a data de recebimento"
           mode="date"
-          minimumDate={startOfMonth(selectedDate)}
-          maximumDate={lastDayOfMonth(selectedDate)}
+          minimumDate={startOfMonth(getPreviousMonth(new Date(selectedDate)))}
+          maximumDate={lastDayOfMonth(addMonths(new Date(selectedDate), 1))}
           onConfirm={date => {
             setSelectStartDateModal(false);
             setStartDate(date);
@@ -374,34 +385,37 @@ export default function CreateIncome(props: IncomeProps) {
         />
         <ModalComponent
           type="loading"
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={incomeState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
-        <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-        />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={
-            incomeState
-              ? 'Entrada atualizada com sucesso!'
-              : 'Entrada criada com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-        />
+
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

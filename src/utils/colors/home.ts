@@ -20,6 +20,10 @@ export const getHomeColors = (theme: ColorSchemeName) => {
     theme === 'dark'
       ? Colors.EXPANSE_PRIMARY_DARKER
       : Colors.EXPANSE_PRIMARY_LIGTHER;
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   return {
     primaryColor,
@@ -28,6 +32,7 @@ export const getHomeColors = (theme: ColorSchemeName) => {
     secondaryCardColor,
     textColor,
     alertColor,
+    modalBackground,
   };
 };
 

@@ -8,7 +8,6 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import {
   addMonths,
-  differenceInMonths,
   isSameMonth,
   isToday,
   lastDayOfMonth,
@@ -18,7 +17,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
 import { useAuth } from '../../../hooks/AuthContext';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useTheme } from '../../../hooks/ThemeContext';
 import { useDate } from '../../../hooks/DateContext';
 
@@ -30,7 +28,6 @@ import ModalComponent from '../../../components/Modal';
 import Input from '../../../components/Input';
 
 import * as S from './styles';
-import api from '../../../services/api';
 import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
@@ -38,8 +35,18 @@ import { currencyToValue } from '../../../utils/masks';
 import { ExpanseCategories } from '../../../utils/categories';
 import { getCreateExpansesColors } from '../../../utils/colors/expanses';
 import { Switch } from 'react-native';
-import { Expanse } from '../../../interfaces/Expanse';
-import { CreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createExpanse,
+  createExpanseOnAccount,
+  updateExpanse,
+} from '../../../store/modules/Expanses/fetchActions';
+import { ICreateExpanseOnAccount } from '../../../interfaces/ExpanseOnAccount';
+import { removeMessage } from '../../../store/modules/Feedbacks';
+import { useNotification } from '../../../hooks/NotificationContext';
+import AsyncStorage from '@react-native-community/async-storage';
+import { addCreatedExpanse } from '../../../store/modules/Expanses';
 
 interface ExpanseProps {
   route?: {
@@ -61,20 +68,22 @@ const schema = yup.object({
 });
 
 export default function CreateExpanse(props: ExpanseProps) {
+  const dispatch = useDispatch<any>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { creditCards } = useSelector((state: State) => state.creditCards);
+  const { expanseCreated, loading } = useSelector(
+    (state: State) => state.expanses,
+  );
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const navigation = useNavigation<Nav>();
   const { user } = useAuth();
-  const {
-    accounts,
-    creditCards,
-    getUserExpanses,
-    getUserCreditCards,
-    handleCreateExpanseOnAccount,
-    getUserExpansesOnAccount,
-    handleUpdateAccountBalance,
-  } = useAccount();
+  const { onCreateTriggerNotification, getTriggerNotification } =
+    useNotification();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
 
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [expanseState, setExpanseState] = useState(
     props?.route?.params?.expanse,
@@ -85,13 +94,8 @@ export default function CreateExpanse(props: ExpanseProps) {
   );
   const [paid, setPaid] = useState(false);
   const [iteration, setIteration] = useState(1);
-  const [hasError, setHasError] = useState(false);
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const colors = getCreateExpansesColors(theme);
 
@@ -102,9 +106,7 @@ export default function CreateExpanse(props: ExpanseProps) {
         ? getCurrencyFormat(expanseState?.value)
         : getCurrencyFormat(0),
       status: false,
-      receiptDefault:
-        expanseState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: expanseState?.receiptDefault || accounts[0].id,
       category: ExpanseCategories.find(c => c.name === expanseState?.category)
         ? ExpanseCategories.find(c => c.name === expanseState?.category)?.id
         : ExpanseCategories[0].name,
@@ -126,94 +128,112 @@ export default function CreateExpanse(props: ExpanseProps) {
     name: string;
     value: string;
     status: boolean;
-    receiptDefault?: string;
+    receiptDefault: string;
     category: string | number;
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
-  const payExpanse = async (expanse: Expanse) => {
-    if (user) {
-      const input: CreateExpanseOnAccount = {
-        userId: user.id,
-        accountId: expanse.receiptDefault,
-        expanseId: expanse?.id,
-        month: selectedDate,
-        value: expanse.value,
-        name: expanse.name,
-        recurrence: expanse.endDate
-          ? `${differenceInMonths(
-              selectedDate,
-              new Date(expanse.startDate),
-            )}/${differenceInMonths(selectedDate, new Date(expanse.endDate))}`
-          : 'mensal',
-      };
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
+  };
 
-      await handleCreateExpanseOnAccount(input);
+  const createExpanseNotification = async (
+    expanseId: string,
+    expanseName: string,
+    startDate: any,
+    endDate: any,
+  ) => {
+    const date = new Date(startDate);
 
-      const account = accounts.find(acc => acc.id === input.accountId);
+    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseEndDate:${expanseId}`,
+      String(endDate),
+    );
+    /*    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseName:${expanseId}`,
+      String(expanseName),
+    ); */
 
-      const accountLastBalance = account?.balances?.find(balance => {
-        if (isSameMonth(new Date(balance.month), selectedDate)) {
-          return balance;
-        }
-      });
+    const data = {
+      expanseId,
+    };
 
-      await handleUpdateAccountBalance(
-        accountLastBalance,
-        input.value,
-        account,
-        'Expanse',
+    onCreateTriggerNotification(
+      'Lembrete de despesa',
+      `A despesa ${expanseName} está próxima do vencimento, não se esqueça de pagar`,
+      date,
+      data,
+    );
+  };
+
+  const updateExpanseNotification = async (
+    expanseId: string,
+    expanseName: string,
+    startDate: any,
+    endDate: any,
+  ) => {
+    const date = new Date(startDate);
+
+    await AsyncStorage.setItem(
+      `@FinancaAppBeta:expanseEndDate:${expanseId}`,
+      String(endDate),
+    );
+
+    const data = {
+      expanseId,
+    };
+
+    const notification = await getTriggerNotification(expanseId);
+
+    if (notification) {
+      onCreateTriggerNotification(
+        'Lembrete de despesa',
+        `A despesa ${expanseName} está próxima do vencimento, não se esqueça de pagar`,
+        date,
+        data,
+        notification.notification.id,
       );
-      await getUserExpansesOnAccount();
     }
   };
 
   const handleSubmitExpanse = async (data: FormData) => {
-    setIsSubmitting(true);
-    const expanseInput = {
-      name: data.name,
-      userId: user?.id,
-      value: Number(currencyToValue(data.value)),
-      category:
-        ExpanseCategories.find(exp => exp.id === Number(data.category))?.name ||
-        data.category,
-      iteration: recurrence === 'Parcelada' ? String(iteration) : 'Mensal',
-      receiptDate: startDate,
-      startDate,
-      endDate:
-        recurrence === 'Parcelada' ? addMonths(startDate, iteration - 1) : null,
-      receiptDefault: data.receiptDefault ? data.receiptDefault : null,
-    };
+    if (user) {
+      setIsSubmitting(true);
+      const interationVerified = iteration === 0 ? 1 : iteration;
+      const expanseInput = {
+        name: data.name,
+        userId: user.id,
+        value: Number(currencyToValue(data.value)),
+        category:
+          ExpanseCategories.find(exp => exp.id === Number(data.category))
+            ?.name || String(data.category),
+        iteration:
+          recurrence === 'Parcelada' ? String(interationVerified) : 'Mensal',
+        receiptDate: startDate,
+        startDate,
+        endDate:
+          recurrence === 'Parcelada'
+            ? addMonths(startDate, interationVerified - 1)
+            : null,
+        receiptDefault: data.receiptDefault,
+      };
 
-    try {
       if (expanseState) {
-        await api.put(`expanses/${expanseState.id}`, expanseInput);
-      } else {
-        const { data } = await api.post(`expanses`, expanseInput);
-
-        const expanseToCreditCard = creditCards.find(
-          c => c.id === data.receiptDefault,
+        dispatch(updateExpanse(expanseInput, expanseState.id, false));
+        await updateExpanseNotification(
+          expanseState.id,
+          expanseInput.name,
+          expanseInput.startDate,
+          expanseInput.endDate,
         );
-
-        // se tiver marcado como pago, criar expanseAccount
-        if (paid && !expanseToCreditCard) {
-          payExpanse(data);
-        }
+      } else {
+        dispatch(createExpanse(expanseInput, paid, false));
       }
-
-      await getUserExpanses();
-      await getUserCreditCards();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      console.log(error?.response?.data);
-      setHasError(true);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -226,6 +246,47 @@ export default function CreateExpanse(props: ExpanseProps) {
     }
   }, [expanseState]);
 
+  useEffect(() => {
+    if (user && paid && expanseCreated) {
+      const findAccount = accounts.find(
+        acc => acc.id === expanseCreated.receiptDefault,
+      );
+
+      const expanseOnAccountToCreate: ICreateExpanseOnAccount = {
+        userId: user.id,
+        accountId: expanseCreated.receiptDefault,
+        expanseId: expanseCreated.id,
+        month: new Date(),
+        value: expanseCreated.value,
+        name: expanseCreated.name,
+        recurrence: expanseCreated.iteration,
+      };
+
+      if (findAccount) {
+        dispatch(createExpanseOnAccount(expanseOnAccountToCreate, findAccount));
+        setPaid(false);
+      }
+    }
+  }, [expanseCreated, accounts, paid, user, dispatch]);
+
+  useEffect(() => {
+    if (expanseCreated) {
+      createExpanseNotification(
+        expanseCreated.id,
+        expanseCreated.name,
+        expanseCreated.startDate,
+        expanseCreated.endDate,
+      );
+      dispatch(addCreatedExpanse(null));
+    }
+  }, [expanseCreated]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
+
   return (
     <>
       <Header reduced showMonthSelector={false} />
@@ -235,7 +296,10 @@ export default function CreateExpanse(props: ExpanseProps) {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingBottom: RFPercentage(15),
+          }}>
           <S.Title color={colors.titleColor}>
             {expanseState ? `Editar Despesa` : `Nova Despesa`}
           </S.Title>
@@ -269,25 +333,35 @@ export default function CreateExpanse(props: ExpanseProps) {
             <S.SelectOption
               backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Mensal')}
+              color={colors.textColor}
               checked={recurrence === 'Mensal'}>
-              <S.Option>Mensal</S.Option>
-              <Ionicons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Mensal</S.Option>
+              <Ionicons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <S.SelectOption
               backgroundColor={colors.inputBackground}
               onPress={() => setRecurrence('Parcelada')}
               checked={recurrence === 'Parcelada'}
+              color={colors.textColor}
               style={{ marginHorizontal: RFPercentage(2) }}>
-              <S.Option>Parcelada</S.Option>
-              <Ionicons name="checkmark" size={RFPercentage(4)} />
+              <S.Option color={colors.textColor}>Parcelada</S.Option>
+              <Ionicons
+                name="checkmark"
+                size={RFPercentage(4)}
+                color={colors.textColor}
+              />
             </S.SelectOption>
 
             <Input
               background={colors.inputBackground}
               textColor={colors.textColor}
               value={
-                iteration <= 0 || isNaN(iteration) ? '1' : String(iteration)
+                iteration < 0 || isNaN(iteration) ? '1' : String(iteration)
               }
               keyboardType="number-pad"
               maxLength={2}
@@ -303,9 +377,16 @@ export default function CreateExpanse(props: ExpanseProps) {
               <S.Label color={colors.textColor}>Data de recebimento</S.Label>
               <S.SelectOption
                 backgroundColor={colors.inputBackground}
+                color={colors.textColor}
                 onPress={() => setSelectStartDateModal(true)}>
-                <Ionicons name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+                <Ionicons
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  color={colors.textColor}
+                  style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
               </S.SelectOption>
@@ -345,7 +426,7 @@ export default function CreateExpanse(props: ExpanseProps) {
               expanseState?.receiptDefault ? expanseState.receiptDefault : ''
             }
             selectItems={[
-              ...accounts.filter(a => a.status === 'active'),
+              ...accounts,
               ...creditCards.map(e => {
                 return { ...e, name: `Cartão - ${e.name}` };
               }),
@@ -393,34 +474,36 @@ export default function CreateExpanse(props: ExpanseProps) {
         />
         <ModalComponent
           type="loading"
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={expanseState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
-        <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-        />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={
-            expanseState
-              ? 'Despesa atualizada com sucesso!'
-              : 'Despesa criada com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-        />
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

@@ -21,6 +21,10 @@ export const getSecurityColors = (theme: ColorSchemeName) => {
     theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
   const inputFillBackground =
     theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   return {
     titleColor,
@@ -31,5 +35,6 @@ export const getSecurityColors = (theme: ColorSchemeName) => {
     thumbColor,
     falseThumbColor,
     inputFillBackground,
+    modalBackground,
   };
 };

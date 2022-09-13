@@ -4,9 +4,24 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import * as S from './styles';
+import { isSameMonth } from 'date-fns';
+import { useDate } from '../../hooks/DateContext';
+import { getCategoryIcon } from '../../utils/getCategoryIcon';
+
+interface SwitchColors {
+  background: string;
+  trackColor: {
+    true: string;
+    false: string;
+  };
+  thumbColor: {
+    true: string;
+    false: string;
+  };
+}
 
 interface ItemCardProps {
-  icon: React.FC;
+  icon?: React.FC;
   title?: string;
   mainColor?: string;
   backgroundColor?: string;
@@ -16,10 +31,13 @@ interface ItemCardProps {
   switchValue?: boolean;
   received?: boolean;
   receivedMessage?: string;
+  switchColors?: SwitchColors;
   onRedirect?: () => void;
   onSwitchChange?: () => void;
   value: number;
   handleRemove: () => void;
+  recurrence?: string;
+  category: string;
 }
 
 export default function ItemCard({
@@ -32,17 +50,24 @@ export default function ItemCard({
   backgroundColor,
   received,
   receivedMessage,
+  switchColors,
+  recurrence,
+  category,
   onSwitchChange,
   handleRemove,
   onRedirect,
   ...rest
 }: ItemCardProps) {
+  const { selectedDate } = useDate();
+
   return (
     <Swipeable
       renderRightActions={() => (
         <Animated.View>
           <View>
-            <S.DeleteButton onPress={handleRemove}>
+            <S.DeleteButton
+              backgroundColor={switchColors?.background || '#000'}
+              onPress={handleRemove}>
               <FeatherIcons name="trash" size={32} color="#fff" />
             </S.DeleteButton>
           </View>
@@ -51,9 +76,13 @@ export default function ItemCard({
       <S.Container backgroundColor={backgroundColor || '#fff'}>
         <S.Main onPress={onRedirect}>
           <S.TitleContainer>
-            <Icon />
+            {Icon ? (
+              <Icon />
+            ) : (
+              getCategoryIcon(category, mainColor || '#fff', 24)
+            )}
             <S.TitleText color={textColor ? textColor : '#000'}>
-              {title}
+              {title} {recurrence && ` ${recurrence}`}
             </S.TitleText>
           </S.TitleContainer>
 
@@ -64,17 +93,35 @@ export default function ItemCard({
           </S.ValueContainer>
         </S.Main>
 
-        <S.ActionContainer backgroundColor="#FF981E">
-          <S.SubtitleText color={textColor ? textColor : '#000'}>
-            {received ? receivedMessage : 'Receber'}
-          </S.SubtitleText>
+        <S.ActionContainer
+          backgroundColor={
+            isSameMonth(new Date(), selectedDate)
+              ? switchColors
+                ? switchColors.background
+                : '#FF981E'
+              : 'transparent'
+          }>
+          {isSameMonth(new Date(), selectedDate) && (
+            <>
+              <S.SubtitleText color="#262626">
+                {received ? receivedMessage : 'Receber'}
+              </S.SubtitleText>
 
-          <Switch
-            trackColor={{ true: textColor, false: textColor }}
-            thumbColor={textColor}
-            value={received}
-            onChange={onSwitchChange}
-          />
+              <Switch
+                trackColor={{
+                  true: switchColors?.trackColor.true,
+                  false: switchColors?.trackColor.false,
+                }}
+                thumbColor={
+                  received
+                    ? switchColors?.thumbColor.true
+                    : switchColors?.thumbColor.false
+                }
+                value={received}
+                onChange={onSwitchChange}
+              />
+            </>
+          )}
         </S.ActionContainer>
       </S.Container>
     </Swipeable>

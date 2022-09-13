@@ -3,7 +3,6 @@ import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 
-import { useAccount } from '../../../../hooks/AccountContext';
 import { useAuth } from '../../../../hooks/AuthContext';
 import { useTheme } from '../../../../hooks/ThemeContext';
 
@@ -15,6 +14,8 @@ import {
   getHomeColors,
   getLastTransactionsColors,
 } from '../../../../utils/colors/home';
+import { useSelector } from 'react-redux';
+import State from '../../../../interfaces/State';
 
 interface ITransactions {
   id: string;
@@ -29,7 +30,9 @@ const LastTransactions = () => {
   const width = Dimensions.get('screen').width;
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { expansesOnAccounts, incomesOnAccounts } = useAccount();
+  const { incomesOnAccount } = useSelector((state: State) => state.incomes);
+  const { expansesOnAccount } = useSelector((state: State) => state.expanses);
+
   const [lastTransactionsState, setLastTransactionsState] = useState<
     ITransactions[]
   >([]);
@@ -51,7 +54,7 @@ const LastTransactions = () => {
 
   useEffect(() => {
     getLastTransactions().finally(() => setLoadingData(false));
-  }, [getLastTransactions, incomesOnAccounts, expansesOnAccounts]);
+  }, [getLastTransactions, incomesOnAccount, expansesOnAccount]);
 
   return (
     <>

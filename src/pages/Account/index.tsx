@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import IonIcons from 'react-native-vector-icons/Ionicons';
@@ -10,7 +10,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 
 import { useAuth } from '../../hooks/AuthContext';
 import { useTheme } from '../../hooks/ThemeContext';
-import { useAccount } from '../../hooks/AccountContext';
 
 import Menu from '../../components/Menu';
 import Header from '../../components/Header';
@@ -20,12 +19,20 @@ import ModalComponent from '../../components/Modal';
 
 import * as S from './styles';
 
-import api from '../../services/api';
 import { Nav } from '../../routes';
 import { currencyToValue } from '../../utils/masks';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { getAccountColors } from '../../utils/colors/account';
 import { accountTypes } from '../../utils/accountTypes';
+import {
+  createAccount,
+  deleteAccount,
+  updateAccount,
+} from '../../store/modules/Accounts/fetchActions';
+import { useDispatch, useSelector } from 'react-redux';
+import { ICreateAccount, IUpdateAccount } from '../../interfaces/Account';
+import State from '../../interfaces/State';
+import { removeMessage } from '../../store/modules/Feedbacks';
 interface ProfileProps {
   route?: {
     key: string;
@@ -55,9 +62,11 @@ type FormData = {
 
 export default function Account(props: ProfileProps) {
   const navigation = useNavigation<Nav>();
+  const dispatch = useDispatch<any>();
   const { user } = useAuth();
-  const { getUserAccounts, incomesOnAccounts, expansesOnAccounts } =
-    useAccount();
+  const { incomesOnAccount } = useSelector((state: State) => state.incomes);
+  const { expansesOnAccount } = useSelector((state: State) => state.expanses);
+  const { messages } = useSelector((state: State) => state.feedbacks);
   const { theme } = useTheme();
   const colors = getAccountColors(theme);
 
@@ -67,25 +76,20 @@ export default function Account(props: ProfileProps) {
   const [accountState, setAccountState] = useState(
     props?.route?.params?.account,
   );
-  const [hasError, setHasError] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
+  const [showMessage, setShowMessage] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [sucessMessage, setSucessMessage] = useState('');
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Home'), 300);
   };
 
   const canDelete = useCallback(() => {
     return (
-      !incomesOnAccounts.find(i => i.accountId === accountState.id) &&
-      !expansesOnAccounts.find(i => i.accountId === accountState.id)
+      !incomesOnAccount.find(i => i.accountId === accountState.id) &&
+      !expansesOnAccount.find(i => i.accountId === accountState.id)
     );
-  }, [expansesOnAccounts, incomesOnAccounts, accountState]);
+  }, [expansesOnAccount, incomesOnAccount, accountState]);
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -112,39 +116,33 @@ export default function Account(props: ProfileProps) {
   };
 
   const handleSubmitAccount = async (data: FormData) => {
-    const accountInput = {
-      userId: user?.id,
-      status: data.status,
-      name: data.name,
-      type:
-        accountTypes.find(type => type.id === Number(data.type))?.name ||
-        data.type,
-    };
-    try {
+    if (user) {
       if (accountState) {
         setLoadingMessage('Atualizando...');
         setIsSubmitting(true);
-        await api.put(`accounts/${accountState.id}`, accountInput);
-        setSucessMessage('Conta atualizada com sucesso!');
+        const accountToUpdate: IUpdateAccount = {
+          ...data,
+          type:
+            accountTypes.find(type => type.id === Number(data.type))?.name ||
+            data.type,
+          userId: user.id,
+        };
+        await dispatch(updateAccount(accountToUpdate, accountState.id));
       } else {
         setLoadingMessage('Criando...');
         setIsSubmitting(true);
-        await api.post(`accounts`, {
-          ...accountInput,
+        const accountToCreate: ICreateAccount = {
+          ...data,
+          type:
+            accountTypes.find(type => type.id === Number(data.type))?.name ||
+            data.type,
           initialValue: data.initialValue
             ? Number(currencyToValue(data.initialValue))
             : 0,
-        });
-        setSucessMessage('Conta criada com sucesso!');
+          userId: user.id,
+        };
+        dispatch(createAccount(accountToCreate));
       }
-
-      await getUserAccounts();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -154,25 +152,21 @@ export default function Account(props: ProfileProps) {
       setDeleteConfirmationVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
-      try {
-        await Promise.all(
-          accountState.balances.map(async (balance: any) => {
-            await api.delete(`accounts/${balance.id}`);
-          }),
-        );
-        await api.delete(`accounts/${accountState.id}/${user.id}`);
-        await getUserAccounts();
-        setSucessMessage('Conta excluída com sucesso!');
-        setEditSucessfully(true);
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          setErrorMessage(error?.response?.data?.message);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
-      }
+      dispatch(deleteAccount(accountState.id, user.id));
+      setIsSubmitting(false);
     }
   }, [user, accountState]);
+
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
+  };
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -276,26 +270,31 @@ export default function Account(props: ProfileProps) {
           transparent
           title={loadingMessage}
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
         <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
+          type={messages ? messages.type : 'error'}
+          visible={showMessage}
+          handleCancel={handleCloseModal}
+          onRequestClose={handleCloseModal}
           transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
+          title={messages?.message}
+          subtitle={
+            messages?.type === 'error'
+              ? 'Tente novamente mais tarde'
+              : undefined
+          }
           animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
+          onSucessOkButton={
+            messages?.type === 'success' ? handleOkSucess : undefined
+          }
         />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={sucessMessage}
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-        />
+
         <ModalComponent
           type="confirmation"
           visible={deleteConfirmationVisible}
@@ -305,6 +304,9 @@ export default function Account(props: ProfileProps) {
           title="Deseja mesmo excluir essa conta?"
           animationType="slide"
           handleConfirm={handleDelete}
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
         />
       </S.Container>
       <Menu />

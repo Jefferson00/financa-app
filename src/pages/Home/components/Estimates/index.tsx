@@ -1,18 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { addMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
 
-import { useAccount } from '../../../../hooks/AccountContext';
 import { useTheme } from '../../../../hooks/ThemeContext';
-
-import { Colors } from '../../../../styles/global';
 import * as S from './styles';
 import { getCurrencyFormat } from '../../../../utils/getCurrencyFormat';
 import { getEstimateColors } from '../../../../utils/colors/home';
-import {
-  getPreviousMonth,
-  getMounthAndYear,
-} from '../../../../utils/dateFormats';
+import { getMounthAndYear } from '../../../../utils/dateFormats';
+import { Invoice } from 'src/interfaces/CreditCards';
+import { useSelector } from 'react-redux';
+import State from '../../../../interfaces/State';
 
 interface IEstimate {
   id: string | number;
@@ -23,34 +20,30 @@ interface IEstimate {
 
 const Estimates = () => {
   const { theme } = useTheme();
-  const { incomes, expanses, accounts } = useAccount();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { incomes, incomesOnAccount } = useSelector(
+    (state: State) => state.incomes,
+  );
+  const { expanses, expansesOnAccount } = useSelector(
+    (state: State) => state.expanses,
+  );
+  const { creditCards } = useSelector((state: State) => state.creditCards);
+
   const [estimates, setEstimates] = useState<IEstimate[]>([]);
 
   const colors = getEstimateColors(theme);
+  const controller = new AbortController();
 
-  useEffect(() => {
-    let estimatesArr = [];
+  const calculateEstimateBalances = useCallback(() => {
     let count = 0;
     let currentMonth = new Date();
-    const prevMonth = getPreviousMonth(new Date());
     let sumBalanceLastMonth = 0;
 
     accounts.map(account => {
-      if (account.status === 'active') {
-        if (account.balances) {
-          const balanceLastMonth = account.balances.find(balance =>
-            isSameMonth(new Date(balance.month), prevMonth),
-          );
-
-          if (balanceLastMonth) {
-            sumBalanceLastMonth = sumBalanceLastMonth + balanceLastMonth.value;
-          } else {
-            sumBalanceLastMonth = sumBalanceLastMonth + account.initialValue;
-          }
-        }
-      }
+      sumBalanceLastMonth = sumBalanceLastMonth + account.balance;
     });
 
+    let estimatesArr = [];
     let balanceInThisMonth = sumBalanceLastMonth;
     let values = [];
 
@@ -66,6 +59,22 @@ const Estimates = () => {
               isSameMonth(new Date(i.startDate), currentMonth)),
       );
 
+      const incomesOnAccountInThisMonth = incomesOnAccount.filter(i =>
+        isSameMonth(new Date(i.month), currentMonth),
+      );
+
+      const incomesWithoutAccount = incomesInThisMonth.filter(
+        i =>
+          !incomesOnAccountInThisMonth.find(
+            inOnAccount => inOnAccount.incomeId === i.id,
+          ),
+      );
+
+      const estimateIncomes = incomesWithoutAccount.reduce(
+        (a, b) => a + (b['value'] || 0),
+        0,
+      );
+
       const expansesInThisMonth = expanses.filter(i =>
         i.endDate
           ? (isBefore(currentMonth, new Date(i.endDate)) ||
@@ -77,11 +86,36 @@ const Estimates = () => {
               isSameMonth(new Date(i.startDate), currentMonth)),
       );
 
-      const estimateIncomes = incomesInThisMonth.reduce(
-        (a, b) => a + (b['value'] || 0),
-        0,
+      const expansesOnAccountInThisMonth = expansesOnAccount.filter(exp =>
+        isSameMonth(new Date(exp.month), currentMonth),
       );
-      const estimateExpanses = expansesInThisMonth.reduce(
+
+      const invoicesInThisMonth: Invoice[] = [];
+
+      creditCards.map(card => {
+        const foundInvoice = card.Invoice.find(
+          invoice =>
+            isSameMonth(new Date(invoice.month), currentMonth) && invoice.paid,
+        );
+        if (foundInvoice) invoicesInThisMonth.push(foundInvoice);
+      });
+
+      if (invoicesInThisMonth) {
+        invoicesInThisMonth.map(invoice => {
+          invoice.ExpanseOnInvoice.map(expanse => {
+            expansesOnAccountInThisMonth.push(expanse as any);
+          });
+        });
+      }
+
+      const expansesWithoutAccount = expansesInThisMonth.filter(
+        i =>
+          !expansesOnAccountInThisMonth.find(
+            expOnAccount => expOnAccount.expanseId === i.id,
+          ),
+      );
+
+      const estimateExpanses = expansesWithoutAccount.reduce(
         (a, b) => a + (b['value'] || 0),
         0,
       );
@@ -120,7 +154,22 @@ const Estimates = () => {
       };
     });
     setEstimates(estimatesArr);
-  }, [accounts, incomes, expanses]);
+  }, [
+    accounts,
+    incomes,
+    expanses,
+    incomesOnAccount,
+    expansesOnAccount,
+    creditCards,
+  ]);
+
+  useEffect(() => {
+    calculateEstimateBalances();
+
+    return () => {
+      controller.abort();
+    };
+  }, [calculateEstimateBalances]);
 
   return (
     <S.EstimateView

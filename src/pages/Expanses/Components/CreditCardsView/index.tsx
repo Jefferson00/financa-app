@@ -8,16 +8,22 @@ import * as S from './styles';
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../../../routes';
 import CardContent from '../CardContent';
-import { useAccount } from '../../../../hooks/AccountContext';
 import { CreditCards } from '../../../../interfaces/CreditCards';
 import ModalComponent from '../../../../components/Modal';
-import api from '../../../../services/api';
 import { useAuth } from '../../../../hooks/AuthContext';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../../interfaces/State';
+import { deleteCreditCard } from '../../../../store/modules/CreditCards/fetchActions';
 
 export default function CreditCardsView() {
+  const dispatch = useDispatch<any>();
+  const { creditCards, loading } = useSelector(
+    (state: State) => state.creditCards,
+  );
+
   const navigation = useNavigation<Nav>();
   const { theme } = useTheme();
-  const { creditCards } = useAccount();
+
   const { user } = useAuth();
   const colors = getExpansesColors(theme);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -40,12 +46,14 @@ export default function CreditCardsView() {
   }, []);
 
   const handleRemoveCreditCard = useCallback(async () => {
-    if (creditCardSelected) {
+    if (user && creditCardSelected) {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
       try {
-        await api.delete(`creditCards/${creditCardSelected.id}/${user?.id}`);
+        dispatch(deleteCreditCard(creditCardSelected.id, user.id));
+
+        setCreditCardSelected(null);
       } catch (error: any) {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);
@@ -103,6 +111,9 @@ export default function CreditCardsView() {
         transparent
         title={loadingMessage}
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -114,6 +125,9 @@ export default function CreditCardsView() {
         title="Tem certeza que deseja excluir essa despesa em definitivo?"
         animationType="slide"
         handleConfirm={() => handleRemoveCreditCard()}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -125,34 +139,10 @@ export default function CreditCardsView() {
         title={errorMessage}
         subtitle="Tente novamente mais tarde"
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
     </>
   );
-}
-
-{
-  /* <S.ExpandableCard key={card.id} onPress={() => setOpen(o => !o)}>
-            <S.CardView backgroundColor={card.color}>
-              {open && (
-                <S.HiddenContent
-                  entering={FadeInUp}
-                  exiting={FadeOutUp}
-                  layout={Layout}>
-                  <View collapsable={false}>
-                    <S.ItemView>
-                      <S.DateTitle color="#fff">05 Nov</S.DateTitle>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                    </S.ItemView>
-                    <S.ItemView>
-                      <S.DateTitle color="#fff">06 Nov</S.DateTitle>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                      <S.ItemCard></S.ItemCard>
-                    </S.ItemView>
-                  </View>
-                </S.HiddenContent>
-              )}
-            </S.CardView>
-          </S.ExpandableCard> */
 }

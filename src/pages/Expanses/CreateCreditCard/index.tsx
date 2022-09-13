@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../hooks/AuthContext';
 import Menu from '../../../components/Menu';
@@ -11,7 +11,6 @@ import ControlledInput from '../../../components/ControlledInput';
 import Button from '../../../components/Button';
 import DatePicker from 'react-native-date-picker';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import api from '../../../services/api';
 import ModalComponent from '../../../components/Modal';
 import { useTheme } from '../../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
@@ -19,17 +18,20 @@ import { Nav } from '../../../routes';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useAccount } from '../../../hooks/AccountContext';
 import { useDate } from '../../../hooks/DateContext';
 import { isToday, lastDayOfMonth, startOfMonth } from 'date-fns';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
-import {
-  getCreateCreditCardColors,
-  getCreateExpansesColors,
-} from '../../../utils/colors/expanses';
+import { getCreateCreditCardColors } from '../../../utils/colors/expanses';
 import { ColorsList } from '../../../utils/cardsColors';
-import { Modal, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import { currencyToValue } from '../../../utils/masks';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../../interfaces/State';
+import {
+  createCreditCard,
+  updateCreditCard,
+} from '../../../store/modules/CreditCards/fetchActions';
+import { removeMessage } from '../../../store/modules/Feedbacks';
 
 interface CreateCreditCardProps {
   route?: {
@@ -51,16 +53,21 @@ const schema = yup.object({
 });
 
 export default function CreateCreditCard(props: CreateCreditCardProps) {
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<Nav>();
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { messages } = useSelector((state: State) => state.feedbacks);
+
   const { user } = useAuth();
-  const { accounts, getUserCreditCards } = useAccount();
+
   const { selectedDate } = useDate();
   const { theme } = useTheme();
+
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [creditCardState, setCreditCardState] = useState(
     props?.route?.params?.card,
   );
-  const [hasError, setHasError] = useState(false);
   const [colorState, setColorState] = useState(ColorsList[0].color);
   const [paymentDate, setPaymentDate] = useState(selectedDate);
   const [invoiceClosing, setInvoiceClosing] = useState(selectedDate);
@@ -68,10 +75,6 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   const [selectPaymentDateModal, setSelectPaymentDateModal] = useState(false);
   const [selectInvoiceClosingModal, setSelectInvoiceClosingModal] =
     useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const colors = getCreateCreditCardColors(theme);
 
@@ -81,9 +84,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       limit: creditCardState?.limit
         ? getCurrencyFormat(creditCardState?.limit)
         : getCurrencyFormat(0),
-      receiptDefault:
-        creditCardState?.receiptDefault ||
-        accounts.filter(a => a.status === 'active')[0].id,
+      receiptDefault: creditCardState?.receiptDefault || accounts[0].id,
     },
     resolver: yupResolver(schema),
   });
@@ -106,39 +107,51 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   };
 
   const handleOkSucess = () => {
-    setEditSucessfully(false);
+    handleCloseModal();
     setTimeout(() => navigation.navigate('Expanses'), 300);
   };
 
-  const handleSubmitCreditCard = async (data: FormData) => {
-    setIsSubmitting(true);
-    const creditCardInput = {
-      name: data.name,
-      userId: user?.id,
-      limit: Number(currencyToValue(data.limit)),
-      paymentDate,
-      invoiceClosing,
-      color: colorState,
-      receiptDefault: data.receiptDefault,
-    };
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
+  };
 
-    try {
+  const handleSubmitCreditCard = async (data: FormData) => {
+    if (user) {
+      setIsSubmitting(true);
+      const creditCardInput = {
+        name: data.name,
+        userId: user?.id,
+        limit: Number(currencyToValue(data.limit)),
+        paymentDate,
+        invoiceClosing,
+        color: colorState,
+        receiptDefault: data.receiptDefault,
+      };
+
       if (creditCardState) {
-        await api.put(`creditCards/${creditCardState.id}`, creditCardInput);
+        dispatch(updateCreditCard(creditCardInput, creditCardState.id));
       } else {
-        await api.post(`creditCards`, creditCardInput);
+        dispatch(createCreditCard(creditCardInput));
       }
 
-      await getUserCreditCards();
-      setEditSucessfully(true);
-    } catch (error: any) {
-      if (error?.response?.data?.message)
-        setErrorMessage(error?.response?.data?.message);
-      setHasError(true);
-    } finally {
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    if (creditCardState?.color) setColorState(creditCardState?.color);
+    if (creditCardState?.paymentDate)
+      setPaymentDate(new Date(creditCardState?.paymentDate));
+    if (creditCardState?.invoiceClosing)
+      setInvoiceClosing(new Date(creditCardState?.invoiceClosing));
+  }, [creditCardState]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
 
   return (
     <>
@@ -149,7 +162,10 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingBottom: RFPercentage(15),
+          }}>
           <S.Title color={colors.titleColor}>
             {creditCardState ? `Editar Cartão` : `Novo Cartão`}
           </S.Title>
@@ -187,7 +203,11 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
               <S.SelectOption
                 backgroundColor={colors.inputBackground}
                 onPress={() => setColorSelectModal(true)}>
-                <Icon name="color-palette" size={RFPercentage(4)} />
+                <Icon
+                  name="color-palette"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
                 <View
                   style={{
                     marginHorizontal: RFPercentage(2),
@@ -208,8 +228,14 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 backgroundColor={colors.inputBackground}
                 onPress={() => setSelectPaymentDateModal(true)}
                 style={{ width: RFPercentage(20) }}>
-                <Icon name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+                <Icon
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  style={{ marginHorizontal: RFPercentage(2) }}
+                  color={colors.textColor}>
                   {isToday(paymentDate)
                     ? 'Hoje'
                     : getDayOfTheMounth(paymentDate)}
@@ -225,8 +251,14 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 backgroundColor={colors.inputBackground}
                 onPress={() => setSelectInvoiceClosingModal(true)}
                 style={{ width: RFPercentage(20) }}>
-                <Icon name="calendar" size={RFPercentage(4)} />
-                <S.Option style={{ marginHorizontal: RFPercentage(2) }}>
+                <Icon
+                  name="calendar"
+                  size={RFPercentage(4)}
+                  color={colors.textColor}
+                />
+                <S.Option
+                  style={{ marginHorizontal: RFPercentage(2) }}
+                  color={colors.textColor}>
                   {isToday(invoiceClosing)
                     ? 'Hoje'
                     : getDayOfTheMounth(invoiceClosing)}
@@ -247,7 +279,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                 ? creditCardState.receiptDefault
                 : ''
             }
-            selectItems={accounts.filter(a => a.status === 'active')}
+            selectItems={accounts}
           />
 
           <S.ButtonContainer>
@@ -301,6 +333,8 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           type="select"
           visible={colorSelectModal}
           transparent
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
           selectTitle="Selecione a cor do cartão"
           animationType="slide"
           selectList={ColorsList}
@@ -319,7 +353,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
                   borderRadius: 10,
                   backgroundColor: item.color,
                   borderWidth: colorState === item.color ? 3 : 0,
-                  borderColor: '#000',
+                  borderColor: colors.textColor,
                 }}
               />
             </TouchableOpacity>
@@ -328,34 +362,36 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
 
         <ModalComponent
           type="loading"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
           visible={isSubmitting}
           transparent
           title={creditCardState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"
+          theme={theme}
         />
-        <ModalComponent
-          type="error"
-          visible={hasError}
-          handleCancel={() => setHasError(false)}
-          onRequestClose={() => setHasError(false)}
-          transparent
-          title={errorMessage}
-          subtitle="Tente novamente mais tarde"
-          animationType="slide"
-        />
-        <ModalComponent
-          type="success"
-          visible={editSucessfully}
-          transparent
-          title={
-            creditCardState
-              ? 'Cartão atualizado com sucesso!'
-              : 'Cartão criado com sucesso!'
-          }
-          animationType="slide"
-          handleCancel={() => setEditSucessfully(false)}
-          onSucessOkButton={handleOkSucess}
-        />
+        {messages && (
+          <ModalComponent
+            type={messages.type}
+            visible={showMessage}
+            handleCancel={handleCloseModal}
+            onRequestClose={handleCloseModal}
+            transparent
+            title={messages?.message}
+            subtitle={
+              messages?.type === 'error'
+                ? 'Tente novamente mais tarde'
+                : undefined
+            }
+            animationType="slide"
+            backgroundColor={colors.modalBackground}
+            color={colors.textColor}
+            theme={theme}
+            onSucessOkButton={
+              messages?.type === 'success' ? handleOkSucess : undefined
+            }
+          />
+        )}
       </S.Container>
       <Menu />
     </>

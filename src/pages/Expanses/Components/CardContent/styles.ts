@@ -67,9 +67,13 @@ export const HiddenContent = styled(Animated.View)<CardProps>`
 `;
 
 export const ItemView = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
+  margin: 0 ${RFPercentage(3.2)}px;
 
-  padding-bottom: ${RFPercentage(3.2)}px;
+  margin-bottom: ${RFPercentage(3.2)}px;
+`;
+
+export const HighlightContainer = styled.View`
+  background-color: #ffffff5a;
 `;
 
 export const ItemCard = styled.Pressable`
@@ -137,4 +141,25 @@ export const DeleteButton = styled(RectButton)`
   padding-left: ${RFPercentage(6)}px;
 
   right: ${RFPercentage(1)}px;
+`;
+
+export const EditCardButton = styled.TouchableOpacity`
+  height: ${RFPercentage(6)}px;
+  width: ${RFPercentage(6)}px;
+  border-radius: ${RFPercentage(3)}px;
+  background-color: #fff;
+
+  justify-content: center;
+  align-items: center;
+`;
+
+export const DeleteCardButton = styled.TouchableOpacity`
+  height: ${RFPercentage(6)}px;
+  width: ${RFPercentage(6)}px;
+  border-radius: ${RFPercentage(3)}px;
+  background-color: #fff;
+  margin-left: ${RFPercentage(2)}px;
+
+  justify-content: center;
+  align-items: center;
 `;

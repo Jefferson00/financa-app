@@ -31,3 +31,20 @@ export const Title = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;
 `;
+
+export const AvatarContainer = styled.View`
+  position: relative;
+`;
+
+export const UpdateAvatarButton = styled.TouchableOpacity`
+  position: absolute;
+  bottom: 10%;
+  right: 0;
+  z-index: 5;
+  width: ${RFPercentage(4.5)}px;
+  height: ${RFPercentage(4.5)}px;
+  background: #4876ac;
+  border-radius: ${RFPercentage(2.25)}px;
+  align-items: center;
+  justify-content: center;
+`;

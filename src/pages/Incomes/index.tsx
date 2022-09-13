@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
-import { differenceInMonths, isAfter, isBefore, isSameMonth } from 'date-fns';
+import { differenceInCalendarMonths, isBefore } from 'date-fns';
 
 import * as S from './styles';
 
@@ -17,62 +16,65 @@ import ItemCard from '../../components/ItemCard';
 import ModalComponent from '../../components/Modal';
 import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 
-import { useAccount } from '../../hooks/AccountContext';
 import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useAuth } from '../../hooks/AuthContext';
 
 import { Nav } from '../../routes';
-import { Income, IncomeList } from '../../interfaces/Income';
-import {
-  getCurrentIncomes,
-  getEstimateIncomes,
-} from '../../utils/getCurrentBalance';
+import { IIncomes } from '../../interfaces/Income';
 import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
-import {
-  CreateIncomeOnAccount,
-  IncomeOnAccount,
-} from '../../interfaces/IncomeOnAccount';
+import { ICreateIncomeOnAccount } from '../../interfaces/IncomeOnAccount';
 import { getIncomesColors } from '../../utils/colors/incomes';
-import api from '../../services/api';
 import { reduceString } from '../../utils/reduceString';
+import { useDispatch, useSelector } from 'react-redux';
+import State from '../../interfaces/State';
+import {
+  createIncomeOnAccount,
+  deleteIncome,
+  deleteIncomeOnAccount,
+} from '../../store/modules/Incomes/fetchActions';
+import { getCurrentIteration } from '../../utils/getCurrentIteration';
+import {
+  getItemsInThisMonth,
+  getItemsOnAccountThisMonth,
+  listByDate,
+} from '../../utils/listByDate';
+import { IIncomesOnAccount } from '../../interfaces/Account';
+import { removeMessage } from '../../store/modules/Feedbacks';
+
+interface ItemType extends IIncomes, IIncomesOnAccount {}
 
 export default function Incomes() {
   const navigation = useNavigation<Nav>();
-  const {
-    incomes,
-    handleCreateIncomeOnAccount,
-    accounts,
-    incomesOnAccounts,
-    accountSelected,
-    handleUpdateAccountBalance,
-    getUserIncomesOnAccount,
-    getUserIncomes,
-    handleClearCache,
-  } = useAccount();
+  const dispatch = useDispatch<any>();
+
+  const { accounts } = useSelector((state: State) => state.accounts);
+  const { messages } = useSelector((state: State) => state.feedbacks);
+  const { incomes, incomesOnAccount, loading } = useSelector(
+    (state: State) => state.incomes,
+  );
+
   const { user } = useAuth();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
   const [incomesByDate, setIncomesByDate] = useState<
-    { day: number; incomes: IncomeList[] }[]
+    { day: number; items: ItemType[] }[]
   >([]);
   const [incomeSelected, setIncomeSelected] = useState<any>();
-  const [currentIncomes, setCurrentIncomes] = useState<Income[]>();
-  const [currentIncomesOnAccount, setCurrentIncomesOnAccount] =
-    useState<IncomeOnAccount[]>();
   const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
-  const [confirmUnreceivedVisible, setConfirmUnreceivedVisible] =
-    useState(false);
-  const [currentTotalIncomes, setCurrentTotalIncomes] = useState(0);
-  const [estimateTotalIncomes, setEstimateTotalIncomes] = useState(0);
+  const [
+    deleteReceiveConfirmationVisible,
+    setDeleteReceiveConfirmationVisible,
+  ] = useState(false);
+
+  const [showMessage, setShowMessage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [editSucessfully, setEditSucessfully] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
+  const [totalCurrentIncomes, setTotalCurrentIncomes] = useState(0);
+  const [totalEstimateIncomes, setTotalEstimateIncomes] = useState(0);
+  const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
+    null,
   );
 
   const colors = getIncomesColors(theme);
@@ -81,254 +83,179 @@ export default function Incomes() {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
   };
 
-  const MoneyIcon = () => {
-    return (
-      <MaterialIcon
-        name="attach-money"
-        size={RFPercentage(6)}
-        color={colors.primaryColor}
-      />
-    );
-  };
-
   const buttonColors = {
     PRIMARY_BACKGROUND: colors.primaryColor,
     SECOND_BACKGROUND: colors.secondaryColor,
     TEXT: '#fff',
   };
 
-  const handleOkSucess = () => {
-    setConfirmReceivedVisible(false);
-    setConfirmUnreceivedVisible(false);
-    setEditSucessfully(false);
+  const handleCloseModal = () => {
+    setShowMessage(false);
+    dispatch(removeMessage());
   };
 
-  const handleRemove = useCallback(
-    async (income: IncomeList) => {
-      setIsDeleteModalVisible(false);
+  const handleDelete = useCallback(async () => {
+    setIsDeleteModalVisible(false);
+    if (user && incomeSelected) {
       setLoadingMessage('Excluindo...');
       setIsSubmitting(true);
-      try {
-        if (income?.incomeId) {
-          await handleToggleIncomeOnAccount(income);
-          await api.delete(`incomes/${income.incomeId}/${user?.id}`);
-          handleClearCache();
-          await getUserIncomes();
-          return;
-        }
-        await api.delete(`incomes/${income.id}/${user?.id}`);
-        handleClearCache();
-        await getUserIncomes();
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          setErrorMessage(error?.response?.data?.message);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [user, incomes],
-  );
+      dispatch(deleteIncome(incomeSelected.id, user.id));
+      setIncomeSelected(null);
+      setIsSubmitting(false);
+    }
+  }, [user, incomes, incomeSelected]);
 
-  const handleToggleIncomeOnAccount = useCallback(
-    async (income: any) => {
-      if (user) {
-        if (income.month) {
-          setLoadingMessage('Excluindo recebimento...');
-          setIsSubmitting(true);
-          try {
-            await api.delete(`incomes/onAccount/${income.id}/${user.id}`);
-
-            const account = accounts.find(acc => acc.id === income.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              income.value,
-              account,
-              'Expanse',
-            );
-
-            await getUserIncomesOnAccount();
-            setConfirmUnreceivedVisible(false);
-            return;
-          } catch (error: any) {
-            if (error?.response?.data?.message)
-              setErrorMessage(error?.response?.data?.message);
-            setHasError(true);
-          } finally {
-            setIsSubmitting(false);
-          }
-        } else {
-          setLoadingMessage('Recebendo...');
-          setIsSubmitting(true);
-          const input: CreateIncomeOnAccount = {
-            userId: user.id,
-            accountId: income.receiptDefault || accountSelected?.id,
-            incomeId: income?.id,
-            month: selectedDate,
-            value: income.value,
-            name: income.name,
-            recurrence: income.endDate
-              ? `${
-                  differenceInMonths(selectedDate, new Date(income.startDate)) +
-                  1
-                }/${
-                  differenceInMonths(selectedDate, new Date(income.endDate)) + 1
-                }`
-              : 'mensal',
-          };
-          try {
-            await handleCreateIncomeOnAccount(input);
-
-            const account = accounts.find(acc => acc.id === input.accountId);
-
-            const accountLastBalance = account?.balances?.find(balance => {
-              if (isSameMonth(new Date(balance.month), selectedDate)) {
-                return balance;
-              }
-            });
-
-            await handleUpdateAccountBalance(
-              accountLastBalance,
-              input.value,
-              account,
-              'Income',
-            );
-
-            await getUserIncomesOnAccount();
-            setEditSucessfully(true);
-          } catch (error: any) {
-            if (error?.response?.data?.message)
-              setErrorMessage(error?.response?.data?.message);
-            setHasError(true);
-          } finally {
-            setIsSubmitting(false);
-          }
-        }
-      }
-    },
-    [
-      accounts,
-      handleCreateIncomeOnAccount,
-      accountSelected,
-      selectedDate,
-      user,
-    ],
-  );
-
-  useEffect(() => {
-    const incomesInThisMonth = incomes.filter(i =>
-      i.endDate
-        ? (isBefore(selectedDate, new Date(i.endDate)) ||
-            isSameMonth(new Date(i.endDate), selectedDate)) &&
-          (isAfter(selectedDate, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), selectedDate))
-        : i.endDate === null &&
-          (isAfter(selectedDate, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), selectedDate)),
-    );
-
-    setCurrentIncomes(incomesInThisMonth);
-
-    const incomesOnAccountInThisMonth = incomesOnAccounts.filter(i =>
-      isSameMonth(new Date(i.month), selectedDate),
-    );
-
-    setCurrentIncomesOnAccount(incomesOnAccountInThisMonth);
-
-    const incomesWithoutAccount = incomesInThisMonth.filter(income => {
-      if (incomesOnAccountInThisMonth.find(i => i.incomeId === income.id)) {
-        // console.log('ta pago', income);
-        return false;
-      } else {
-        // console.log('não ta pago', income);
-        return true;
-      }
-    });
-
-    const incomesOrdered = incomesWithoutAccount.sort(
-      (a, b) =>
-        new Date(a.receiptDate).getDate() - new Date(b.receiptDate).getDate(),
-    );
-    const incomesOrderedByDay: any[] = [];
-
-    incomesOrdered.filter(entry => {
-      if (
-        incomesOrderedByDay.find(
-          item => item.day === new Date(entry.receiptDate).getDate(),
-        )
-      ) {
-        return false;
-      }
-      incomesOrderedByDay.push({
-        day: new Date(entry.receiptDate).getDate(),
-      });
-      return true;
-    });
-
-    incomesOnAccountInThisMonth.filter(entry => {
-      if (
-        incomesOrderedByDay.find(
-          item => item.day === new Date(entry.month).getDate(),
-        )
-      ) {
-        return false;
-      }
-      incomesOrderedByDay.push({
-        day: new Date(entry.month).getDate(),
-      });
-      return true;
-    });
-
-    incomesOrderedByDay.map(item => {
-      item.incomes = incomesWithoutAccount.filter(
-        income => new Date(income.receiptDate).getDate() === item.day,
+  const handleDeleteIncomeOnAccount = async () => {
+    if (user && incomeSelected) {
+      const findAccount = accounts.find(
+        acc =>
+          acc.id === accountIdSelected ||
+          acc.id === incomeSelected.receiptDefault,
       );
-      item.incomes = [
-        ...item.incomes,
-        ...incomesOnAccountInThisMonth.filter(income => {
-          if (new Date(income.month).getDate() === item.day) {
-            Object.assign(income, {
-              income: incomesInThisMonth.filter(
-                i => i.id === income.incomeId,
-              )[0],
-            });
-            return income;
-          }
-        }),
-      ];
-    });
 
-    setIncomesByDate(incomesOrderedByDay.sort((a, b) => a.day - b.day));
-    setIsLoading(false);
-  }, [incomes, incomesOnAccounts, selectedDate]);
-
-  useEffect(() => {
-    if (currentIncomes && currentIncomesOnAccount) {
-      const currentTotal = getCurrentIncomes(currentIncomesOnAccount);
-      setCurrentTotalIncomes(currentTotal);
-      const currentMonth = new Date();
-      currentMonth.setDate(1);
-      currentMonth.setUTCHours(0, 0, 0, 0);
-      if (isBefore(selectedDate, currentMonth)) {
-        setEstimateTotalIncomes(currentTotal);
-      } else {
-        setEstimateTotalIncomes(getEstimateIncomes(currentIncomes));
+      if (findAccount) {
+        setLoadingMessage('Excluindo recebimento...');
+        setIsSubmitting(true);
+        dispatch(
+          deleteIncomeOnAccount(incomeSelected.id, user.id, findAccount),
+        );
+        setIsSubmitting(false);
+        setDeleteReceiveConfirmationVisible(false);
+        setIncomeSelected(null);
+        setAccountIdSelected(null);
       }
     }
-  }, [currentIncomesOnAccount, currentIncomes, selectedDate]);
+  };
+
+  const handleReceive = async () => {
+    if (user && incomeSelected) {
+      const findAccount = accounts.find(
+        acc =>
+          acc.id === accountIdSelected ||
+          acc.id === incomeSelected.receiptDefault,
+      );
+
+      const currentPart = incomeSelected.endDate
+        ? differenceInCalendarMonths(
+            new Date(incomeSelected.endDate),
+            new Date(),
+          )
+        : null;
+
+      const incomeOnAccountToCreate: ICreateIncomeOnAccount = {
+        userId: user.id,
+        accountId: accountIdSelected || incomeSelected.receiptDefault,
+        incomeId: incomeSelected.id,
+        month: new Date(),
+        value: incomeSelected.value,
+        name: incomeSelected.name,
+        recurrence:
+          incomeSelected.iteration === 'mensal'
+            ? 'mensal'
+            : getCurrentIteration(currentPart, incomeSelected.iteration),
+      };
+
+      if (findAccount) {
+        setLoadingMessage('Recebendo...');
+        setIsSubmitting(true);
+        dispatch(createIncomeOnAccount(incomeOnAccountToCreate, findAccount));
+        setIsSubmitting(false);
+      }
+
+      setConfirmReceivedVisible(false);
+      setIncomeSelected(null);
+    }
+  };
+
+  const handleOpenConfirmReceiveModal = (income: ItemType) => {
+    setConfirmReceivedVisible(true);
+    setAccountIdSelected(income.receiptDefault);
+    setIncomeSelected(income);
+  };
+
+  const handleOpenConfirmUnreceiveModal = (income: ItemType) => {
+    setDeleteReceiveConfirmationVisible(true);
+    setAccountIdSelected(income.accountId);
+    setIncomeSelected(income);
+  };
+
+  const handleOpenDeleteModal = (income: ItemType) => {
+    setIncomeSelected(income.income ? income.income : income);
+    setIsDeleteModalVisible(true);
+  };
+
+  useEffect(() => {
+    const incomesList = listByDate(incomes, incomesOnAccount, selectedDate);
+    setIncomesByDate(incomesList);
+  }, [incomes, incomesOnAccount, selectedDate]);
+
+  useEffect(() => {
+    const currentMonth = new Date();
+    currentMonth.setDate(1);
+    currentMonth.setUTCHours(0, 0, 0, 0);
+
+    const currentIncomes = getItemsInThisMonth(incomes, selectedDate);
+    const currentIncomesOnAccount = getItemsOnAccountThisMonth(
+      incomesOnAccount,
+      selectedDate,
+    );
+    const currentTotal = currentIncomesOnAccount.reduce(
+      (a, b) => a + (b['value'] || 0),
+      0,
+    );
+    setTotalCurrentIncomes(currentTotal);
+
+    if (isBefore(selectedDate, currentMonth)) {
+      setTotalEstimateIncomes(currentTotal);
+    } else {
+      const incomesWithoutAccount = currentIncomes.filter(
+        i =>
+          !currentIncomesOnAccount.find(
+            inOnAccount => inOnAccount.incomeId === i.id,
+          ),
+      );
+      setTotalEstimateIncomes(
+        [...incomesWithoutAccount, ...currentIncomesOnAccount].reduce(
+          (a, b) => a + (b['value'] || 0),
+          0,
+        ),
+      );
+    }
+  }, [incomes, incomesOnAccount, selectedDate]);
+
+  useEffect(() => {
+    if (messages) {
+      setShowMessage(true);
+    }
+  }, [messages]);
+
+  const verifyRecurrence = (income: ItemType) => {
+    let currentPart = null;
+    if (income.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(income.endDate),
+        selectedDate,
+      );
+    } else if (income.income && income.income.endDate) {
+      currentPart = differenceInCalendarMonths(
+        new Date(income.income.endDate),
+        selectedDate,
+      );
+    }
+    if (income.iteration && income.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, income.iteration);
+    }
+    if (income.income && income.income.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, income.income.iteration);
+    }
+    return '';
+  };
 
   return (
     <>
       <Header />
       <S.Container>
-        {isLoading && (
+        {loading && (
           <ContentLoader
             viewBox="0 0 269 140"
             height={140}
@@ -340,7 +267,7 @@ export default function Incomes() {
             <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
           </ContentLoader>
         )}
-        {!isLoading && (
+        {!loading && (
           <>
             <Card
               id={'income'}
@@ -357,8 +284,8 @@ export default function Incomes() {
               )}
               title="Entradas"
               values={{
-                current: currentTotalIncomes,
-                estimate: estimateTotalIncomes,
+                current: totalCurrentIncomes,
+                estimate: totalEstimateIncomes,
               }}
               type={null}
             />
@@ -390,7 +317,7 @@ export default function Incomes() {
         />
       </S.ButtonContainer>
 
-      {isLoading ? (
+      {loading ? (
         <ContentLoader
           viewBox="0 0 327 100"
           height={100}
@@ -419,13 +346,14 @@ export default function Incomes() {
                   {item.day} de {getMonthName(selectedDate)}
                 </S.DateTitle>
 
-                {item.incomes.map(income => (
+                {item.items.map(income => (
                   <ItemCard
                     key={income.id}
-                    icon={MoneyIcon}
-                    title={income?.name || income?.income?.name}
+                    category={income.category}
+                    title={income.name}
                     value={income.value}
                     received={!!income?.paymentDate}
+                    recurrence={verifyRecurrence(income)}
                     receivedMessage={
                       income.paymentDate
                         ? `Recebido em ${getDayOfTheMounth(
@@ -438,10 +366,9 @@ export default function Incomes() {
                         : 'Receber'
                     }
                     mainColor={colors.primaryColor}
-                    handleRemove={() => {
-                      setIncomeSelected(income);
-                      setIsDeleteModalVisible(true);
-                    }}
+                    textColor={colors.textColor}
+                    switchColors={colors.switchColors}
+                    handleRemove={() => handleOpenDeleteModal(income)}
                     backgroundColor={colors.secondaryCardLoader}
                     onRedirect={() => {
                       navigation.navigate('CreateIncome', {
@@ -452,11 +379,10 @@ export default function Incomes() {
                       });
                     }}
                     onSwitchChange={() => {
-                      setIncomeSelected(income);
-                      if (income?.month) {
-                        setConfirmUnreceivedVisible(true);
+                      if (!income?.paymentDate) {
+                        handleOpenConfirmReceiveModal(income);
                       } else {
-                        setConfirmReceivedVisible(true);
+                        handleOpenConfirmUnreceiveModal(income);
                       }
                     }}
                   />
@@ -465,7 +391,7 @@ export default function Incomes() {
             ))}
         </ScrollView>
       )}
-      {!isLoading && incomesByDate.length === 0 && (
+      {!loading && incomesByDate.length === 0 && (
         <S.Empty>
           <Icon
             name="close-circle"
@@ -486,8 +412,11 @@ export default function Incomes() {
         title="Em qual conta a entrada será recebida?"
         animationType="slide"
         defaulAccount={incomeSelected?.receiptDefault}
-        handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
+        handleConfirm={handleReceive}
         accounts={accounts.filter(a => a.status === 'active')}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
+        theme={theme}
       />
 
       <ModalComponent
@@ -496,26 +425,31 @@ export default function Incomes() {
         transparent
         title={loadingMessage}
         animationType="slide"
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
-      <ModalComponent
-        type="error"
-        visible={hasError}
-        handleCancel={() => setHasError(false)}
-        onRequestClose={() => setHasError(false)}
-        transparent
-        title={errorMessage}
-        subtitle="Tente novamente mais tarde"
-        animationType="slide"
-      />
-      <ModalComponent
-        type="success"
-        visible={editSucessfully}
-        transparent
-        title="Entrada recebida com sucesso!"
-        animationType="slide"
-        handleCancel={() => setEditSucessfully(false)}
-        onSucessOkButton={handleOkSucess}
-      />
+      {messages && (
+        <ModalComponent
+          type={messages.type}
+          visible={showMessage}
+          handleCancel={handleCloseModal}
+          onRequestClose={handleCloseModal}
+          transparent
+          title={messages?.message}
+          subtitle={
+            messages?.type === 'error'
+              ? 'Tente novamente mais tarde'
+              : undefined
+          }
+          animationType="slide"
+          backgroundColor={colors.modalBackground}
+          color={colors.textColor}
+          theme={theme}
+          onSucessOkButton={
+            messages?.type === 'success' ? handleCloseModal : undefined
+          }
+        />
+      )}
 
       <ModalComponent
         type="confirmation"
@@ -525,18 +459,22 @@ export default function Incomes() {
         transparent
         title="Tem certeza que deseja excluir essa despesa em definitivo?"
         animationType="slide"
-        handleConfirm={() => handleRemove(incomeSelected)}
+        handleConfirm={handleDelete}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
 
       <ModalComponent
         type="confirmation"
-        visible={confirmUnreceivedVisible}
-        handleCancel={() => setConfirmUnreceivedVisible(false)}
-        onRequestClose={() => setConfirmUnreceivedVisible(false)}
+        visible={deleteReceiveConfirmationVisible}
+        handleCancel={() => setDeleteReceiveConfirmationVisible(false)}
+        onRequestClose={() => setDeleteReceiveConfirmationVisible(false)}
         transparent
         title="Tem certeza? Essa entrada será marcada como não recebida."
         animationType="slide"
-        handleConfirm={() => handleToggleIncomeOnAccount(incomeSelected)}
+        handleConfirm={handleDeleteIncomeOnAccount}
+        backgroundColor={colors.modalBackground}
+        color={colors.textColor}
       />
       <Menu />
     </>

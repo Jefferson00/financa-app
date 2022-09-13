@@ -17,6 +17,10 @@ export const getThemeScreenColors = (theme: ColorSchemeName) => {
     theme === 'dark'
       ? Colors.BLUE_SECONDARY_LIGHTER
       : Colors.BLUE_SECONDARY_LIGHTER;
+  const modalBackground =
+    theme === 'dark'
+      ? Colors.CARD_BACKGROUND_DARKER
+      : Colors.BACKGROUND_LIGTHER;
 
   return {
     titleColor,
@@ -25,5 +29,6 @@ export const getThemeScreenColors = (theme: ColorSchemeName) => {
     falseTrackColor,
     thumbColor,
     falseThumbColor,
+    modalBackground,
   };
 };
