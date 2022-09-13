@@ -11,9 +11,9 @@
 </h3>
 
 <p align="center">
- <img alt="GitHub language count" src="https://img.shields.io/github/languages/count/Jefferson00/FinancaWeb?color=blue">
+ <img alt="GitHub language count" src="https://img.shields.io/github/languages/count/Jefferson00/financa-app?color=blue">
   <img alt="Version" src="https://img.shields.io/badge/version-1.0-blue">
-  <img alt="Repository size" src="https://img.shields.io/github/repo-size/Jefferson00/FinancaWeb?color=blue">
+  <img alt="Repository size" src="https://img.shields.io/github/repo-size/Jefferson00/financa-app?color=blue">
   <a href="https://www.linkedin.com/in/jefferson-c-silva-aa1b7b1a9/">
     <img alt="Made by Jefferson" src="https://img.shields.io/badge/made%20by-Jefferson-blue">
   </a>
