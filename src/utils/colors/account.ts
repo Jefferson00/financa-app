@@ -7,7 +7,7 @@ export const getAccountColors = (theme: ColorSchemeName) => {
   const textColor =
     theme === 'dark' ? Colors.MAIN_TEXT_DARKER : Colors.MAIN_TEXT_LIGHTER;
   const inputBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : '#EFF6FF';
   const deleteButtonColor =
     theme === 'dark'
       ? Colors.EXPANSE_PRIMARY_DARKER

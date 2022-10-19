@@ -33,6 +33,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { ICreateAccount, IUpdateAccount } from '../../interfaces/Account';
 import State from '../../interfaces/State';
 import { removeMessage } from '../../store/modules/Feedbacks';
+import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
+import { View } from 'react-native';
 interface ProfileProps {
   route?: {
     key: string;
@@ -67,15 +69,14 @@ export default function Account(props: ProfileProps) {
   const { incomesOnAccount } = useSelector((state: State) => state.incomes);
   const { expansesOnAccount } = useSelector((state: State) => state.expanses);
   const { messages } = useSelector((state: State) => state.feedbacks);
+  const { loading } = useSelector((state: State) => state.accounts);
+  const { creditCards } = useSelector((state: State) => state.creditCards);
   const { theme } = useTheme();
   const colors = getAccountColors(theme);
 
   const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
     useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [accountState, setAccountState] = useState(
-    props?.route?.params?.account,
-  );
+  const [accountState] = useState(props?.route?.params?.account);
   const [showMessage, setShowMessage] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
 
@@ -87,9 +88,10 @@ export default function Account(props: ProfileProps) {
   const canDelete = useCallback(() => {
     return (
       !incomesOnAccount.find(i => i.accountId === accountState.id) &&
-      !expansesOnAccount.find(i => i.accountId === accountState.id)
+      !expansesOnAccount.find(i => i.accountId === accountState.id) &&
+      !creditCards.find(c => c.receiptDefault === accountState.id)
     );
-  }, [expansesOnAccount, incomesOnAccount, accountState]);
+  }, [expansesOnAccount, incomesOnAccount, accountState, creditCards]);
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -119,7 +121,6 @@ export default function Account(props: ProfileProps) {
     if (user) {
       if (accountState) {
         setLoadingMessage('Atualizando...');
-        setIsSubmitting(true);
         const accountToUpdate: IUpdateAccount = {
           ...data,
           type:
@@ -130,7 +131,6 @@ export default function Account(props: ProfileProps) {
         await dispatch(updateAccount(accountToUpdate, accountState.id));
       } else {
         setLoadingMessage('Criando...');
-        setIsSubmitting(true);
         const accountToCreate: ICreateAccount = {
           ...data,
           type:
@@ -143,7 +143,6 @@ export default function Account(props: ProfileProps) {
         };
         dispatch(createAccount(accountToCreate));
       }
-      setIsSubmitting(false);
     }
   };
 
@@ -151,9 +150,7 @@ export default function Account(props: ProfileProps) {
     if (user && accountState) {
       setDeleteConfirmationVisible(false);
       setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
       dispatch(deleteAccount(accountState.id, user.id));
-      setIsSubmitting(false);
     }
   }, [user, accountState]);
 
@@ -170,18 +167,16 @@ export default function Account(props: ProfileProps) {
 
   return (
     <>
-      <Header reduced showMonthSelector={false} />
+      <ReducedHeader title={accountState ? `Editar Conta` : `Nova Conta`} />
       <S.Container>
         <KeyboardAwareScrollView
           resetScrollToCoords={{ x: 0, y: 0 }}
           scrollEnabled
           showsVerticalScrollIndicator={false}
           style={{ width: '100%' }}
-          contentContainerStyle={{ alignItems: 'center' }}>
-          <S.Title color={colors.titleColor}>
-            {accountState ? `Editar Conta` : `Nova Conta`}
-          </S.Title>
-
+          contentContainerStyle={{
+            alignItems: 'center',
+          }}>
           <ControlledInput
             label="Nome"
             background={colors.inputBackground}
@@ -223,24 +218,6 @@ export default function Account(props: ProfileProps) {
                 }
               />
             </S.Col>
-
-            <S.SwitchContainer>
-              <S.Label
-                color={colors.textColor}
-                style={{ width: '100%', textAlign: 'right' }}>
-                Ativo
-              </S.Label>
-              <ControlledInput
-                type="switch"
-                background="transparent"
-                textColor={colors.textColor}
-                name="status"
-                control={control}
-                value={accountState?.status ? accountState.status : 'active'}
-                thumbColor={colors.thumbColor}
-                trackColor={colors.trackColor}
-              />
-            </S.SwitchContainer>
           </S.Row>
 
           <S.ButtonContainer>
@@ -248,7 +225,6 @@ export default function Account(props: ProfileProps) {
               title={accountState ? 'Salvar' : 'Criar'}
               colors={colors.saveButtonColors}
               icon={SaveIcon}
-              style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitAccount)}
             />
             {accountState && canDelete() && (
@@ -266,7 +242,7 @@ export default function Account(props: ProfileProps) {
 
         <ModalComponent
           type="loading"
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={loadingMessage}
           animationType="slide"

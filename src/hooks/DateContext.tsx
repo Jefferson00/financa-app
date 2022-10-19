@@ -16,16 +16,17 @@ export const DateProvider: React.FC = ({ children }) => {
   function changeMonth(order: 'PREV' | 'NEXT') {
     return new Promise((resolve, reject) => {
       const currentMonth = selectedDate.getMonth();
-      setTimeout(() => {
-        setSelectedDate(
-          new Date(
-            selectedDate.setMonth(
-              order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
-            ),
+      setSelectedDate(
+        new Date(
+          selectedDate.setMonth(
+            order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
           ),
-        );
-        resolve(true);
-      }, 200);
+        ),
+      );
+      resolve(true);
+      /*      setTimeout(() => {
+       
+      }, 50); */
     });
   }
 

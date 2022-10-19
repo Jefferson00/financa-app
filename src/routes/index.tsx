@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '../hooks/AuthContext';
 import AuthRoutes from './auth.routes';
 import AppRoutes from './app.routes';
-import { Image, View } from 'react-native';
+import { Image, StatusBar, View } from 'react-native';
 import { useTheme } from '../hooks/ThemeContext';
 import SecurityAccess from '../pages/SecurityAccess';
 import { useSecurity } from '../hooks/SecurityContext';
@@ -43,5 +43,12 @@ export default function Routes() {
     return <SecurityAccess />;
   }
 
-  return user ? <AuthRoutes /> : <AppRoutes />;
+  return user ? (
+    <>
+      <StatusBar translucent barStyle="light-content" />
+      <AuthRoutes />
+    </>
+  ) : (
+    <AppRoutes />
+  );
 }

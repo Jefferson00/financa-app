@@ -1,15 +1,6 @@
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import MaskInput from 'react-native-mask-input';
 import styled from 'styled-components/native';
 import Animated from 'react-native-reanimated';
-
-interface ContainerProps {
-  backgroundColor: string;
-}
-
-interface ButtonProps {
-  isActive: boolean;
-}
 
 export const Container = styled(Animated.View)`
   flex-direction: row;
@@ -27,9 +18,7 @@ export const Container = styled(Animated.View)`
   right: 0;
 `;
 
-export const MenuButton = styled.Pressable<ButtonProps>`
-  opacity: ${props => (props.isActive ? 1 : 0.5)};
-`;
+export const MenuButton = styled.Pressable``;
 
 export const MenuView = styled.View`
   width: ${RFPercentage(4)}px;
@@ -46,7 +35,6 @@ export const AnimatedView = styled(Animated.View)``;
 export const Dot = styled.View`
   width: ${RFPercentage(2)}px;
   height: ${RFPercentage(2)}px;
-  background-color: #4876ac;
   position: absolute;
   border-radius: ${RFPercentage(1)}px;
   top: 25%;

@@ -298,7 +298,7 @@ export const NotificationProvider: React.FC = ({ children }) => {
 
   async function onDisplayNotification() {
     const triggerNotifications = await notifee.getTriggerNotifications();
-    console.log(triggerNotifications);
+    // console.log(triggerNotifications);
   }
 
   async function getTriggerNotification(id: string) {
@@ -318,7 +318,7 @@ export const NotificationProvider: React.FC = ({ children }) => {
       switch (type) {
         case EventType.DELIVERED:
           if (detail.notification?.data?.expanseId) {
-            console.log('expanseId', detail.notification?.data?.expanseId);
+            // console.log('expanseId', detail.notification?.data?.expanseId);
             const expanseEndDate = await AsyncStorage.getItem(
               `@FinancaAppBeta:expanseEndDate:${detail.notification?.data?.expanseId}`,
             );
@@ -332,7 +332,7 @@ export const NotificationProvider: React.FC = ({ children }) => {
                 dateTrigger.setDate(endDate.getDate());
                 dateTrigger.setHours(12);
                 dateTrigger.setMinutes(0);
-                console.log('dateTrigger', dateTrigger);
+                // console.log('dateTrigger', dateTrigger);
 
                 const trigger: TimestampTrigger = {
                   type: TriggerType.TIMESTAMP,

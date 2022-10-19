@@ -175,12 +175,12 @@ export const deleteExpanse = (
         if (fromInvoice) {
           dispatch(listCreditCards(userId));
         }
-        /* dispatch(
+        dispatch(
           addMessage({
             type: 'success',
-            message: 'Despesa excluída',
+            message: 'Despesa excluída com sucesso',
           }),
-        ); */
+        );
       })
       .catch(e => {
         dispatch(changeLoadingState(false));

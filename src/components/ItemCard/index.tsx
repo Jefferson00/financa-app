@@ -8,7 +8,7 @@ import { isSameMonth } from 'date-fns';
 import { useDate } from '../../hooks/DateContext';
 import { getCategoryIcon } from '../../utils/getCategoryIcon';
 
-interface SwitchColors {
+export interface SwitchColors {
   background: string;
   trackColor: {
     true: string;

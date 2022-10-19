@@ -50,7 +50,7 @@ export const IncomesTitleText = styled.Text<TextProps>`
 `;
 
 export const ButtonContainer = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
+  margin-top: ${RFPercentage(4.4)}px;
 `;
 
 export const IncomesList = styled.FlatList`
@@ -82,5 +82,38 @@ export const DateTitle = styled.Text<TextProps>`
   font-size: ${RFPercentage(2.5)}px;
   margin-top: ${RFPercentage(2)}px;
 
+  color: ${props => (props.color ? props.color : '#000')};
+`;
+
+export const Row = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: ${RFPercentage(2.2)}px;
+`;
+
+export const RowButton = styled.TouchableOpacity`
+  flex-direction: row;
+  align-items: center;
+`;
+
+export const IconCircle = styled.View`
+  align-items: center;
+  justify-content: center;
+  width: ${RFPercentage(4)}px;
+  height: ${RFPercentage(4)}px;
+  border-radius: ${RFPercentage(2)}px;
+  margin-right: 8px;
+`;
+
+interface TextProps {
+  fontWeight: 'SemiBold' | 'Medium' | 'Regular';
+  fontSize: number;
+  color: string;
+}
+
+export const Text = styled.Text<TextProps>`
+  font-family: ${props => `Poppins-${props.fontWeight}`};
+  font-size: ${props => RFPercentage(props.fontSize)}px;
   color: ${props => (props.color ? props.color : '#000')};
 `;

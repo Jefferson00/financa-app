@@ -23,7 +23,7 @@ export const Container = styled.View<ContainerProps>`
   height: ${RFPercentage(7)}px;
   width: 100%;
   flex-direction: row;
-  border-radius: 10px;
+  border-radius: 4px;
 
   background-color: ${props => props.backgroundColor};
 
@@ -91,6 +91,5 @@ export const LabelContainer = styled.View`
   justify-content: flex-start;
   align-items: center;
   width: 100%;
-
-  margin: ${RFPercentage(3)}px 0 ${RFPercentage(1.5)}px 0;
+  margin-bottom: ${RFPercentage(1.1)}px;
 `;

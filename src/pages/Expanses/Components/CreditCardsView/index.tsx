@@ -14,6 +14,7 @@ import { useAuth } from '../../../../hooks/AuthContext';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../../../interfaces/State';
 import { deleteCreditCard } from '../../../../store/modules/CreditCards/fetchActions';
+import { View } from 'react-native';
 
 export default function CreditCardsView() {
   const dispatch = useDispatch<any>();
@@ -27,7 +28,6 @@ export default function CreditCardsView() {
   const { user } = useAuth();
   const colors = getExpansesColors(theme);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Excluindo...');
   const [errorMessage, setErrorMessage] = useState(
@@ -49,7 +49,6 @@ export default function CreditCardsView() {
     if (user && creditCardSelected) {
       setIsDeleteModalVisible(false);
       setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
       try {
         dispatch(deleteCreditCard(creditCardSelected.id, user.id));
 
@@ -58,31 +57,33 @@ export default function CreditCardsView() {
         if (error?.response?.data?.message)
           setErrorMessage(error?.response?.data?.message);
         setHasError(true);
-      } finally {
-        setIsSubmitting(false);
       }
     }
   }, [creditCardSelected, user]);
 
   return (
     <>
-      <S.Container
-        contentContainerStyle={{
-          paddingBottom: RFPercentage(26),
-        }}>
-        <Button
-          title="Novo Cartão"
-          icon={PlusIcon}
-          colors={colors.creditCardButtonColors}
-          onPress={() =>
-            navigation.navigate('CreateCreditCard', {
-              card: null,
-            })
-          }
-        />
+      {creditCards.length > 0 ? (
+        <S.Container
+          style={{
+            flex: 1,
+          }}
+          contentContainerStyle={{
+            paddingBottom: RFPercentage(26),
+            backgroundColor: '#fff',
+          }}>
+          <Button
+            title="Novo Cartão"
+            icon={PlusIcon}
+            colors={colors.creditCardButtonColors}
+            onPress={() =>
+              navigation.navigate('CreateCreditCard', {
+                card: null,
+              })
+            }
+          />
 
-        {creditCards.length > 0 &&
-          creditCards.map(card => (
+          {creditCards.map(card => (
             <CardContent
               backgroundColor={card.color}
               key={card.id}
@@ -90,24 +91,38 @@ export default function CreditCardsView() {
               onDelete={() => handleOpenDeleteConfirm(card)}
             />
           ))}
-      </S.Container>
-
-      {creditCards.length === 0 && (
-        <S.Empty>
-          <Ionicons
-            name="close-circle"
-            size={RFPercentage(4)}
-            color={colors.primaryColor}
+        </S.Container>
+      ) : (
+        <S.EmptyContainer>
+          <Button
+            title="Novo Cartão"
+            icon={PlusIcon}
+            colors={colors.creditCardButtonColors}
+            onPress={() =>
+              navigation.navigate('CreateCreditCard', {
+                card: null,
+              })
+            }
           />
-          <S.EmptyText color={colors.textColor}>
-            Sem cartões cadastrados
-          </S.EmptyText>
-        </S.Empty>
+
+          <S.Empty>
+            <S.EmptyContent>
+              <Ionicons
+                name="close-circle"
+                size={RFPercentage(4)}
+                color={colors.primaryColor}
+              />
+              <S.EmptyText color={colors.textColor}>
+                Sem cartões cadastrados
+              </S.EmptyText>
+            </S.EmptyContent>
+          </S.Empty>
+        </S.EmptyContainer>
       )}
 
       <ModalComponent
         type="loading"
-        visible={isSubmitting}
+        visible={loading}
         transparent
         title={loadingMessage}
         animationType="slide"

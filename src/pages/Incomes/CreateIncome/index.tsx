@@ -83,7 +83,6 @@ export default function CreateIncome(props: IncomeProps) {
   const colors = getCreateIncomesColors(theme);
 
   const [showMessage, setShowMessage] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [incomeState] = useState(props?.route?.params?.income);
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
@@ -157,13 +156,11 @@ export default function CreateIncome(props: IncomeProps) {
             : null,
         receiptDefault: data.receiptDefault,
       };
-      setIsSubmitting(true);
       if (incomeState) {
         await dispatch(updateIncome(incomeInput, incomeState.id));
       } else {
         await dispatch(createIncome(incomeInput, received));
       }
-      setIsSubmitting(false);
     }
   };
 

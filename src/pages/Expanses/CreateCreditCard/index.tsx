@@ -57,6 +57,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   const navigation = useNavigation<Nav>();
   const { accounts } = useSelector((state: State) => state.accounts);
   const { messages } = useSelector((state: State) => state.feedbacks);
+  const { loading } = useSelector((state: State) => state.creditCards);
 
   const { user } = useAuth();
 
@@ -64,10 +65,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
   const { theme } = useTheme();
 
   const [showMessage, setShowMessage] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [creditCardState, setCreditCardState] = useState(
-    props?.route?.params?.card,
-  );
+  const [creditCardState] = useState(props?.route?.params?.card);
   const [colorState, setColorState] = useState(ColorsList[0].color);
   const [paymentDate, setPaymentDate] = useState(selectedDate);
   const [invoiceClosing, setInvoiceClosing] = useState(selectedDate);
@@ -118,7 +116,6 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
 
   const handleSubmitCreditCard = async (data: FormData) => {
     if (user) {
-      setIsSubmitting(true);
       const creditCardInput = {
         name: data.name,
         userId: user?.id,
@@ -134,8 +131,6 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
       } else {
         dispatch(createCreditCard(creditCardInput));
       }
-
-      setIsSubmitting(false);
     }
   };
 
@@ -364,7 +359,7 @@ export default function CreateCreditCard(props: CreateCreditCardProps) {
           type="loading"
           backgroundColor={colors.modalBackground}
           color={colors.textColor}
-          visible={isSubmitting}
+          visible={loading}
           transparent
           title={creditCardState ? 'Atualizando...' : 'Criando...'}
           animationType="slide"

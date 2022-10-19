@@ -1,31 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useNavigation } from '@react-navigation/native';
 import { differenceInCalendarMonths, isBefore } from 'date-fns';
-
-import * as S from './styles';
-
-import Header from '../../components/Header';
+import { Header } from '../../components/NewHeader';
 import Menu from '../../components/Menu';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import ItemCard from '../../components/ItemCard';
-import ModalComponent from '../../components/Modal';
-import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
-
+import Button, { ButtonColors } from '../../components/Button';
 import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useAuth } from '../../hooks/AuthContext';
-
 import { Nav } from '../../routes';
 import { IIncomes } from '../../interfaces/Income';
-import { getDayOfTheMounth, getMonthName } from '../../utils/dateFormats';
 import { ICreateIncomeOnAccount } from '../../interfaces/IncomeOnAccount';
-import { getIncomesColors } from '../../utils/colors/incomes';
-import { reduceString } from '../../utils/reduceString';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../interfaces/State';
 import {
@@ -40,70 +28,81 @@ import {
   listByDate,
 } from '../../utils/listByDate';
 import { IIncomesOnAccount } from '../../interfaces/Account';
-import { removeMessage } from '../../store/modules/Feedbacks';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { colors } from '../../styles/colors';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import { ItemsList } from '../../components/ItemsList';
+import { Modal } from '../../components/NewModal';
+
+import * as S from './styles';
 
 interface ItemType extends IIncomes, IIncomesOnAccount {}
+export interface IncomesItemsByDate {
+  day: number;
+  items: ItemType[];
+}
 
 export default function Incomes() {
   const navigation = useNavigation<Nav>();
   const dispatch = useDispatch<any>();
 
   const { accounts } = useSelector((state: State) => state.accounts);
-  const { messages } = useSelector((state: State) => state.feedbacks);
-  const { incomes, incomesOnAccount, loading } = useSelector(
-    (state: State) => state.incomes,
-  );
+  const {
+    incomes,
+    incomesOnAccount,
+    loading: loadingIncomes,
+  } = useSelector((state: State) => state.incomes);
 
   const { user } = useAuth();
   const { selectedDate } = useDate();
   const { theme } = useTheme();
-  const [incomesByDate, setIncomesByDate] = useState<
-    { day: number; items: ItemType[] }[]
-  >([]);
+  const [incomesByDate, setIncomesByDate] = useState<IncomesItemsByDate[]>([]);
   const [incomeSelected, setIncomeSelected] = useState<any>();
-  const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
-  const [
-    deleteReceiveConfirmationVisible,
-    setDeleteReceiveConfirmationVisible,
-  ] = useState(false);
-
-  const [showMessage, setShowMessage] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
-  const [totalCurrentIncomes, setTotalCurrentIncomes] = useState(0);
-  const [totalEstimateIncomes, setTotalEstimateIncomes] = useState(0);
+  const [isConfirmReceiveModalVisible, setIsConfirmReceiveModalVisible] =
+    useState(false);
+  const [isConfirmUnreceiveModalVisible, setIsConfirmUnreceiveModalVisible] =
+    useState(false);
+  const [calcIncomesList, setCalcIncomesList] = useState(true);
+  const [totalCurrentIncomes, setTotalCurrentIncomes] = useState(
+    getCurrencyFormat(0),
+  );
+  const [totalEstimateIncomes, setTotalEstimateIncomes] = useState(
+    getCurrencyFormat(0),
+  );
   const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
     null,
   );
-
-  const colors = getIncomesColors(theme);
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
   };
 
-  const buttonColors = {
-    PRIMARY_BACKGROUND: colors.primaryColor,
-    SECOND_BACKGROUND: colors.secondaryColor,
-    TEXT: '#fff',
+  const handleOpenConfirmReceiveModal = (income: ItemType) => {
+    setIsConfirmReceiveModalVisible(true);
+    setAccountIdSelected(income.receiptDefault);
+    setIncomeSelected(income);
   };
 
-  const handleCloseModal = () => {
-    setShowMessage(false);
-    dispatch(removeMessage());
+  const handleCloseConfirmReceiveModal = () => {
+    setIsConfirmReceiveModalVisible(false);
+    setAccountIdSelected('');
+    setIncomeSelected(null);
   };
 
-  const handleDelete = useCallback(async () => {
-    setIsDeleteModalVisible(false);
-    if (user && incomeSelected) {
-      setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
-      dispatch(deleteIncome(incomeSelected.id, user.id));
-      setIncomeSelected(null);
-      setIsSubmitting(false);
-    }
-  }, [user, incomes, incomeSelected]);
+  const handleOpenConfirmUnreceiveModal = (income: ItemType) => {
+    setIsConfirmUnreceiveModalVisible(true);
+    setAccountIdSelected(income.accountId);
+    setIncomeSelected(income);
+  };
+
+  const handleCloseConfirmUnreceiveModal = () => {
+    setIsConfirmUnreceiveModalVisible(false);
+    setAccountIdSelected('');
+    setIncomeSelected(null);
+  };
 
   const handleDeleteIncomeOnAccount = async () => {
     if (user && incomeSelected) {
@@ -114,13 +113,9 @@ export default function Incomes() {
       );
 
       if (findAccount) {
-        setLoadingMessage('Excluindo recebimento...');
-        setIsSubmitting(true);
         dispatch(
           deleteIncomeOnAccount(incomeSelected.id, user.id, findAccount),
         );
-        setIsSubmitting(false);
-        setDeleteReceiveConfirmationVisible(false);
         setIncomeSelected(null);
         setAccountIdSelected(null);
       }
@@ -156,37 +151,28 @@ export default function Incomes() {
       };
 
       if (findAccount) {
-        setLoadingMessage('Recebendo...');
-        setIsSubmitting(true);
         dispatch(createIncomeOnAccount(incomeOnAccountToCreate, findAccount));
-        setIsSubmitting(false);
       }
 
-      setConfirmReceivedVisible(false);
       setIncomeSelected(null);
     }
   };
 
-  const handleOpenConfirmReceiveModal = (income: ItemType) => {
-    setConfirmReceivedVisible(true);
-    setAccountIdSelected(income.receiptDefault);
-    setIncomeSelected(income);
-  };
-
-  const handleOpenConfirmUnreceiveModal = (income: ItemType) => {
-    setDeleteReceiveConfirmationVisible(true);
-    setAccountIdSelected(income.accountId);
-    setIncomeSelected(income);
-  };
-
-  const handleOpenDeleteModal = (income: ItemType) => {
-    setIncomeSelected(income.income ? income.income : income);
-    setIsDeleteModalVisible(true);
-  };
-
   useEffect(() => {
-    const incomesList = listByDate(incomes, incomesOnAccount, selectedDate);
-    setIncomesByDate(incomesList);
+    setCalcIncomesList(true);
+    const incomesListPromise: Promise<IncomesItemsByDate[]> = new Promise(
+      (resolve, reject) => {
+        const list = listByDate(incomes, incomesOnAccount, selectedDate);
+        setTimeout(() => resolve(list), 200);
+      },
+    );
+    incomesListPromise
+      .then(list => {
+        setIncomesByDate(list);
+      })
+      .finally(() => {
+        setCalcIncomesList(false);
+      });
   }, [incomes, incomesOnAccount, selectedDate]);
 
   useEffect(() => {
@@ -203,10 +189,10 @@ export default function Incomes() {
       (a, b) => a + (b['value'] || 0),
       0,
     );
-    setTotalCurrentIncomes(currentTotal);
+    setTotalCurrentIncomes(getCurrencyFormat(currentTotal));
 
     if (isBefore(selectedDate, currentMonth)) {
-      setTotalEstimateIncomes(currentTotal);
+      setTotalEstimateIncomes(getCurrencyFormat(currentTotal));
     } else {
       const incomesWithoutAccount = currentIncomes.filter(
         i =>
@@ -214,269 +200,222 @@ export default function Incomes() {
             inOnAccount => inOnAccount.incomeId === i.id,
           ),
       );
-      setTotalEstimateIncomes(
-        [...incomesWithoutAccount, ...currentIncomesOnAccount].reduce(
-          (a, b) => a + (b['value'] || 0),
-          0,
-        ),
-      );
+      const estimateIncomes = [
+        ...incomesWithoutAccount,
+        ...currentIncomesOnAccount,
+      ].reduce((a, b) => a + (b['value'] || 0), 0);
+      setTotalEstimateIncomes(getCurrencyFormat(estimateIncomes));
     }
   }, [incomes, incomesOnAccount, selectedDate]);
 
-  useEffect(() => {
-    if (messages) {
-      setShowMessage(true);
-    }
-  }, [messages]);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [itemSelected, setItemSelected] = useState<any | null>(null);
 
-  const verifyRecurrence = (income: ItemType) => {
-    let currentPart = null;
-    if (income.endDate) {
-      currentPart = differenceInCalendarMonths(
-        new Date(income.endDate),
-        selectedDate,
-      );
-    } else if (income.income && income.income.endDate) {
-      currentPart = differenceInCalendarMonths(
-        new Date(income.income.endDate),
-        selectedDate,
-      );
-    }
-    if (income.iteration && income.iteration.toLowerCase() !== 'mensal') {
-      return getCurrentIteration(currentPart, income.iteration);
-    }
-    if (income.income && income.income.iteration.toLowerCase() !== 'mensal') {
-      return getCurrentIteration(currentPart, income.income.iteration);
-    }
-    return '';
+  const openDeleteModal = (income: ItemType) => {
+    setIsDeleteModalVisible(true);
+    setItemSelected(income.income ? income.income : income);
   };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+    setItemSelected(null);
+  };
+
+  const handleDelete = useCallback(async () => {
+    if (user && itemSelected) {
+      dispatch(deleteIncome(itemSelected.id, user.id));
+      setItemSelected(null);
+    }
+  }, [user, itemSelected]);
+
+  const headerValue = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    headerValue.value = event.contentOffset.y;
+  });
+
+  const headerColors = () => {
+    if (theme === 'dark') {
+      return [colors.dark[800], colors.dark[800]];
+    }
+    return [colors.green[500], colors.green[600]];
+  };
+
+  const loadingColors = () => {
+    if (theme === 'dark') {
+      return {
+        background: colors.dark[700],
+        foreground: colors.gray[600],
+      };
+    }
+    return {
+      background: colors.green[100],
+      foreground: colors.white,
+    };
+  };
+
+  const emptyColors = () => {
+    if (theme === 'dark') {
+      return {
+        icon: colors.dark[700],
+        text: colors.blue[200],
+      };
+    }
+    return {
+      icon: colors.green[500],
+      text: colors.gray[600],
+    };
+  };
+
+  const buttonColors = (): ButtonColors => {
+    if (theme === 'dark') {
+      return {
+        PRIMARY_BACKGROUND: colors.green.dark[500],
+        SECOND_BACKGROUND: colors.green.dark[400],
+        TEXT: colors.white,
+      };
+    }
+    return {
+      PRIMARY_BACKGROUND: colors.green[500],
+      SECOND_BACKGROUND: colors.green[400],
+      TEXT: colors.white,
+    };
+  };
+
+  const width = Dimensions.get('screen').width;
 
   return (
     <>
-      <Header />
-      <S.Container>
-        {loading && (
-          <ContentLoader
-            viewBox="0 0 269 140"
-            height={140}
-            style={{
-              marginBottom: 32,
-            }}
-            backgroundColor={colors.secondaryCardColor}
-            foregroundColor="rgb(255, 255, 255)">
-            <Rect x="0" y="0" rx="20" ry="20" width="269" height="140" />
-          </ContentLoader>
-        )}
-        {!loading && (
-          <>
-            <Card
-              id={'income'}
-              colors={{
-                PRIMARY_BACKGROUND: colors.primaryCardColor,
-                SECOND_BACKGROUND: colors.secondaryCardColor,
-              }}
-              icon={() => (
-                <Icon
-                  name="arrow-down"
-                  size={RFPercentage(5)}
-                  color={colors.primaryColor}
-                />
-              )}
-              title="Entradas"
-              values={{
-                current: totalCurrentIncomes,
-                estimate: totalEstimateIncomes,
-              }}
-              type={null}
-            />
-          </>
-        )}
-      </S.Container>
-
-      <S.IncomesTitle>
-        <Icon
-          name="arrow-down-circle"
-          size={RFPercentage(4)}
-          color={colors.titleColor}
-        />
-        <S.IncomesTitleText color={colors.titleColor}>
-          Entradas
-        </S.IncomesTitleText>
-      </S.IncomesTitle>
-
-      <S.ButtonContainer>
-        <Button
-          title="Nova Entrada"
-          icon={PlusIcon}
-          colors={buttonColors}
-          onPress={() =>
-            navigation.navigate('CreateIncome', {
-              income: null,
-            })
-          }
-        />
-      </S.ButtonContainer>
-
-      {loading ? (
-        <ContentLoader
-          viewBox="0 0 327 100"
-          height={100}
-          style={{
-            marginTop: 32,
-          }}
-          backgroundColor={colors.secondaryCardLoader}
-          foregroundColor="rgb(255, 255, 255)">
-          <Rect x="0" y="0" rx="20" ry="20" width="327" height="100" />
-        </ContentLoader>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          style={{
-            paddingBottom: RFPercentage(15),
-            flex: 1,
-            marginTop: RFPercentage(2),
-          }}
-          contentContainerStyle={{
-            paddingBottom: RFPercentage(20),
-          }}>
-          {incomesByDate.length > 0 &&
-            incomesByDate.map(item => (
-              <S.ItemView key={item.day}>
-                <S.DateTitle color={colors.dateTitleColor}>
-                  {item.day} de {getMonthName(selectedDate)}
-                </S.DateTitle>
-
-                {item.items.map(income => (
-                  <ItemCard
-                    key={income.id}
-                    category={income.category}
-                    title={income.name}
-                    value={income.value}
-                    received={!!income?.paymentDate}
-                    recurrence={verifyRecurrence(income)}
-                    receivedMessage={
-                      income.paymentDate
-                        ? `Recebido em ${getDayOfTheMounth(
-                            new Date(income.paymentDate),
-                          )} - ${reduceString(
-                            accounts.find(acc => acc.id === income.accountId)
-                              ?.name,
-                            16,
-                          )}`
-                        : 'Receber'
-                    }
-                    mainColor={colors.primaryColor}
-                    textColor={colors.textColor}
-                    switchColors={colors.switchColors}
-                    handleRemove={() => handleOpenDeleteModal(income)}
-                    backgroundColor={colors.secondaryCardLoader}
-                    onRedirect={() => {
-                      navigation.navigate('CreateIncome', {
-                        income: incomes.find(
-                          inc =>
-                            inc.id === income.id || inc.id === income.incomeId,
-                        ),
-                      });
-                    }}
-                    onSwitchChange={() => {
-                      if (!income?.paymentDate) {
-                        handleOpenConfirmReceiveModal(income);
-                      } else {
-                        handleOpenConfirmUnreceiveModal(income);
-                      }
-                    }}
-                  />
-                ))}
-              </S.ItemView>
-            ))}
-        </ScrollView>
-      )}
-      {!loading && incomesByDate.length === 0 && (
-        <S.Empty>
-          <Icon
-            name="close-circle"
-            size={RFPercentage(4)}
-            color={colors.primaryColor}
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        contentContainerStyle={{
+          minHeight:
+            incomesByDate.length === 0 ? RFPercentage(110) : RFPercentage(140),
+          paddingTop: RFPercentage(36),
+          paddingBottom: RFPercentage(15),
+          paddingHorizontal: RFPercentage(3.2),
+        }}
+        onScroll={scrollHandler}>
+        <S.ButtonContainer>
+          <Button
+            title="Nova Entrada"
+            icon={PlusIcon}
+            colors={buttonColors()}
+            onPress={() =>
+              navigation.navigate('CreateIncome', {
+                income: null,
+              })
+            }
           />
-          <S.EmptyText color={colors.textColor}>
-            Nenhuma entrada nesse mês
-          </S.EmptyText>
-        </S.Empty>
-      )}
+        </S.ButtonContainer>
 
-      <ConfirmReceivedModalComponent
-        visible={confirmReceivedVisible}
-        handleCancel={() => setConfirmReceivedVisible(false)}
-        onRequestClose={() => setConfirmReceivedVisible(false)}
-        transparent
-        title="Em qual conta a entrada será recebida?"
-        animationType="slide"
-        defaulAccount={incomeSelected?.receiptDefault}
-        handleConfirm={handleReceive}
-        accounts={accounts.filter(a => a.status === 'active')}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-        theme={theme}
-      />
+        {loadingIncomes || calcIncomesList ? (
+          <ContentLoader
+            viewBox={`0 0 ${width} 325`}
+            height={325}
+            style={{
+              marginTop: RFPercentage(1),
+            }}
+            backgroundColor={loadingColors().background}
+            foregroundColor={loadingColors().foreground}>
+            <Rect x="0" y="0" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="80" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="160" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="240" rx="8" ry="8" width={width} height="65" />
+          </ContentLoader>
+        ) : (
+          <ItemsList
+            onDelete={openDeleteModal}
+            switchActions={{
+              onSelect: handleOpenConfirmReceiveModal,
+              onUnselect: handleOpenConfirmUnreceiveModal,
+            }}
+            itemsByDate={incomesByDate}
+            type="Incomes"
+          />
+        )}
 
-      <ModalComponent
-        type="loading"
-        visible={isSubmitting}
-        transparent
-        title={loadingMessage}
-        animationType="slide"
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-      />
-      {messages && (
-        <ModalComponent
-          type={messages.type}
-          visible={showMessage}
-          handleCancel={handleCloseModal}
-          onRequestClose={handleCloseModal}
-          transparent
-          title={messages?.message}
-          subtitle={
-            messages?.type === 'error'
-              ? 'Tente novamente mais tarde'
-              : undefined
-          }
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-          onSucessOkButton={
-            messages?.type === 'success' ? handleCloseModal : undefined
-          }
-        />
-      )}
+        {!loadingIncomes && !calcIncomesList && incomesByDate.length === 0 && (
+          <S.EmptyContainer>
+            <S.EmptyRow>
+              <Icon
+                name="close-circle"
+                size={RFPercentage(4)}
+                color={emptyColors().icon}
+              />
+              <S.EmptyText color={emptyColors().text}>
+                Nenhuma entrada nesse mês
+              </S.EmptyText>
+            </S.EmptyRow>
+          </S.EmptyContainer>
+        )}
+      </Animated.ScrollView>
 
-      <ModalComponent
-        type="confirmation"
-        visible={isDeleteModalVisible}
-        handleCancel={() => setIsDeleteModalVisible(false)}
-        onRequestClose={() => setIsDeleteModalVisible(false)}
-        transparent
-        title="Tem certeza que deseja excluir essa despesa em definitivo?"
-        animationType="slide"
-        handleConfirm={handleDelete}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-      />
-
-      <ModalComponent
-        type="confirmation"
-        visible={deleteReceiveConfirmationVisible}
-        handleCancel={() => setDeleteReceiveConfirmationVisible(false)}
-        onRequestClose={() => setDeleteReceiveConfirmationVisible(false)}
-        transparent
-        title="Tem certeza? Essa entrada será marcada como não recebida."
-        animationType="slide"
-        handleConfirm={handleDeleteIncomeOnAccount}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
+      <Header
+        variant="income"
+        headerValue={headerValue}
+        colors={headerColors()}
+        titles={{
+          current: 'Entradas',
+          estimate: 'Previsto',
+        }}
+        values={{
+          current: totalCurrentIncomes,
+          estimate: totalEstimateIncomes,
+        }}
       />
       <Menu />
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          successText: 'Excluido com sucesso!',
+          errorText: 'Erro ao excluir',
+          confirmationText: 'Tem certeza que deseja excluir?',
+          loadingText: 'Excluindo...',
+        }}
+        requestConfirm={handleDelete}
+        defaultConfirm={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        visible={isDeleteModalVisible}
+        type="Confirmation"
+      />
+
+      <Modal
+        accounts={accounts}
+        defaulAccount={incomeSelected?.receiptDefault}
+        transparent
+        animationType="slide"
+        texts={{
+          successText: 'Rececbido com sucesso!',
+          errorText: 'Erro ao receber',
+          confirmationText: 'Em qual conta deseja receber?',
+          loadingText: 'Recebendo...',
+        }}
+        requestConfirm={handleReceive}
+        defaultConfirm={handleCloseConfirmReceiveModal}
+        onCancel={handleCloseConfirmReceiveModal}
+        visible={isConfirmReceiveModalVisible}
+        type="AccountConfirmation"
+      />
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          successText: 'Rececbido com sucesso!',
+          errorText: 'Erro ao receber',
+          confirmationText: 'Tem certeza que deseja marcar como não recebido?',
+          loadingText: 'Recebendo...',
+        }}
+        requestConfirm={handleDeleteIncomeOnAccount}
+        defaultConfirm={handleCloseConfirmUnreceiveModal}
+        onCancel={handleCloseConfirmUnreceiveModal}
+        visible={isConfirmUnreceiveModalVisible}
+        type="Confirmation"
+      />
     </>
   );
 }

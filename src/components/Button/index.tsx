@@ -11,11 +11,11 @@ import * as S from './styles';
 interface ButtonProps extends PressableProps {
   icon: React.FC;
   title: string;
-  colors: Colors;
+  colors: ButtonColors;
   fontSize?: 'small' | 'default';
 }
 
-interface Colors {
+export interface ButtonColors {
   PRIMARY_BACKGROUND: string;
   SECOND_BACKGROUND: string;
   BORDER?: string;

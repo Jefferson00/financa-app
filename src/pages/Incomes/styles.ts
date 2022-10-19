@@ -38,7 +38,7 @@ export const IncomesTitleText = styled.Text<TextProps>`
 `;
 
 export const ButtonContainer = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
+  margin-top: ${RFPercentage(4.4)}px;
 `;
 
 export const IncomesList = styled.FlatList`
@@ -46,13 +46,16 @@ export const IncomesList = styled.FlatList`
   width: 100%;
 `;
 
-export const Empty = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
-  flex-direction: row;
-
+export const EmptyContainer = styled.View`
+  flex: 1;
+  align-items: center;
   justify-content: center;
+`;
 
-  height: ${RFPercentage(32)}px;
+export const EmptyRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const ItemView = styled.View`
@@ -61,7 +64,7 @@ export const ItemView = styled.View`
 
 export const EmptyText = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.5)}px;
+  font-size: ${RFPercentage(2)}px;
   margin-left: 8px;
 
   color: ${props => (props.color ? props.color : '#000')};

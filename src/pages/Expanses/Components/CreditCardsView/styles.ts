@@ -16,12 +16,21 @@ export const Container = styled.ScrollView`
   flex: 1;
 `;
 
+export const EmptyContainer = styled.View`
+  padding: 0 ${RFPercentage(3.2)}px;
+  width: 100%;
+  flex: 1;
+`;
+
 export const Empty = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
+  justify-content: center;
+  height: ${RFPercentage(32)}px;
+`;
+
+export const EmptyContent = styled.View`
   flex-direction: row;
   justify-content: center;
-
-  height: ${RFPercentage(32)}px;
 `;
 
 export const EmptyText = styled.Text<TextProps>`

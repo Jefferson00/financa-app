@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Control, Controller } from 'react-hook-form';
 import { Switch, Text, View } from 'react-native';
 import { MaskInputProps } from 'react-native-mask-input';
+import { RFPercentage } from 'react-native-responsive-fontsize';
 import { priceMask } from '../../utils/masks';
 import * as S from './styles';
 
@@ -50,7 +51,10 @@ export default function ControlledInput({
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <>
+        <View
+          style={{
+            marginBottom: RFPercentage(3.2),
+          }}>
           {label && (
             <S.LabelContainer>
               <S.Label color={fieldState.invalid ? '#CC3728' : textColor}>
@@ -117,7 +121,7 @@ export default function ControlledInput({
               />
             )}
           </S.Container>
-        </>
+        </View>
       )}
     />
   );

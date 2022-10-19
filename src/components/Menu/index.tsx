@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as S from './styles';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { Colors } from '../../styles/global';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -15,12 +14,11 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Nav } from '../../routes';
 import { useTheme } from '../../hooks/ThemeContext';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { useDate } from '../../hooks/DateContext';
 import ModalComponent from '../Modal';
 import { useSelector } from 'react-redux';
 import State from '../../interfaces/State';
 import { useNotification } from '../../hooks/NotificationContext';
-import { View } from 'react-native';
+import { colors } from '../../styles/colors';
 
 export default function Menu() {
   const navigation = useNavigation<Nav>();
@@ -28,14 +26,10 @@ export default function Menu() {
   const routeName = routes.name;
   const { theme } = useTheme();
   const { lateItems, nextDaysItems } = useNotification();
-  const { setCurrentMonth } = useDate();
 
   const { accounts } = useSelector((state: State) => state.accounts);
   const [hasAccount, setHasAccount] = useState(false);
   const [alertModalVisible, setAlertModalVisible] = useState(false);
-
-  const iconColor =
-    theme === 'dark' ? Colors.BLUE_PRIMARY_DARKER : Colors.BLUE_PRIMARY_LIGHTER;
 
   const hasNotifications = useMemo(() => {
     return nextDaysItems.length > 0 || lateItems.length > 0;
@@ -124,6 +118,23 @@ export default function Menu() {
     [hasAccount],
   );
 
+  const menuColors = () => {
+    if (theme === 'dark') {
+      return {
+        background: colors.dark[800],
+        border: colors.dark[800],
+        active: colors.blue[200],
+        inactive: colors.dark[700],
+      };
+    }
+    return {
+      background: colors.white,
+      border: colors.blue[200],
+      active: colors.blue[600],
+      inactive: colors.blue[300],
+    };
+  };
+
   useEffect(() => {
     if (accounts.length > 0) {
       setHasAccount(true);
@@ -137,36 +148,34 @@ export default function Menu() {
       <S.Container
         style={[
           {
-            shadowOpacity: 0.25,
-            shadowRadius: 2,
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            shadowColor: '#000000',
-            elevation: 20,
             borderWidth: 1,
-            borderColor: '#d2d2d2',
+            borderColor: menuColors().border,
           },
           colorAnimated,
         ]}>
         <S.MenuView>
           <S.MenuButton
-            isActive={routeName === 'Home'}
             hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
             onPressIn={() => (buttonHomeAnimate.value = withTiming(1))}
             onPressOut={() => {
-              setCurrentMonth(), handleClickButton(buttonHomeAnimate, 'Home');
+              handleClickButton(buttonHomeAnimate, 'Home');
             }}>
             <S.AnimatedView style={buttonHomeAnimated}>
-              <Icon name="home" size={RFPercentage(5.2)} color={iconColor} />
+              <Icon
+                name="home"
+                size={RFPercentage(5.2)}
+                color={
+                  routeName === 'Home'
+                    ? menuColors().active
+                    : menuColors().inactive
+                }
+              />
             </S.AnimatedView>
           </S.MenuButton>
         </S.MenuView>
 
         <S.MenuView>
           <S.MenuButton
-            isActive={routeName === 'Incomes' || routeName === 'CreateIncome'}
             hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
             onPressIn={() => (buttonIncomeAnimate.value = withTiming(1))}
             onPressOut={() =>
@@ -176,7 +185,11 @@ export default function Menu() {
               <Icon
                 name="arrow-up-circle"
                 size={RFPercentage(5.2)}
-                color={iconColor}
+                color={
+                  routeName === 'Incomes' || routeName === 'CreateIncome'
+                    ? menuColors().active
+                    : menuColors().inactive
+                }
               />
             </S.AnimatedView>
           </S.MenuButton>
@@ -184,7 +197,6 @@ export default function Menu() {
 
         <S.MenuView>
           <S.MenuButton
-            isActive={routeName === 'Expanses' || routeName === 'CreateExpanse'}
             hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
             onPressIn={() => (buttonExpanseAnimate.value = withTiming(1))}
             onPressOut={() =>
@@ -194,7 +206,11 @@ export default function Menu() {
               <Icon
                 name="arrow-down-circle"
                 size={RFPercentage(5.2)}
-                color={iconColor}
+                color={
+                  routeName === 'Expanses' || routeName === 'CreateExpanse'
+                    ? menuColors().active
+                    : menuColors().inactive
+                }
               />
             </S.AnimatedView>
           </S.MenuButton>
@@ -202,7 +218,6 @@ export default function Menu() {
 
         <S.MenuView>
           <S.MenuButton
-            isActive={routeName === 'Notifications'}
             hitSlop={{ top: 6, left: 6, right: 6, bottom: 6 }}
             onPressIn={() => (buttonNotificationsAnimate.value = withTiming(1))}
             onPressOut={() =>
@@ -212,11 +227,17 @@ export default function Menu() {
               <Icon
                 name="notifications"
                 size={RFPercentage(5.2)}
-                color={iconColor}
+                color={
+                  routeName === 'Notifications'
+                    ? menuColors().active
+                    : menuColors().inactive
+                }
               />
             </S.AnimatedView>
           </S.MenuButton>
-          {hasNotifications && <S.Dot />}
+          {hasNotifications && (
+            <S.Dot style={{ backgroundColor: menuColors().active }} />
+          )}
         </S.MenuView>
       </S.Container>
 

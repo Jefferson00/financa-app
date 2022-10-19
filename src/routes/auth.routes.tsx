@@ -8,7 +8,7 @@ import { useTheme } from '../hooks/ThemeContext';
 import SecurityScreen from '../pages/SecurityScreen';
 import Account from '../pages/Account';
 import Incomes from '../pages/Incomes';
-import CreateIncome from '../pages/Incomes/CreateIncome';
+import { CreateIncome } from '../pages/CreateIncome';
 import Expanses from '../pages/Expanses';
 import CreateExpanse from '../pages/Expanses/CreateExpanse';
 import CreateCreditCard from '../pages/Expanses/CreateCreditCard';
@@ -25,7 +25,7 @@ export default function AuthRoutes() {
       screenOptions={{
         headerShown: false,
         cardStyle: {
-          backgroundColor: theme === 'dark' ? '#1C1C1C' : '#fff',
+          backgroundColor: theme === 'dark' ? '#121212' : '#fff',
         },
       }}>
       <App.Screen name="Home" component={Home} />

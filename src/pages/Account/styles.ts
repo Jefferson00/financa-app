@@ -20,8 +20,9 @@ interface ButtonProps {
 export const Container = styled.View`
   flex: 1;
   align-items: center;
-  padding: 16px 24px;
-  padding-bottom: 96px;
+  margin-top: ${RFPercentage(4.3)}px;
+  padding: 0 ${RFPercentage(3.2)}px;
+  padding-bottom: ${RFPercentage(13)}px;
 `;
 
 export const EmptyAvatar = styled.View`
@@ -79,7 +80,7 @@ export const SwitchContainer = styled.View`
 `;
 
 export const ButtonContainer = styled.View`
-  margin-top: ${RFPercentage(6)}px;
+  margin-top: ${RFPercentage(6.4)}px;
 `;
 
 export const DeleteButton = styled.TouchableOpacity`

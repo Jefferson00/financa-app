@@ -1,5 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import React, {
+  LegacyRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { Dimensions, ScrollView, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
@@ -7,10 +13,10 @@ import { useNavigation } from '@react-navigation/native';
 
 import * as S from './styles';
 
-import Header from '../../components/Header';
+import { Header } from '../../components/NewHeader';
 import Menu from '../../components/Menu';
 import Card from '../../components/Card';
-import Button from '../../components/Button';
+import Button, { ButtonColors } from '../../components/Button';
 import ItemCard from '../../components/ItemCard';
 
 import { useDate } from '../../hooks/DateContext';
@@ -47,16 +53,30 @@ import AsyncStorage from '@react-native-community/async-storage';
 import notifee from '@notifee/react-native';
 import { useNotification } from '../../hooks/NotificationContext';
 
+import Swipeable from 'react-native-gesture-handler/Swipeable';
+import Animated, {
+  useAnimatedScrollHandler,
+  useSharedValue,
+} from 'react-native-reanimated';
+import { colors } from '../../styles/colors';
+import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import { ItemsList } from '../../components/ItemsList';
+import { Modal } from '../../components/NewModal';
+
 interface ItemType extends IExpanses, IExpansesOnAccount {}
 
 export default function Expanses() {
+  const width = Dimensions.get('screen').width;
   const dispatch = useDispatch<any>();
+  const swipeableRef = useRef<any>(null);
   const navigation = useNavigation<Nav>();
   const { messages } = useSelector((state: State) => state.feedbacks);
   const { accounts } = useSelector((state: State) => state.accounts);
-  const { expanses, expansesOnAccount, loading } = useSelector(
-    (state: State) => state.expanses,
-  );
+  const {
+    expanses,
+    expansesOnAccount,
+    loading: loadingExpanses,
+  } = useSelector((state: State) => state.expanses);
   const { creditCards } = useSelector((state: State) => state.creditCards);
   const { user } = useAuth();
   const { selectedDate } = useDate();
@@ -70,62 +90,51 @@ export default function Expanses() {
     'Expanses',
   );
   const [expanseSelected, setExpanseSelected] = useState<any>();
+  const [itemSelected, setItemSelected] = useState<any | null>(null);
 
-  const [confirmReceivedVisible, setConfirmReceivedVisible] = useState(false);
+  const [totalCurrentExpanses, setTotalCurrentExpanses] = useState(
+    getCurrencyFormat(0),
+  );
+  const [totalEstimateExpanses, setTotalEstimateExpanses] = useState(
+    getCurrencyFormat(0),
+  );
 
-  const [totalCurrentExpanses, setTotalCurrentExpanses] = useState(0);
-  const [totalEstimateExpanses, setTotalEstimateExpanses] = useState(0);
-
-  const [showMessage, setShowMessage] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
+  const [calcExpanseList, setCalcExpanseList] = useState(true);
   const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
     null,
   );
-  const [
-    deleteReceiveConfirmationVisible,
-    setDeleteReceiveConfirmationVisible,
-  ] = useState(false);
-
-  const colors = getExpansesColors(theme);
+  const [isConfirmReceiveModalVisible, setIsConfirmReceiveModalVisible] =
+    useState(false);
+  const [isConfirmUnreceiveModalVisible, setIsConfirmUnreceiveModalVisible] =
+    useState(false);
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
   };
 
-  const buttonColors = {
-    PRIMARY_BACKGROUND: colors.primaryColor,
-    SECOND_BACKGROUND: colors.secondaryColor,
-    TEXT: '#fff',
-  };
-
-  const handleOkSucess = () => {
-    setConfirmReceivedVisible(false);
-    setDeleteReceiveConfirmationVisible(false);
-    handleCloseModal();
-  };
-
-  const handleCloseModal = () => {
-    setShowMessage(false);
-    dispatch(removeMessage());
-  };
-
-  const handleOpenDeleteModal = (expanse: ItemType) => {
-    setExpanseSelected(expanse.expanse ? expanse.expanse : expanse);
-    setIsDeleteModalVisible(true);
-  };
-
   const handleOpenConfirmReceiveModal = (expanse: ItemType) => {
-    setConfirmReceivedVisible(true);
+    setIsConfirmReceiveModalVisible(true);
     setAccountIdSelected(expanse.receiptDefault);
     setExpanseSelected(expanse);
   };
 
+  const handleCloseConfirmReceiveModal = () => {
+    setIsConfirmReceiveModalVisible(false);
+    setAccountIdSelected('');
+    setExpanseSelected(null);
+  };
+
   const handleOpenConfirmUnreceiveModal = (expanse: ItemType) => {
-    setDeleteReceiveConfirmationVisible(true);
+    setIsConfirmUnreceiveModalVisible(true);
     setAccountIdSelected(expanse.accountId);
     setExpanseSelected(expanse);
+  };
+
+  const handleCloseConfirmUnreceiveModal = () => {
+    setIsConfirmUnreceiveModalVisible(false);
+    setAccountIdSelected('');
+    setExpanseSelected(null);
   };
 
   const handleRemoveNotification = async (expanseId: string) => {
@@ -138,18 +147,6 @@ export default function Expanses() {
     }
   };
 
-  const handleRemove = useCallback(async () => {
-    if (user && expanseSelected) {
-      setIsDeleteModalVisible(false);
-      setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
-      dispatch(deleteExpanse(expanseSelected.id, user.id));
-      await handleRemoveNotification(expanseSelected.id);
-      setExpanseSelected(null);
-      setIsSubmitting(false);
-    }
-  }, [user, expanseSelected]);
-
   const handleDeleteExpanseOnAccount = async () => {
     if (user && expanseSelected) {
       const findAccount = accounts.find(
@@ -159,15 +156,11 @@ export default function Expanses() {
       );
 
       if (findAccount) {
-        setLoadingMessage('Excluindo pagamento...');
-        setIsSubmitting(true);
         dispatch(
           deleteExpanseOnAccount(expanseSelected.id, user.id, findAccount),
         );
-        setDeleteReceiveConfirmationVisible(false);
         setExpanseSelected(null);
         setAccountIdSelected(null);
-        setIsSubmitting(false);
       }
     }
   };
@@ -201,16 +194,20 @@ export default function Expanses() {
       };
 
       if (findAccount) {
-        setLoadingMessage('Pagando...');
-        setIsSubmitting(true);
         dispatch(createExpanseOnAccount(expanseOnAccountToCreate, findAccount));
-        setIsSubmitting(false);
       }
 
-      setConfirmReceivedVisible(false);
       setExpanseSelected(null);
     }
   };
+
+  const handleDelete = useCallback(async () => {
+    if (user && itemSelected) {
+      dispatch(deleteExpanse(itemSelected.id, user.id));
+      await handleRemoveNotification(itemSelected.id);
+      setItemSelected(null);
+    }
+  }, [user, itemSelected]);
 
   const verifyRecurrence = (expanse: ItemType) => {
     let currentPart = null;
@@ -237,7 +234,18 @@ export default function Expanses() {
     return '';
   };
 
+  const openDeleteModal = (expanse: ItemType) => {
+    setIsDeleteModalVisible(true);
+    setItemSelected(expanse.expanse ? expanse.expanse : expanse);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+    setItemSelected(null);
+  };
+
   useEffect(() => {
+    setCalcExpanseList(true);
     const expansesWithoutInvoice = expanses.filter(exp =>
       accounts.find(acc => acc.id === exp.receiptDefault),
     );
@@ -247,6 +255,7 @@ export default function Expanses() {
       selectedDate,
     );
     setExpanseByDate(expansesList);
+    setCalcExpanseList(false);
   }, [accounts, expanses, expansesOnAccount, selectedDate]);
 
   useEffect(() => {
@@ -277,10 +286,11 @@ export default function Expanses() {
       (a, b) => a + (b['value'] || 0),
       0,
     );
-    setTotalCurrentExpanses(currentTotal + totalInvoice);
+    const total = getCurrencyFormat(currentTotal + totalInvoice);
+    setTotalCurrentExpanses(total);
 
     if (isBefore(selectedDate, currentMonth)) {
-      setTotalEstimateExpanses(currentTotal);
+      setTotalEstimateExpanses(getCurrencyFormat(currentTotal));
     } else {
       const expansesWithoutAccount = currentExpanses.filter(
         i =>
@@ -288,25 +298,212 @@ export default function Expanses() {
             expOnAccount => expOnAccount.expanseId === i.id,
           ),
       );
-      setTotalEstimateExpanses(
-        [...expansesWithoutAccount, ...currentExpansesOnAccount].reduce(
-          (a, b) => a + (b['value'] || 0),
-          0,
-        ),
-      );
+      const estimateExpanses = [
+        ...expansesWithoutAccount,
+        ...currentExpansesOnAccount,
+      ].reduce((a, b) => a + (b['value'] || 0), 0);
+      setTotalEstimateExpanses(getCurrencyFormat(estimateExpanses));
     }
   }, [expanses, expansesOnAccount, selectedDate, creditCards]);
 
-  useEffect(() => {
-    if (messages) {
-      setShowMessage(true);
+  const headerValue = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    headerValue.value = event.contentOffset.y;
+  });
+
+  const expansesColor = () => {
+    if (theme === 'dark') {
+      return {
+        primary: colors.red.dark[500],
+        secondary: colors.red.dark[400],
+        title: colors.gray[600],
+        text: colors.gray[600],
+        icon_circle: colors.dark[700],
+      };
     }
-  }, [messages]);
+    return {
+      primary: colors.red[500],
+      secondary: colors.red[400],
+      title: colors.gray[600],
+      text: colors.gray[600],
+      icon_circle: colors.red[100],
+    };
+  };
+
+  const headerColors = () => {
+    if (theme === 'dark') {
+      return [colors.dark[800], colors.dark[800]];
+    }
+    return [colors.red[500], colors.red[600]];
+  };
+
+  const loadingColors = () => {
+    if (theme === 'dark') {
+      return {
+        background: colors.dark[700],
+        foreground: colors.gray[600],
+      };
+    }
+    return {
+      background: colors.green[100],
+      foreground: colors.white,
+    };
+  };
+
+  const emptyColors = () => {
+    if (theme === 'dark') {
+      return {
+        icon: colors.dark[700],
+        text: colors.blue[200],
+      };
+    }
+    return {
+      icon: colors.green[500],
+      text: colors.gray[600],
+    };
+  };
+
+  const buttonColors = (): ButtonColors => {
+    if (theme === 'dark') {
+      return {
+        PRIMARY_BACKGROUND: colors.red.dark[500],
+        SECOND_BACKGROUND: colors.red.dark[400],
+        TEXT: colors.white,
+      };
+    }
+    return {
+      PRIMARY_BACKGROUND: colors.red[500],
+      SECOND_BACKGROUND: colors.red[400],
+      TEXT: colors.white,
+    };
+  };
 
   return (
     <>
-      <Header />
-      <S.Container>
+      <Animated.ScrollView
+        showsVerticalScrollIndicator={false}
+        scrollEventThrottle={16}
+        contentContainerStyle={{
+          minHeight:
+            expanseByDate.length === 0 ? RFPercentage(110) : RFPercentage(140),
+          paddingTop: RFPercentage(36),
+          paddingBottom: RFPercentage(15),
+          paddingHorizontal: RFPercentage(3.2),
+        }}
+        onScroll={scrollHandler}>
+        <S.ButtonContainer>
+          <Button
+            title="Nova Despesa"
+            icon={PlusIcon}
+            colors={buttonColors()}
+            onPress={() =>
+              navigation.navigate('CreateExpanse', {
+                expanse: null,
+              })
+            }
+          />
+        </S.ButtonContainer>
+
+        <S.Row>
+          <S.RowButton
+            onPress={() => {
+              setTabSelected('Expanses');
+              swipeableRef.current.close();
+            }}>
+            <S.IconCircle
+              style={{
+                backgroundColor: expansesColor().icon_circle,
+                opacity: tabSelected === 'Expanses' ? 1 : 0.5,
+              }}>
+              <Icon
+                name="arrow-down"
+                size={RFPercentage(3)}
+                color={expansesColor().primary}
+              />
+            </S.IconCircle>
+            <S.Text
+              style={{
+                opacity: tabSelected === 'Expanses' ? 1 : 0.5,
+              }}
+              color={expansesColor().title}
+              fontSize={2}
+              fontWeight="SemiBold">
+              Despesas
+            </S.Text>
+          </S.RowButton>
+
+          <S.RowButton
+            onPress={() => {
+              swipeableRef.current.openRight();
+              setTabSelected('Cards');
+            }}>
+            <S.IconCircle
+              style={{
+                backgroundColor: expansesColor().icon_circle,
+                opacity: tabSelected === 'Cards' ? 1 : 0.5,
+              }}>
+              <Icon
+                name="card"
+                size={RFPercentage(3)}
+                color={expansesColor().primary}
+              />
+            </S.IconCircle>
+            <S.Text
+              style={{
+                opacity: tabSelected === 'Cards' ? 1 : 0.5,
+              }}
+              color={expansesColor().title}
+              fontSize={2}
+              fontWeight="SemiBold">
+              Cartões
+            </S.Text>
+          </S.RowButton>
+        </S.Row>
+
+        {loadingExpanses || calcExpanseList ? (
+          <ContentLoader
+            viewBox={`0 0 ${width} 325`}
+            height={325}
+            style={{
+              marginTop: RFPercentage(1),
+            }}
+            backgroundColor={loadingColors().background}
+            foregroundColor={loadingColors().foreground}>
+            <Rect x="0" y="0" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="80" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="160" rx="8" ry="8" width={width} height="65" />
+            <Rect x="0" y="240" rx="8" ry="8" width={width} height="65" />
+          </ContentLoader>
+        ) : (
+          <Swipeable
+            ref={swipeableRef}
+            containerStyle={{
+              flex: 1,
+              backgroundColor:
+                theme === 'dark' ? colors.dark[900] : colors.white,
+            }}
+            childrenContainerStyle={{
+              backgroundColor:
+                theme === 'dark' ? colors.dark[900] : colors.white,
+            }}
+            renderRightActions={() => <CreditCardsView />}
+            onSwipeableRightOpen={() => setTabSelected('Cards')}
+            onSwipeableClose={() => setTabSelected('Expanses')}>
+            <ItemsList
+              showTitle={false}
+              onDelete={openDeleteModal}
+              switchActions={{
+                onSelect: handleOpenConfirmReceiveModal,
+                onUnselect: handleOpenConfirmUnreceiveModal,
+              }}
+              itemsByDate={expanseByDate}
+              type="Expanses"
+            />
+          </Swipeable>
+        )}
+      </Animated.ScrollView>
+      {/*   <S.Container>
         {loading && (
           <ContentLoader
             viewBox="0 0 269 140"
@@ -343,10 +540,14 @@ export default function Expanses() {
             />
           </>
         )}
-      </S.Container>
+      </S.Container> */}
 
-      <S.IncomesTitle>
-        <S.TitleItem onPress={() => setTabSelected('Expanses')}>
+      {/*  <S.IncomesTitle>
+        <S.TitleItem
+          onPress={() => {
+            setTabSelected('Expanses');
+            swipeableRef.current.close();
+          }}>
           <Icon
             name="arrow-down-circle"
             size={RFPercentage(4)}
@@ -360,7 +561,11 @@ export default function Expanses() {
           </S.IncomesTitleText>
         </S.TitleItem>
 
-        <S.TitleItem onPress={() => setTabSelected('Cards')}>
+        <S.TitleItem
+          onPress={() => {
+            swipeableRef.current.openRight();
+            setTabSelected('Cards');
+          }}>
           <Icon
             name="card"
             size={RFPercentage(4)}
@@ -373,9 +578,20 @@ export default function Expanses() {
             Cartões
           </S.IncomesTitleText>
         </S.TitleItem>
-      </S.IncomesTitle>
+      </S.IncomesTitle> */}
 
-      {tabSelected === 'Expanses' && (
+      {/*  <Swipeable
+        ref={swipeableRef}
+        containerStyle={{
+          backgroundColor: '#fff',
+          flex: 1,
+        }}
+        childrenContainerStyle={{
+          backgroundColor: '#fff',
+        }}
+        renderRightActions={() => <CreditCardsView />}
+        onSwipeableRightOpen={() => setTabSelected('Cards')}
+        onSwipeableClose={() => setTabSelected('Expanses')}>
         <>
           <S.ButtonContainer>
             <Button
@@ -406,7 +622,6 @@ export default function Expanses() {
               showsVerticalScrollIndicator={false}
               style={{
                 paddingBottom: RFPercentage(15),
-                flex: 1,
                 marginTop: RFPercentage(2),
               }}
               contentContainerStyle={{
@@ -478,87 +693,67 @@ export default function Expanses() {
             </S.Empty>
           )}
         </>
-      )}
+      </Swipeable> */}
 
-      {tabSelected === 'Cards' && <CreditCardsView />}
-
-      <ConfirmReceivedModalComponent
-        visible={confirmReceivedVisible}
-        handleCancel={() => setConfirmReceivedVisible(false)}
-        onRequestClose={() => setConfirmReceivedVisible(false)}
-        transparent
-        title="Em qual conta a despesa será paga?"
-        animationType="slide"
-        defaulAccount={expanseSelected?.receiptDefault}
-        handleConfirm={handleReceive}
-        accounts={accounts}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-        theme={theme}
-      />
-
-      <ModalComponent
-        type="loading"
-        visible={isSubmitting}
-        transparent
-        title={loadingMessage}
-        animationType="slide"
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-        theme={theme}
-      />
-      {messages && (
-        <ModalComponent
-          type={messages.type}
-          visible={showMessage}
-          handleCancel={handleCloseModal}
-          onRequestClose={handleCloseModal}
-          transparent
-          title={messages?.message}
-          subtitle={
-            messages?.type === 'error'
-              ? 'Tente novamente mais tarde'
-              : undefined
-          }
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-          onSucessOkButton={
-            messages?.type === 'success' ? handleOkSucess : undefined
-          }
-        />
-      )}
-
-      <ModalComponent
-        type="confirmation"
-        visible={isDeleteModalVisible}
-        handleCancel={() => setIsDeleteModalVisible(false)}
-        onRequestClose={() => setIsDeleteModalVisible(false)}
-        transparent
-        title="Tem certeza que deseja excluir essa despesa em definitivo?"
-        animationType="slide"
-        handleConfirm={handleRemove}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-        theme={theme}
-      />
-
-      <ModalComponent
-        type="confirmation"
-        visible={deleteReceiveConfirmationVisible}
-        handleCancel={() => setDeleteReceiveConfirmationVisible(false)}
-        onRequestClose={() => setDeleteReceiveConfirmationVisible(false)}
-        transparent
-        title="Tem certeza que deseja excluir esse pagamento?"
-        animationType="slide"
-        handleConfirm={handleDeleteExpanseOnAccount}
-        backgroundColor={colors.modalBackground}
-        color={colors.textColor}
-        theme={theme}
+      <Header
+        variant="expanse"
+        headerValue={headerValue}
+        colors={headerColors()}
+        titles={{
+          current: 'Despesas',
+          estimate: 'Previsto',
+        }}
+        values={{
+          current: totalCurrentExpanses,
+          estimate: totalEstimateExpanses,
+        }}
       />
 
       <Menu />
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          confirmationText: 'Tem certeza que deseja excluir essa despesa?',
+          loadingText: 'Excluindo...',
+        }}
+        requestConfirm={handleDelete}
+        defaultConfirm={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        visible={isDeleteModalVisible}
+        type="Confirmation"
+      />
+
+      <Modal
+        accounts={accounts}
+        defaulAccount={expanseSelected?.receiptDefault}
+        transparent
+        animationType="slide"
+        texts={{
+          confirmationText: 'Em qual conta deseja pagar essa despesa?',
+          loadingText: 'Pagando...',
+        }}
+        requestConfirm={handleReceive}
+        defaultConfirm={handleCloseConfirmReceiveModal}
+        onCancel={handleCloseConfirmReceiveModal}
+        visible={isConfirmReceiveModalVisible}
+        type="AccountConfirmation"
+      />
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          confirmationText: 'Tem certeza que deseja marcar como não pago?',
+          loadingText: 'Excluindo pagamento...',
+        }}
+        requestConfirm={handleDeleteExpanseOnAccount}
+        defaultConfirm={handleCloseConfirmUnreceiveModal}
+        onCancel={handleCloseConfirmUnreceiveModal}
+        visible={isConfirmUnreceiveModalVisible}
+        type="Confirmation"
+      />
     </>
   );
 }
