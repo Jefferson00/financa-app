@@ -14,6 +14,7 @@ import { useAuth } from '../../hooks/AuthContext';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../interfaces/State';
 import { deleteCreditCard } from '../../store/modules/CreditCards/fetchActions';
+import { Modal } from '../NewModal';
 
 export function CreditCard() {
   const dispatch = useDispatch<any>();
@@ -28,7 +29,6 @@ export function CreditCard() {
   const colors = getExpansesColors(theme);
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('Excluindo...');
   const [errorMessage, setErrorMessage] = useState(
     'Erro ao atualizar informações',
   );
@@ -44,10 +44,16 @@ export function CreditCard() {
     setCreditCardSelected(card);
   }, []);
 
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+  };
+
+  const closeErrorModal = () => {
+    setHasError(false);
+  };
+
   const handleRemoveCreditCard = useCallback(async () => {
     if (user && creditCardSelected) {
-      setIsDeleteModalVisible(false);
-      setLoadingMessage('Excluindo...');
       try {
         dispatch(deleteCreditCard(creditCardSelected.id, user.id));
 
@@ -113,6 +119,32 @@ export function CreditCard() {
           </S.Empty>
         </S.EmptyContainer>
       )}
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          confirmationText: 'Tem certeza que deseja excluir esse cartão?',
+          loadingText: 'Excluindo...',
+        }}
+        requestConfirm={handleRemoveCreditCard}
+        defaultConfirm={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        visible={isDeleteModalVisible}
+        type="Confirmation"
+      />
+
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          errorText: errorMessage,
+        }}
+        defaultConfirm={closeErrorModal}
+        onCancel={closeErrorModal}
+        visible={hasError}
+        type="Error"
+      />
 
       {/*  <ModalComponent
         type="loading"

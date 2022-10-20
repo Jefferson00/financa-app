@@ -80,3 +80,29 @@ export const AccountItem = styled.TouchableOpacity<AccountItemProps>`
       border-color: ${props.borderColor ? props.borderColor : '#000'};
     `}
 `;
+
+export const SelectContent = styled.View`
+  flex-direction: row;
+  flex-wrap: wrap;
+
+  justify-content: center;
+  align-items: center;
+`;
+
+export const SelectItem = styled.View`
+  margin: ${RFPercentage(1)}px;
+`;
+
+interface ColorPalettProps {
+  backgroundColor: string;
+}
+
+export const ColorItem = styled.View<ColorPalettProps>`
+  width: ${RFPercentage(4.4)}px;
+  height: ${RFPercentage(4.4)}px;
+
+  border-radius: 4px;
+
+  background-color: ${props =>
+    props.backgroundColor ? props.backgroundColor : 'transparent'};
+`;

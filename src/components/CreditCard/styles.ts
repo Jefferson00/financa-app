@@ -11,7 +11,7 @@ interface ExpandableCardProps {
 }
 
 export const Container = styled.View`
-  flex: 1;
+  width: 100%;
 `;
 
 export const ButtonContainer = styled.View`

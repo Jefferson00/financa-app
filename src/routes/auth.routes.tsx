@@ -11,7 +11,7 @@ import Incomes from '../pages/Incomes';
 import { CreateIncome } from '../pages/CreateIncome';
 import Expanses from '../pages/Expanses';
 import { CreateExpanse } from '../pages/CreateExpanse';
-import CreateCreditCard from '../pages/Expanses/CreateCreditCard';
+import { CreateCreditCard } from '../pages/CreateCreditCard';
 import Notifications from '../pages/Notifications';
 
 const App = createSharedElementStackNavigator();

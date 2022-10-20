@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ModalBaseProps,
   TouchableWithoutFeedback,
   Modal as ReactNativeModal,
   ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { colors } from '../../styles/colors';
 import { useTheme } from '../../hooks/ThemeContext';
@@ -15,6 +16,7 @@ import { useAccount } from '../../hooks/AccountContext';
 import State from '../../interfaces/State';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeMessage } from '../../store/modules/Feedbacks';
+import { ColorsList } from '../../utils/cardsColors';
 
 interface IModalProps extends ModalBaseProps {
   type:
@@ -26,11 +28,12 @@ interface IModalProps extends ModalBaseProps {
     | 'Success'
     | 'Error';
   defaultConfirm?: () => void;
+  handleSelectColor?: (color: string) => void;
   requestConfirm?: () => Promise<void>;
   onCancel?: () => void;
   accounts?: IAccount[];
   defaulAccount?: string;
-  texts: {
+  texts?: {
     loadingText?: string;
     confirmationText?: string;
     successText?: string;
@@ -47,6 +50,7 @@ export function Modal({
   defaultConfirm,
   requestConfirm,
   onCancel,
+  handleSelectColor,
   ...rest
 }: IModalProps) {
   const dispatch = useDispatch<any>();
@@ -58,6 +62,12 @@ export function Modal({
   const { loading: loadingExpanses } = useSelector(
     (state: State) => state.expanses,
   );
+  const { loading: loadingAccounts } = useSelector(
+    (state: State) => state.accounts,
+  );
+  const { loading: loadingCreditCards } = useSelector(
+    (state: State) => state.creditCards,
+  );
   const { messages } = useSelector((state: State) => state.feedbacks);
   const [status, setStatus] = useState(type);
 
@@ -66,6 +76,15 @@ export function Modal({
       requestConfirm();
     }
   };
+
+  const loading = useMemo(
+    () =>
+      loadingExpanses ||
+      loadingIncomes ||
+      loadingCreditCards ||
+      loadingAccounts,
+    [loadingExpanses, loadingIncomes, loadingCreditCards, loadingAccounts],
+  );
 
   const onClose = () => {
     setStatus(type);
@@ -79,7 +98,7 @@ export function Modal({
   };
 
   useEffect(() => {
-    if (loadingExpanses || loadingIncomes) {
+    if (loading) {
       setStatus('Loading');
     } else if (messages) {
       if (messages?.type === 'success') {
@@ -88,7 +107,7 @@ export function Modal({
         setStatus('Error');
       }
     }
-  }, [loadingIncomes, loadingExpanses, messages]);
+  }, [loading, messages]);
 
   useEffect(() => {
     setStatus(type);
@@ -238,6 +257,29 @@ export function Modal({
                       Ok
                     </S.Text>
                   </S.Button>
+                </>
+              )}
+
+              {status === 'Colors' && handleSelectColor && (
+                <>
+                  <S.Text
+                    fontSize={2}
+                    fontWeight="SemiBold"
+                    color={modalColors().main_text}>
+                    Selecione a cor do cartão
+                  </S.Text>
+
+                  <S.SelectContent>
+                    {ColorsList &&
+                      ColorsList.map(color => (
+                        <S.SelectItem key={color.id}>
+                          <TouchableOpacity
+                            onPress={() => handleSelectColor(color.color)}>
+                            <S.ColorItem backgroundColor={color.color} />
+                          </TouchableOpacity>
+                        </S.SelectItem>
+                      ))}
+                  </S.SelectContent>
                 </>
               )}
 

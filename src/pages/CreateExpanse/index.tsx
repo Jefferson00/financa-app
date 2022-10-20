@@ -49,6 +49,7 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { addCreatedExpanse } from '../../store/modules/Expanses';
 import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
 import { Modal } from '../../components/NewModal';
+import { colors } from '../../styles/colors';
 
 interface ExpanseProps {
   route?: {
@@ -99,7 +100,50 @@ export function CreateExpanse(props: ExpanseProps) {
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const colors = getCreateExpansesColors(theme);
+  // const colors = getCreateExpansesColors(theme);
+
+  const expanseColors = () => {
+    if (theme === 'dark') {
+      return {
+        input_bg: colors.dark[700],
+        text: colors.blue[100],
+        button_colors: {
+          PRIMARY_BACKGROUND: colors.red.dark[500],
+          SECOND_BACKGROUND: colors.red.dark[400],
+          TEXT: colors.white,
+        },
+        switch_colors: {
+          thumbColor: {
+            false: colors.red.dark[400],
+            true: colors.red.dark[500],
+          },
+          trackColor: {
+            false: colors.dark[700],
+            true: colors.red.dark[400],
+          },
+        },
+      };
+    }
+    return {
+      input_bg: colors.red[100],
+      text: colors.gray[900],
+      button_colors: {
+        PRIMARY_BACKGROUND: colors.red[500],
+        SECOND_BACKGROUND: colors.red[400],
+        TEXT: colors.white,
+      },
+      switch_colors: {
+        thumbColor: {
+          false: colors.red[400],
+          true: colors.red[500],
+        },
+        trackColor: {
+          false: colors.red[200],
+          true: colors.red[400],
+        },
+      },
+    };
+  };
 
   const { control, handleSubmit } = useForm<FormData>({
     defaultValues: {
@@ -302,8 +346,8 @@ export function CreateExpanse(props: ExpanseProps) {
         <S.Container>
           <ControlledInput
             label="Nome"
-            background={colors.inputBackground}
-            textColor={colors.textColor}
+            background={expanseColors().input_bg}
+            textColor={expanseColors().text}
             returnKeyType="next"
             autoCapitalize="sentences"
             name="name"
@@ -314,8 +358,8 @@ export function CreateExpanse(props: ExpanseProps) {
 
           <ControlledInput
             label="Valor"
-            background={colors.inputBackground}
-            textColor={colors.textColor}
+            background={expanseColors().input_bg}
+            textColor={expanseColors().text}
             returnKeyType="next"
             keyboardType="number-pad"
             name="value"
@@ -324,38 +368,38 @@ export function CreateExpanse(props: ExpanseProps) {
             value={expanseState?.value ? String(expanseState.value) : '0'}
           />
 
-          <S.Label color={colors.textColor}>Recorrência</S.Label>
+          <S.Label color={expanseColors().text}>Recorrência</S.Label>
           <S.Row>
             <S.SelectOption
-              backgroundColor={colors.inputBackground}
+              backgroundColor={expanseColors().input_bg}
               onPress={() => setRecurrence('Mensal')}
-              color={colors.textColor}
+              color={expanseColors().text}
               checked={recurrence === 'Mensal'}>
-              <S.Option color={colors.textColor}>Mensal</S.Option>
+              <S.Option color={expanseColors().text}>Mensal</S.Option>
               <Ionicons
                 name="checkmark"
                 size={RFPercentage(4)}
-                color={colors.textColor}
+                color={expanseColors().text}
               />
             </S.SelectOption>
 
             <S.SelectOption
-              backgroundColor={colors.inputBackground}
+              backgroundColor={expanseColors().input_bg}
               onPress={() => setRecurrence('Parcelada')}
               checked={recurrence === 'Parcelada'}
-              color={colors.textColor}
+              color={expanseColors().text}
               style={{ marginHorizontal: RFPercentage(2) }}>
-              <S.Option color={colors.textColor}>Parcelada</S.Option>
+              <S.Option color={expanseColors().text}>Parcelada</S.Option>
               <Ionicons
                 name="checkmark"
                 size={RFPercentage(4)}
-                color={colors.textColor}
+                color={expanseColors().text}
               />
             </S.SelectOption>
 
             <Input
-              background={colors.inputBackground}
-              textColor={colors.textColor}
+              background={expanseColors().input_bg}
+              textColor={expanseColors().text}
               value={
                 iteration < 0 || isNaN(iteration) ? '1' : String(iteration)
               }
@@ -370,18 +414,18 @@ export function CreateExpanse(props: ExpanseProps) {
 
           <S.Row>
             <S.Col>
-              <S.Label color={colors.textColor}>Data de pagamento</S.Label>
+              <S.Label color={expanseColors().text}>Data de pagamento</S.Label>
               <S.SelectOption
-                backgroundColor={colors.inputBackground}
-                color={colors.textColor}
+                backgroundColor={expanseColors().input_bg}
+                color={expanseColors().text}
                 onPress={() => setSelectStartDateModal(true)}>
                 <Ionicons
                   name="calendar"
                   size={RFPercentage(4)}
-                  color={colors.textColor}
+                  color={expanseColors().text}
                 />
                 <S.Option
-                  color={colors.textColor}
+                  color={expanseColors().text}
                   style={{ marginHorizontal: RFPercentage(2) }}>
                   {isToday(startDate) ? 'Hoje' : getDayOfTheMounth(startDate)}
                 </S.Option>
@@ -392,7 +436,7 @@ export function CreateExpanse(props: ExpanseProps) {
               {isSameMonth(new Date(), selectedDate) && !expanseState && (
                 <>
                   <S.Label
-                    color={colors.textColor}
+                    color={expanseColors().text}
                     style={{ width: '100%', textAlign: 'right' }}>
                     Pago
                   </S.Label>
@@ -401,10 +445,10 @@ export function CreateExpanse(props: ExpanseProps) {
                     onChange={() => setPaid(!paid)}
                     thumbColor={
                       paid
-                        ? colors.thumbColor?.true || '#000'
-                        : colors.thumbColor?.false || '#000'
+                        ? expanseColors().switch_colors.thumbColor.true
+                        : expanseColors().switch_colors.thumbColor.false
                     }
-                    trackColor={colors.trackColor}
+                    trackColor={expanseColors().switch_colors.trackColor}
                   />
                 </>
               )}
@@ -414,8 +458,8 @@ export function CreateExpanse(props: ExpanseProps) {
           <ControlledInput
             label="Conta padrão de pagamento"
             type="select"
-            background={colors.inputBackground}
-            textColor={colors.textColor}
+            background={expanseColors().input_bg}
+            textColor={expanseColors().text}
             name="receiptDefault"
             control={control}
             value={
@@ -432,8 +476,8 @@ export function CreateExpanse(props: ExpanseProps) {
           <ControlledInput
             label="Categoria"
             type="select"
-            background={colors.inputBackground}
-            textColor={colors.textColor}
+            background={expanseColors().input_bg}
+            textColor={expanseColors().text}
             name="category"
             control={control}
             value={expanseState?.category ? expanseState.category : ''}
@@ -443,7 +487,7 @@ export function CreateExpanse(props: ExpanseProps) {
           <S.ButtonContainer>
             <Button
               title="Salvar"
-              colors={colors.saveButtonColors}
+              colors={expanseColors().button_colors}
               icon={SaveIcon}
               style={{ marginTop: 32 }}
               onPress={handleSubmit(handleSubmitExpanse)}
@@ -476,7 +520,7 @@ export function CreateExpanse(props: ExpanseProps) {
         title={expanseState ? 'Atualizando...' : 'Criando...'}
         animationType="slide"
         backgroundColor={colors.modalBackground}
-        color={colors.textColor}
+        color={expanseColors().text}
         theme={theme}
       />
       {messages && (
@@ -494,7 +538,7 @@ export function CreateExpanse(props: ExpanseProps) {
           }
           animationType="slide"
           backgroundColor={colors.modalBackground}
-          color={colors.textColor}
+          color={expanseColors().text}
           theme={theme}
           onSucessOkButton={
             messages?.type === 'success' ? handleOkSucess : undefined
