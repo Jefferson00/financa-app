@@ -10,7 +10,7 @@ import Account from '../pages/Account';
 import Incomes from '../pages/Incomes';
 import { CreateIncome } from '../pages/CreateIncome';
 import Expanses from '../pages/Expanses';
-import CreateExpanse from '../pages/Expanses/CreateExpanse';
+import { CreateExpanse } from '../pages/CreateExpanse';
 import CreateCreditCard from '../pages/Expanses/CreateCreditCard';
 import Notifications from '../pages/Notifications';
 

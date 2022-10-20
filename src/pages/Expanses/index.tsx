@@ -31,7 +31,7 @@ import { ICreateExpanseOnAccount } from '../../interfaces/ExpanseOnAccount';
 import { IExpanses } from '../../interfaces/Expanse';
 import ConfirmReceivedModalComponent from './Components/ConfirmReceivedModal';
 import ModalComponent from '../../components/Modal';
-import CreditCardsView from './Components/CreditCardsView';
+import { CreditCard } from '../../components/CreditCard';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../interfaces/State';
 import { IExpansesOnAccount } from '../../interfaces/Account';
@@ -487,7 +487,7 @@ export default function Expanses() {
               backgroundColor:
                 theme === 'dark' ? colors.dark[900] : colors.white,
             }}
-            renderRightActions={() => <CreditCardsView />}
+            renderRightActions={() => <CreditCard />}
             onSwipeableRightOpen={() => setTabSelected('Cards')}
             onSwipeableClose={() => setTabSelected('Expanses')}>
             <ItemsList

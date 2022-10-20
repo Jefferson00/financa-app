@@ -80,6 +80,7 @@ export default function Home() {
 
   useEffect(() => {
     if (user?.id) {
+      console.log('list');
       dispatch(listAccounts(user.id));
       dispatch(listExpanses(user.id));
       dispatch(listExpansesOnAccount(user.id));
