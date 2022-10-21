@@ -58,25 +58,24 @@ export const IncomesList = styled.FlatList`
   width: 100%;
 `;
 
-export const Empty = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
-  flex-direction: row;
+export const EmptyContainer = styled.View`
+  flex: 1;
+  align-items: center;
   justify-content: center;
+  width: 100%;
+  height: ${RFPercentage(40)}px;
+`;
 
-  height: ${RFPercentage(32)}px;
+export const EmptyRow = styled.View`
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
 `;
 
 export const ItemView = styled.View`
   padding: 0 ${RFPercentage(3.2)}px;
 `;
 
-export const EmptyText = styled.Text<TextProps>`
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.5)}px;
-  margin-left: 8px;
-
-  color: ${props => (props.color ? props.color : '#000')};
-`;
 export const DateTitle = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;

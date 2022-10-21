@@ -60,24 +60,37 @@ export function List({
   const { expanses } = useSelector((state: State) => state.expanses);
   const navigation = useNavigation<Nav>();
 
-  const verifyRecurrence = (income: any) => {
+  const verifyRecurrence = (item: any) => {
     let currentPart = null;
-    if (income.endDate) {
+    const itemOnAccountEndDate: boolean =
+      (item.income && item.income.endDate) ||
+      (item.expanse && item.expanse.endDate);
+
+    const itemOnAccountIteration: boolean =
+      (item.income && item.income.iteration.toLowerCase() !== 'mensal') ||
+      (item.expanse && item.expanse.iteration.toLowerCase() !== 'mensal');
+
+    if (item.endDate) {
       currentPart = differenceInCalendarMonths(
-        new Date(income.endDate),
+        new Date(item.endDate),
         selectedDate,
       );
-    } else if (income.income && income.income.endDate) {
+    } else if (itemOnAccountEndDate) {
       currentPart = differenceInCalendarMonths(
-        new Date(income.income.endDate),
+        item?.income?.endDate
+          ? new Date(item.income.endDate)
+          : new Date(item.expanse.endDate),
         selectedDate,
       );
     }
-    if (income.iteration && income.iteration.toLowerCase() !== 'mensal') {
-      return getCurrentIteration(currentPart, income.iteration);
+    if (item.iteration && item.iteration.toLowerCase() !== 'mensal') {
+      return getCurrentIteration(currentPart, item.iteration);
     }
-    if (income.income && income.income.iteration.toLowerCase() !== 'mensal') {
-      return getCurrentIteration(currentPart, income.income.iteration);
+    if (itemOnAccountIteration) {
+      return getCurrentIteration(
+        currentPart,
+        item?.income?.iteration || item?.expanse?.iteration,
+      );
     }
     return '';
   };

@@ -1,8 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { Control, Controller } from 'react-hook-form';
-import { Switch, Text, View } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Control,
+  Controller,
+  ControllerFieldState,
+  ControllerRenderProps,
+} from 'react-hook-form';
+import { Switch } from 'react-native';
 import { MaskInputProps } from 'react-native-mask-input';
-import { RFPercentage } from 'react-native-responsive-fontsize';
+import { useTheme } from '../../hooks/ThemeContext';
+import { colors } from '../../styles/colors';
 import { priceMask } from '../../utils/masks';
 import * as S from './styles';
 
@@ -44,84 +50,101 @@ export default function ControlledInput({
   thumbColor,
   ...rest
 }: ButtonProps) {
+  const { theme } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
+
+  const switchInput = (field: ControllerRenderProps<any, string>) => {
+    return (
+      <Switch
+        trackColor={{
+          true: trackColor?.true || '#000',
+          false: trackColor?.false || '#000',
+        }}
+        thumbColor={
+          field.value === 'active'
+            ? thumbColor?.true || '#000'
+            : thumbColor?.false || '#000'
+        }
+        value={field.value === 'active'}
+        onChange={() => {
+          if (field.value === 'active') {
+            field.onChange('inative');
+          } else {
+            field.onChange('active');
+          }
+        }}
+      />
+    );
+  };
+
+  const selectInput = (field: ControllerRenderProps<any, string>) => {
+    return (
+      <S.InputSelect
+        mode="dropdown"
+        selectedValue={field.value}
+        dropdownIconColor={textColor}
+        onValueChange={field.onChange}>
+        {selectItems &&
+          selectItems.map(item => (
+            <S.InputSelect.Item
+              key={item.id}
+              label={item.name}
+              value={item.id}
+              color={textColor}
+            />
+          ))}
+      </S.InputSelect>
+    );
+  };
+
+  const textInput = (field: ControllerRenderProps<any, string>) => {
+    return (
+      <S.InputText
+        {...rest}
+        color={textColor}
+        onChangeText={field.onChange}
+        value={currencyFormater ? priceMask(field.value) : field.value}
+        editable={!disabled}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+    );
+  };
+
+  const labelComponent = (fieldState: ControllerFieldState) => {
+    const alertColor =
+      theme === 'dark' ? colors.red.dark[500] : colors.red[500];
+
+    return (
+      <S.LabelContainer>
+        <S.Label color={fieldState.invalid ? alertColor : textColor}>
+          {label}
+        </S.Label>
+        {fieldState.invalid && (
+          <S.Alert color={alertColor}>{fieldState.error?.message}</S.Alert>
+        )}
+      </S.LabelContainer>
+    );
+  };
 
   return (
     <Controller
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <View
-          style={{
-            marginBottom: RFPercentage(3.2),
-          }}>
-          {label && (
-            <S.LabelContainer>
-              <S.Label color={fieldState.invalid ? '#CC3728' : textColor}>
-                {label}
-              </S.Label>
-              {fieldState.invalid && (
-                <S.Alert color="red">{fieldState.error?.message}</S.Alert>
-              )}
-            </S.LabelContainer>
-          )}
-          <S.Container
+        <S.Container>
+          {label && labelComponent(fieldState)}
+          <S.InputContainer
             backgroundColor={background}
             disabled={disabled}
             isFocused={isFocused}
             isErrored={fieldState.invalid}>
             {Icon && <Icon />}
-            {type === 'select' && (
-              <S.InputSelect
-                mode="dropdown"
-                selectedValue={field.value}
-                dropdownIconColor={textColor}
-                onValueChange={field.onChange}>
-                {selectItems &&
-                  selectItems.map(item => (
-                    <S.InputSelect.Item
-                      key={item.id}
-                      label={item.name}
-                      value={item.id}
-                      color={textColor}
-                    />
-                  ))}
-              </S.InputSelect>
-            )}
-            {type !== 'select' && type !== 'switch' && (
-              <S.InputText
-                {...rest}
-                color={textColor}
-                onChangeText={field.onChange}
-                value={currencyFormater ? priceMask(field.value) : field.value}
-                editable={!disabled}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-              />
-            )}
-            {type === 'switch' && (
-              <Switch
-                trackColor={{
-                  true: trackColor?.true || '#000',
-                  false: trackColor?.false || '#000',
-                }}
-                thumbColor={
-                  field.value === 'active'
-                    ? thumbColor?.true || '#000'
-                    : thumbColor?.false || '#000'
-                }
-                value={field.value === 'active'}
-                onChange={() => {
-                  if (field.value === 'active') {
-                    field.onChange('inative');
-                  } else {
-                    field.onChange('active');
-                  }
-                }}
-              />
-            )}
-          </S.Container>
-        </View>
+            {type !== 'select' && type !== 'switch' && textInput(field)}
+            {type === 'select' && selectInput(field)}
+            {type === 'switch' && switchInput(field)}
+          </S.InputContainer>
+        </S.Container>
       )}
     />
   );

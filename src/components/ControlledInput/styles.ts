@@ -3,7 +3,11 @@ import MaskInput from 'react-native-mask-input';
 import styled, { css } from 'styled-components/native';
 import { Picker } from '@react-native-picker/picker';
 
-interface ContainerProps {
+export const Container = styled.View`
+  margin-bottom: ${RFPercentage(3.2)}px;
+`;
+
+interface InputContainerProps {
   backgroundColor: string;
   borderColor?: string;
   disabled?: boolean;
@@ -11,15 +15,7 @@ interface ContainerProps {
   isErrored?: boolean;
 }
 
-interface IconContainer {
-  backgroundColor: string;
-}
-
-interface TextColor {
-  color: string;
-}
-
-export const Container = styled.View<ContainerProps>`
+export const InputContainer = styled.View<InputContainerProps>`
   height: ${RFPercentage(7)}px;
   width: 100%;
   flex-direction: row;
@@ -50,7 +46,12 @@ export const Container = styled.View<ContainerProps>`
       opacity: 0.6;
     `}
 `;
-export const Icon = styled.View<IconContainer>`
+
+interface IconProps {
+  backgroundColor: string;
+}
+
+export const Icon = styled.View<IconProps>`
   width: 56px;
   align-items: center;
   justify-content: center;
@@ -59,7 +60,11 @@ export const Icon = styled.View<IconContainer>`
   position: absolute;
 `;
 
-export const InputText = styled(MaskInput)<TextColor>`
+interface TextProps {
+  color: string;
+}
+
+export const InputText = styled(MaskInput)<TextProps>`
   flex: 1;
   margin-left: 8px;
   color: ${props => props.color};
@@ -67,7 +72,7 @@ export const InputText = styled(MaskInput)<TextColor>`
   font-family: 'Poppins-Regular';
 `;
 
-export const Alert = styled.Text<TextColor>`
+export const Alert = styled.Text<TextProps>`
   color: ${props => props.color};
   font-size: ${RFPercentage(1.8)}px;
   font-family: 'Poppins-Regular';
@@ -75,15 +80,15 @@ export const Alert = styled.Text<TextColor>`
   margin-left: ${RFPercentage(1.5)}px;
 `;
 
-export const InputSelect = styled(Picker)`
-  width: 100%;
-`;
-
-export const Label = styled.Text<TextColor>`
+export const Label = styled.Text<TextProps>`
   color: ${props => props.color};
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.2)}px;
   align-self: flex-start;
+`;
+
+export const InputSelect = styled(Picker)`
+  width: 100%;
 `;
 
 export const LabelContainer = styled.View`

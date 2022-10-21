@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import FeatherIcons from 'react-native-vector-icons/Feather';
 import IonIcons from 'react-native-vector-icons/Ionicons';
@@ -12,10 +12,8 @@ import { useAuth } from '../../hooks/AuthContext';
 import { useTheme } from '../../hooks/ThemeContext';
 
 import Menu from '../../components/Menu';
-import Header from '../../components/Header';
 import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
-import ModalComponent from '../../components/Modal';
 
 import * as S from './styles';
 
@@ -32,9 +30,8 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { ICreateAccount, IUpdateAccount } from '../../interfaces/Account';
 import State from '../../interfaces/State';
-import { removeMessage } from '../../store/modules/Feedbacks';
 import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
-import { View } from 'react-native';
+import { Modal } from '../../components/NewModal';
 interface ProfileProps {
   route?: {
     key: string;
@@ -68,21 +65,22 @@ export default function Account(props: ProfileProps) {
   const { user } = useAuth();
   const { incomesOnAccount } = useSelector((state: State) => state.incomes);
   const { expansesOnAccount } = useSelector((state: State) => state.expanses);
-  const { messages } = useSelector((state: State) => state.feedbacks);
-  const { loading } = useSelector((state: State) => state.accounts);
   const { creditCards } = useSelector((state: State) => state.creditCards);
   const { theme } = useTheme();
   const colors = getAccountColors(theme);
 
-  const [deleteConfirmationVisible, setDeleteConfirmationVisible] =
-    useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [accountState] = useState(props?.route?.params?.account);
-  const [showMessage, setShowMessage] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
 
-  const handleOkSucess = () => {
-    handleCloseModal();
-    setTimeout(() => navigation.navigate('Home'), 300);
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+    setTimeout(() => navigation.navigate('Home'), 200);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setTimeout(() => navigation.navigate('Home'), 200);
   };
 
   const canDelete = useCallback(() => {
@@ -119,8 +117,8 @@ export default function Account(props: ProfileProps) {
 
   const handleSubmitAccount = async (data: FormData) => {
     if (user) {
+      setIsModalVisible(true);
       if (accountState) {
-        setLoadingMessage('Atualizando...');
         const accountToUpdate: IUpdateAccount = {
           ...data,
           type:
@@ -130,7 +128,6 @@ export default function Account(props: ProfileProps) {
         };
         await dispatch(updateAccount(accountToUpdate, accountState.id));
       } else {
-        setLoadingMessage('Criando...');
         const accountToCreate: ICreateAccount = {
           ...data,
           type:
@@ -148,35 +145,23 @@ export default function Account(props: ProfileProps) {
 
   const handleDelete = useCallback(async () => {
     if (user && accountState) {
-      setDeleteConfirmationVisible(false);
-      setLoadingMessage('Excluindo...');
       dispatch(deleteAccount(accountState.id, user.id));
     }
   }, [user, accountState]);
 
-  const handleCloseModal = () => {
-    setShowMessage(false);
-    dispatch(removeMessage());
-  };
-
-  useEffect(() => {
-    if (messages) {
-      setShowMessage(true);
-    }
-  }, [messages]);
-
   return (
     <>
       <ReducedHeader title={accountState ? `Editar Conta` : `Nova Conta`} />
-      <S.Container>
-        <KeyboardAwareScrollView
-          resetScrollToCoords={{ x: 0, y: 0 }}
-          scrollEnabled
-          showsVerticalScrollIndicator={false}
-          style={{ width: '100%' }}
-          contentContainerStyle={{
-            alignItems: 'center',
-          }}>
+
+      <KeyboardAwareScrollView
+        resetScrollToCoords={{ x: 0, y: 0 }}
+        scrollEnabled
+        showsVerticalScrollIndicator={false}
+        style={{ width: '100%' }}
+        contentContainerStyle={{
+          alignItems: 'center',
+        }}>
+        <S.Container>
           <ControlledInput
             label="Nome"
             background={colors.inputBackground}
@@ -228,8 +213,7 @@ export default function Account(props: ProfileProps) {
               onPress={handleSubmit(handleSubmitAccount)}
             />
             {accountState && canDelete() && (
-              <S.DeleteButton
-                onPress={() => setDeleteConfirmationVisible(true)}>
+              <S.DeleteButton onPress={() => setIsDeleteModalVisible(true)}>
                 <IonIcons
                   name="trash"
                   size={RFPercentage(4)}
@@ -238,53 +222,35 @@ export default function Account(props: ProfileProps) {
               </S.DeleteButton>
             )}
           </S.ButtonContainer>
-        </KeyboardAwareScrollView>
+        </S.Container>
+      </KeyboardAwareScrollView>
 
-        <ModalComponent
-          type="loading"
-          visible={loading}
-          transparent
-          title={loadingMessage}
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
-        <ModalComponent
-          type={messages ? messages.type : 'error'}
-          visible={showMessage}
-          handleCancel={handleCloseModal}
-          onRequestClose={handleCloseModal}
-          transparent
-          title={messages?.message}
-          subtitle={
-            messages?.type === 'error'
-              ? 'Tente novamente mais tarde'
-              : undefined
-          }
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-          onSucessOkButton={
-            messages?.type === 'success' ? handleOkSucess : undefined
-          }
-        />
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          loadingText: accountState ? 'Atualizando...' : 'Criando...',
+        }}
+        visible={isModalVisible}
+        onCancel={handleCloseModal}
+        defaultConfirm={handleCloseModal}
+        type="Loading"
+      />
 
-        <ModalComponent
-          type="confirmation"
-          visible={deleteConfirmationVisible}
-          handleCancel={() => setDeleteConfirmationVisible(false)}
-          onRequestClose={() => setDeleteConfirmationVisible(false)}
-          transparent
-          title="Deseja mesmo excluir essa conta?"
-          animationType="slide"
-          handleConfirm={handleDelete}
-          backgroundColor={colors.modalBackground}
-          color={colors.textColor}
-          theme={theme}
-        />
-      </S.Container>
+      <Modal
+        transparent
+        animationType="slide"
+        texts={{
+          confirmationText: 'Tem certeza que deseja excluir essa conta?',
+          loadingText: 'Excluindo conta...',
+        }}
+        requestConfirm={handleDelete}
+        defaultConfirm={closeDeleteModal}
+        onCancel={closeDeleteModal}
+        visible={isDeleteModalVisible}
+        type="Confirmation"
+      />
+
       <Menu />
     </>
   );

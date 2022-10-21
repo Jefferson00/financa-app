@@ -45,6 +45,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import State from '../../../interfaces/State';
 import { payInvoice } from '../../../store/modules/CreditCards/fetchActions';
 import { deleteExpanseOnInvoice } from '../../../store/modules/Expanses/fetchActions';
+import { VisibleContent } from './VisibleContent';
+import { HiddenContent } from './HiddenContent';
 
 interface CardContentProps {
   backgroundColor?: string;
@@ -93,14 +95,9 @@ export default function CardContent({
   const [expanseSelected, setExpanseSelected] = useState<any>();
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasError, setHasError] = useState(false);
   const [paidSucessfully, setPaidSucessfully] = useState(false);
   const [confirmPaymentModalVisible, setConfirmPaymentModalVisible] =
     useState(false);
-  const [loadingMessage, setLoadingMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState(
-    'Erro ao atualizar informações',
-  );
 
   const toggleConfirmPaymentModalVisibility = () => {
     setConfirmPaymentModalVisible(pervState => !pervState);
@@ -213,44 +210,20 @@ export default function CardContent({
   }, [expanses, selectedDate, creditCard]);
 
   const handlePayInvoice = useCallback(async () => {
-    setLoadingMessage('Pagando fatura...');
-    setIsSubmitting(true);
     toggleConfirmPaymentModalVisibility();
 
     if (user && currentInvoice && !currentInvoice.paid) {
-      try {
-        dispatch(payInvoice(currentInvoice.id, user.id));
-      } catch (error: any) {
-        if (error?.response?.data?.message)
-          setErrorMessage(error?.response?.data?.message);
-        setHasError(true);
-      } finally {
-        setIsSubmitting(false);
-      }
+      dispatch(payInvoice(currentInvoice.id, user.id));
     }
   }, [currentInvoice, dispatch, user]);
 
-  const handleRemove = useCallback(
+  const handleDelete = useCallback(
     async (expanse: any) => {
-      setIsDeleteModalVisible(false);
-      setLoadingMessage('Excluindo...');
-      setIsSubmitting(true);
-
       if (user) {
-        try {
-          if (expanse?.expanseId) {
-            dispatch(
-              deleteExpanseOnInvoice(expanse.id, expanse.expanseId, user.id),
-            );
-
-            return;
-          }
-        } catch (error: any) {
-          if (error?.response?.data?.message)
-            setErrorMessage(error?.response?.data?.message);
-          setHasError(true);
-        } finally {
-          setIsSubmitting(false);
+        if (expanse?.expanseId) {
+          dispatch(
+            deleteExpanseOnInvoice(expanse.id, expanse.expanseId, user.id),
+          );
         }
       }
     },
@@ -280,225 +253,33 @@ export default function CardContent({
           }
           open.value = !open.value;
         }}>
-        <S.VisibleContent style={headerStyle} backgroundColor={backgroundColor}>
-          <S.Header>
-            <S.Title color="#fff">{creditCard.name}</S.Title>
-
-            <S.Row>
-              <S.EditCardButton
-                onPress={() =>
-                  navigation.navigate('CreateCreditCard', {
-                    card: creditCard,
-                  })
-                }>
-                <Ionicons
-                  name="create"
-                  size={RFPercentage(4)}
-                  color={creditCard.color}
-                  style={{ marginHorizontal: RFPercentage(1) }}
-                />
-              </S.EditCardButton>
-              {!creditCard.Invoice.find(
-                inv => inv.ExpanseOnInvoice.length > 0,
-              ) && (
-                <S.DeleteCardButton onPress={onDelete}>
-                  <Ionicons
-                    name="trash"
-                    size={RFPercentage(4)}
-                    color="#CC3728"
-                  />
-                </S.DeleteCardButton>
-              )}
-            </S.Row>
-          </S.Header>
-
-          <S.Main>
-            <S.Row>
-              <View>
-                <S.Subtitle color="#fff">Fatura atual</S.Subtitle>
-                <S.Title color="#fff">
-                  {getCurrencyFormat(currentInvoice?.value || 0)}
-                </S.Title>
-              </View>
-
-              <View>
-                <S.Row>
-                  {currentInvoice?.closed && !currentInvoice.paid && (
-                    <TouchableOpacity>
-                      <Ionicons
-                        name="alert-circle"
-                        size={RFPercentage(3)}
-                        color="#CC3728"
-                        style={{ marginHorizontal: RFPercentage(1) }}
-                      />
-                    </TouchableOpacity>
-                  )}
-                  {currentInvoice?.closed && !currentInvoice.paid && (
-                    <S.Subtitle color="#fff">Pagar fatura</S.Subtitle>
-                  )}
-                </S.Row>
-                {currentInvoice?.closed && !currentInvoice.paid && (
-                  <Switch
-                    value={currentInvoice.paid}
-                    onChange={toggleConfirmPaymentModalVisibility}
-                  />
-                )}
-              </View>
-            </S.Row>
-
-            <S.Row>
-              <View>
-                <S.Text color="#fff">Limite disponível</S.Text>
-                <S.Text color="#fff">
-                  {getCurrencyFormat(creditCard.limit)}
-                </S.Text>
-              </View>
-
-              <View style={{ alignItems: 'flex-end' }}>
-                <S.Text color="#fff">Data de pagamento</S.Text>
-                <S.Text color="#fff">
-                  {getDayOfTheMounth(
-                    new Date(
-                      currentInvoice?.paymentDate
-                        ? currentInvoice?.paymentDate
-                        : creditCard.paymentDate,
-                    ),
-                  )}
-                </S.Text>
-              </View>
-            </S.Row>
-          </S.Main>
-        </S.VisibleContent>
+        <VisibleContent
+          style={headerStyle}
+          backgroundColor={backgroundColor || '#000'}
+          creditCard={creditCard}
+          currentInvoice={currentInvoice}
+          toggleConfirmPaymentModalVisibility={
+            toggleConfirmPaymentModalVisibility
+          }
+          onDelete={onDelete}
+        />
       </TouchableWithoutFeedback>
 
-      <S.HiddenContent
-        style={[{ overflow: 'hidden' }, style]}
-        backgroundColor={backgroundColor}>
-        <View
-          ref={aref}
-          onLayout={({
-            nativeEvent: {
-              layout: { height: h },
-            },
-          }) => (height.value = h)}>
-          {currentInvoice &&
-            daysState.map((d, index) => (
-              <S.ItemView key={index}>
-                <S.DateTitle color="#fff">
-                  {d} de {getMonthName(new Date(currentInvoice.month))}
-                </S.DateTitle>
-                {currentInvoice?.ExpanseOnInvoice.filter(
-                  exp => exp.day === d,
-                ).map(expanse => (
-                  <Swipeable
-                    key={expanse.id}
-                    renderRightActions={() => (
-                      <Animated.View>
-                        <View>
-                          <S.DeleteButton
-                            onPress={() => {
-                              setExpanseSelected(expanse);
-                              setIsDeleteModalVisible(true);
-                            }}>
-                            <FeatherIcons name="trash" size={32} color="#fff" />
-                          </S.DeleteButton>
-                        </View>
-                      </Animated.View>
-                    )}>
-                    <S.ItemCard
-                      onPress={() =>
-                        navigation.navigate('CreateExpanse', {
-                          expanse: expanses.find(
-                            exp =>
-                              exp.id === expanse.id ||
-                              exp.id === expanse.expanseId,
-                          ),
-                        })
-                      }>
-                      <S.DollarSign>
-                        <FoundationIcons
-                          name="dollar"
-                          size={RFPercentage(7)}
-                          color={backgroundColor}
-                        />
-                      </S.DollarSign>
-                      <S.ItemInfo>
-                        <S.ItemTitle>{expanse.name}</S.ItemTitle>
-                        <S.ItemValue>
-                          {getCurrencyFormat(expanse.value)}
-                        </S.ItemValue>
-                      </S.ItemInfo>
-                    </S.ItemCard>
-                  </Swipeable>
-                ))}
-              </S.ItemView>
-            ))}
-          {!currentInvoice ||
-            (currentInvoice.ExpanseOnInvoice.length === 0 && (
-              <S.ItemView>
-                <S.ItemCard style={{ justifyContent: 'center' }}>
-                  <S.ItemInfo>
-                    <S.ItemTitle>Nenhuma despesa nessa fatura</S.ItemTitle>
-                  </S.ItemInfo>
-                </S.ItemCard>
-              </S.ItemView>
-            ))}
+      <HiddenContent
+        backgroundColor={backgroundColor}
+        creditCard={creditCard}
+        currentInvoice={currentInvoice}
+        daysState={daysState}
+        heightSharedValue={height}
+        onDelete={expanse => {
+          setExpanseSelected(expanse);
+          setIsDeleteModalVisible(true);
+        }}
+        viewRef={aref}
+        style={style}
+      />
 
-          {currentPaidInvoiceState && isSameMonth(selectedDate, new Date()) && (
-            <S.HighlightContainer>
-              <S.ItemView>
-                <S.Subtitle color="#fff">
-                  Fatura de{' '}
-                  {getMonthName(new Date(currentPaidInvoiceState?.month))} paga
-                  em{' '}
-                  {getDayOfTheMounth(
-                    new Date(currentPaidInvoiceState?.updatedAt),
-                  )}
-                </S.Subtitle>
-              </S.ItemView>
-              {paidInvoiceDaysState.map(d => (
-                <S.ItemView key={Math.random()}>
-                  <S.DateTitle color="#fff">
-                    {d} de{' '}
-                    {getMonthName(new Date(currentPaidInvoiceState.month))}
-                  </S.DateTitle>
-                  {currentPaidInvoiceState?.ExpanseOnInvoice.filter(
-                    exp => exp.day === d,
-                  ).map(expanse => (
-                    <S.ItemCard
-                      key={expanse.id}
-                      onPress={() =>
-                        navigation.navigate('CreateExpanse', {
-                          expanse: expanses.find(
-                            exp =>
-                              exp.id === expanse.id ||
-                              exp.id === expanse.expanseId,
-                          ),
-                        })
-                      }>
-                      <S.DollarSign>
-                        <FoundationIcons
-                          name="dollar"
-                          size={RFPercentage(7)}
-                          color={backgroundColor}
-                        />
-                      </S.DollarSign>
-                      <S.ItemInfo>
-                        <S.ItemTitle>{expanse.name}</S.ItemTitle>
-                        <S.ItemValue>
-                          {getCurrencyFormat(expanse.value)}
-                        </S.ItemValue>
-                      </S.ItemInfo>
-                    </S.ItemCard>
-                  ))}
-                </S.ItemView>
-              ))}
-            </S.HighlightContainer>
-          )}
-        </View>
-      </S.HiddenContent>
-
-      <ConfirmReceivedModalComponent
+      {/*  <ConfirmReceivedModalComponent
         visible={confirmPaymentModalVisible}
         handleCancel={toggleConfirmPaymentModalVisibility}
         onRequestClose={toggleConfirmPaymentModalVisibility}
@@ -511,9 +292,9 @@ export default function CardContent({
         backgroundColor={colors.modalBackground}
         color={colors.textColor}
         theme={theme}
-      />
+      /> */}
 
-      <ModalComponent
+      {/*  <ModalComponent
         type="confirmation"
         visible={isDeleteModalVisible}
         handleCancel={() => setIsDeleteModalVisible(false)}
@@ -523,8 +304,8 @@ export default function CardContent({
         animationType="slide"
         handleConfirm={() => handleRemove(expanseSelected)}
       />
-
-      <ModalComponent
+ */}
+      {/*  <ModalComponent
         type="loading"
         visible={isSubmitting}
         transparent
@@ -552,7 +333,7 @@ export default function CardContent({
         backgroundColor={colors.modalBackground}
         color={colors.textColor}
         theme={theme}
-      />
+      /> */}
     </>
   );
 }

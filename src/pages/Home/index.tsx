@@ -29,29 +29,22 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { colors } from '../../styles/colors';
 import { useDate } from '../../hooks/DateContext';
 import State from '../../interfaces/State';
-import { useNavigation } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 
 export default function Home() {
-  const { isFocused } = useNavigation();
+  const routes = useRoute();
+  const routeName = routes.name;
   const dispatch = useDispatch<any>();
   const { selectedDate, setCurrentMonth } = useDate();
   const { accounts } = useSelector((state: State) => state.accounts);
-  const { incomes, incomesOnAccount } = useSelector(
-    (state: State) => state.incomes,
-  );
-  const { expanses, expansesOnAccount } = useSelector(
-    (state: State) => state.expanses,
-  );
+  const { incomes } = useSelector((state: State) => state.incomes);
+  const { expanses } = useSelector((state: State) => state.expanses);
 
   const { user } = useAuth();
   const { theme } = useTheme();
-  const {
-    listAccountCards,
-    totalEstimateBalance,
-    totalCurrentBalance,
-    loadingCards,
-  } = useAccount();
+  const { listAccountCards, totalEstimateBalance, totalCurrentBalance } =
+    useAccount();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -80,7 +73,6 @@ export default function Home() {
 
   useEffect(() => {
     if (user?.id) {
-      console.log('list');
       dispatch(listAccounts(user.id));
       dispatch(listExpanses(user.id));
       dispatch(listExpansesOnAccount(user.id));
@@ -91,7 +83,7 @@ export default function Home() {
   }, [dispatch, user]);
 
   useEffect(() => {
-    if (isFocused()) {
+    if (routeName === 'Home') {
       listAccountCards();
     }
   }, [selectedDate, accounts, incomes, expanses]);
@@ -110,7 +102,7 @@ export default function Home() {
         }
         contentContainerStyle={{
           minHeight: RFPercentage(100),
-          paddingTop: RFPercentage(40),
+          paddingTop: RFPercentage(36),
         }}
         onScroll={scrollHandler}>
         <S.Container>

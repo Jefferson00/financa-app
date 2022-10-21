@@ -23,8 +23,6 @@ import { useDate } from '../../hooks/DateContext';
 import Menu from '../../components/Menu';
 import ControlledInput from '../../components/ControlledInput';
 import Button from '../../components/Button';
-import Header from '../../components/Header';
-import ModalComponent from '../../components/Modal';
 import Input from '../../components/Input';
 
 import * as S from './styles';
@@ -33,7 +31,6 @@ import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { getDayOfTheMounth } from '../../utils/dateFormats';
 import { currencyToValue } from '../../utils/masks';
 import { ExpanseCategories } from '../../utils/categories';
-import { getCreateExpansesColors } from '../../utils/colors/expanses';
 import { Switch } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import State from '../../interfaces/State';
@@ -43,7 +40,6 @@ import {
   updateExpanse,
 } from '../../store/modules/Expanses/fetchActions';
 import { ICreateExpanseOnAccount } from '../../interfaces/ExpanseOnAccount';
-import { removeMessage } from '../../store/modules/Feedbacks';
 import { useNotification } from '../../hooks/NotificationContext';
 import AsyncStorage from '@react-native-community/async-storage';
 import { addCreatedExpanse } from '../../store/modules/Expanses';
@@ -86,10 +82,7 @@ export function CreateExpanse(props: ExpanseProps) {
   const { selectedDate } = useDate();
   const { theme } = useTheme();
 
-  const [showMessage, setShowMessage] = useState(false);
-  const [expanseState, setExpanseState] = useState(
-    props?.route?.params?.expanse,
-  );
+  const [expanseState] = useState(props?.route?.params?.expanse);
 
   const [recurrence, setRecurrence] = useState<'Mensal' | 'Parcelada'>(
     'Parcelada',
@@ -99,8 +92,6 @@ export function CreateExpanse(props: ExpanseProps) {
   const [startDate, setStartDate] = useState(selectedDate);
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
-  // const colors = getCreateExpansesColors(theme);
 
   const expanseColors = () => {
     if (theme === 'dark') {
@@ -321,12 +312,6 @@ export function CreateExpanse(props: ExpanseProps) {
     }
   }, [expanseCreated]);
 
-  useEffect(() => {
-    if (messages) {
-      setShowMessage(true);
-    }
-  }, [messages]);
-
   return (
     <>
       <ReducedHeader
@@ -513,38 +498,6 @@ export function CreateExpanse(props: ExpanseProps) {
           setSelectStartDateModal(false);
         }}
       />
-      {/*      <ModalComponent
-        type="loading"
-        visible={loading}
-        transparent
-        title={expanseState ? 'Atualizando...' : 'Criando...'}
-        animationType="slide"
-        backgroundColor={colors.modalBackground}
-        color={expanseColors().text}
-        theme={theme}
-      />
-      {messages && (
-        <ModalComponent
-          type={messages.type}
-          visible={showMessage}
-          handleCancel={handleCloseModal}
-          onRequestClose={handleCloseModal}
-          transparent
-          title={messages?.message}
-          subtitle={
-            messages?.type === 'error'
-              ? 'Tente novamente mais tarde'
-              : undefined
-          }
-          animationType="slide"
-          backgroundColor={colors.modalBackground}
-          color={expanseColors().text}
-          theme={theme}
-          onSucessOkButton={
-            messages?.type === 'success' ? handleOkSucess : undefined
-          }
-        />
-      )} */}
 
       <Modal
         transparent

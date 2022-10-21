@@ -49,9 +49,11 @@ export default function Button({
       <S.Container style={buttonAnimated}>
         <S.Main backgroundColor={colors.PRIMARY_BACKGROUND}>
           {fontSize === 'small' ? (
-            <S.SubText color={colors.TEXT}>{title}</S.SubText>
+            <S.Text fontSize={2} color={colors.TEXT}>
+              {title}
+            </S.Text>
           ) : (
-            <S.MainText color={colors.TEXT}>{title}</S.MainText>
+            <S.Text color={colors.TEXT}>{title}</S.Text>
           )}
         </S.Main>
 

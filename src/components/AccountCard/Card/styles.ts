@@ -9,7 +9,7 @@ export const Container = styled(LinearGradient)`
   margin: 0 auto;
   border-radius: 10px;
 
-  padding: ${RFPercentage(3)}px;
+  padding: ${RFPercentage(2)}px ${RFPercentage(3)}px;
 
   flex-direction: row;
 
@@ -40,7 +40,7 @@ export const EmptyCardTitle = styled.Text`
 export const CardBalance = styled.Text`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(3)}px;
-
+  margin-top: ${RFPercentage(1)}px;
   color: #fff;
 `;
 

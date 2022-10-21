@@ -15,12 +15,6 @@ interface CradsProps {
 
 export function Card({ icon: Icon, item, colors, handleNavigate }: CradsProps) {
   const ref: React.Ref<LinearGradient> = useRef(null);
-  const primaryColors = ['#FF981E', '#F9C33C'];
-  const secondColors = ['#0070BA', '#1546A0'];
-
-  /*  useEffect(() => {
-    console.log(ref.current);
-  }, [ref.current]); */
 
   return (
     <S.Container
