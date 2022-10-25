@@ -182,7 +182,11 @@ export function List({
             onDelete={onDelete}
             item={{
               id: item.id,
-              category: item.category,
+              category:
+                item.income?.category ||
+                item.expanse?.category ||
+                item.category ||
+                '',
               name: item.name,
               recurrence: verifyRecurrence(item),
               value: item.value,

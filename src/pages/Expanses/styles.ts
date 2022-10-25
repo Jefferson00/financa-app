@@ -61,9 +61,9 @@ export const IncomesList = styled.FlatList`
 export const EmptyContainer = styled.View`
   flex: 1;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
-  height: ${RFPercentage(40)}px;
+  height: ${RFPercentage(30)}px;
 `;
 
 export const EmptyRow = styled.View`

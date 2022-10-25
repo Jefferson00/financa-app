@@ -12,6 +12,7 @@ import LogoImg from '../assets/Logos/logoLogin.png';
 export type Nav = {
   navigate: (value: string, props?: any) => void;
   goBack: () => void;
+  isFocused: () => boolean;
 };
 
 export default function Routes() {

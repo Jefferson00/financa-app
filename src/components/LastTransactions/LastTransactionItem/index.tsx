@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { ITransactions } from '..';
 import { getDayOfTheMounth } from '../../../utils/dateFormats';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { getCategoryIcon } from '../../../utils/getCategoryIcon';
 
 interface LastTransactionItemProps {
   transaction: ITransactions;
@@ -13,7 +14,7 @@ interface LastTransactionItemProps {
 export function LastTransactionItem({ transaction }: LastTransactionItemProps) {
   return (
     <S.LastTransactionsView>
-      <Icon name="business" size={RFPercentage(3)} color="#09192D" />
+      {getCategoryIcon(transaction.category, '#09192D', RFPercentage(3))}
       <S.TitleContainer>
         <S.TransactionTitle>
           {transaction.title.length > 15

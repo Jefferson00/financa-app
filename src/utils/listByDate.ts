@@ -96,8 +96,7 @@ export const listByDate = (
   });
 
   const itemsOrdered = itemsWithoutAccount.sort(
-    (a, b) =>
-      new Date(a.receiptDate).getDate() - new Date(b.receiptDate).getDate(),
+    (a, b) => new Date(a.startDate).getDate() - new Date(b.startDate).getDate(),
   );
 
   getItemsOrderByDay(itemsOrdered, itemsOrderedByDay);
@@ -105,7 +104,7 @@ export const listByDate = (
 
   itemsOrderedByDay.map(item => {
     item.items = itemsWithoutAccount.filter(
-      entry => new Date(entry.receiptDate).getDate() === item.day,
+      entry => new Date(entry.startDate).getDate() === item.day,
     );
     item.items = [
       ...item.items,

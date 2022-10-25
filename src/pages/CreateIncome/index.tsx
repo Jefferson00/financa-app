@@ -78,7 +78,11 @@ export function CreateIncome(props: IncomeProps) {
     'Parcelada',
   );
   const [iteration, setIteration] = useState(1);
-  const [startDate, setStartDate] = useState(selectedDate);
+  const [startDate, setStartDate] = useState(
+    props?.route?.params?.income
+      ? new Date(props?.route?.params?.income.startDate)
+      : selectedDate,
+  );
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
   const [received, setReceived] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -169,7 +173,7 @@ export function CreateIncome(props: IncomeProps) {
         userId: user.id,
         accountId: incomeCreated.receiptDefault,
         incomeId: incomeCreated.id,
-        month: new Date(),
+        month: new Date(incomeCreated.startDate), // new Date()
         value: incomeCreated.value,
         name: incomeCreated.name,
         recurrence: incomeCreated.iteration,

@@ -3,20 +3,20 @@ import {
   ModalBaseProps,
   TouchableWithoutFeedback,
   Modal as ReactNativeModal,
-  ActivityIndicator,
-  TouchableOpacity,
 } from 'react-native';
 import { colors } from '../../styles/colors';
 import { useTheme } from '../../hooks/ThemeContext';
-import Icons from 'react-native-vector-icons/Ionicons';
 import * as S from './styles';
-import { RFPercentage } from 'react-native-responsive-fontsize';
 import { IAccount } from '../../interfaces/Account';
-import { useAccount } from '../../hooks/AccountContext';
 import State from '../../interfaces/State';
 import { useDispatch, useSelector } from 'react-redux';
 import { removeMessage } from '../../store/modules/Feedbacks';
-import { ColorsList } from '../../utils/cardsColors';
+import { Confirmation } from './Confirmation';
+import { Success } from './Success';
+import { Error } from './Error';
+import { Colors } from './Colors';
+import { AccountConfirmation } from './AccountConfirmation';
+import { Loading } from './Loading';
 
 interface IModalProps extends ModalBaseProps {
   type:
@@ -41,6 +41,17 @@ interface IModalProps extends ModalBaseProps {
   };
 }
 
+export type ModalColors = () => {
+  primary: string;
+  main_text: string;
+  primary_button_text: string;
+  secondary_button_bg: string;
+  success: string;
+  error: string;
+  select: string;
+  unselect: string;
+};
+
 export function Modal({
   visible,
   texts,
@@ -55,7 +66,6 @@ export function Modal({
 }: IModalProps) {
   const dispatch = useDispatch<any>();
   const { theme } = useTheme();
-  const { handleSelectAccount, accountSelected } = useAccount();
   const { loading: loadingIncomes } = useSelector(
     (state: State) => state.incomes,
   );
@@ -139,212 +149,66 @@ export function Modal({
   };
 
   return (
-    <S.Container visible={visible || false}>
-      <ReactNativeModal
-        statusBarTranslucent
-        visible={visible}
-        {...rest}
-        onRequestClose={onClose}>
-        <S.Wrapper onPress={onClose}>
-          <TouchableWithoutFeedback>
-            <S.Content>
-              {status === 'Confirmation' && (
-                <>
-                  <Icons
-                    name="alert-circle"
-                    size={36}
-                    color={modalColors().error}
-                  />
-                  <S.Text
-                    fontSize={2}
-                    fontWeight="SemiBold"
-                    color={modalColors().main_text}>
-                    {texts?.confirmationText}
-                  </S.Text>
+    <ReactNativeModal
+      statusBarTranslucent
+      visible={visible}
+      {...rest}
+      onRequestClose={onClose}>
+      <S.Wrapper onPress={onClose}>
+        <TouchableWithoutFeedback>
+          <S.Content>
+            {status === 'Confirmation' && (
+              <Confirmation
+                modalColors={modalColors}
+                confirmationText={texts?.confirmationText}
+                onCancel={onClose}
+                requestConfirm={onConfirmRequest}
+              />
+            )}
 
-                  <S.Row>
-                    <S.Button
-                      backgroundColor={modalColors().secondary_button_bg}
-                      style={{
-                        marginRight: RFPercentage(2.4),
-                      }}
-                      onPress={onClose}>
-                      <S.Text
-                        fontSize={2}
-                        fontWeight="SemiBold"
-                        color={modalColors().primary}>
-                        Cancelar
-                      </S.Text>
-                    </S.Button>
+            {status === 'Loading' && (
+              <Loading
+                modalColors={modalColors}
+                loadingMessage={texts?.loadingText}
+              />
+            )}
 
-                    <S.Button
-                      backgroundColor={modalColors().error}
-                      onPress={onConfirmRequest}>
-                      <S.Text
-                        fontSize={2}
-                        fontWeight="SemiBold"
-                        color={modalColors().primary_button_text}>
-                        Ok
-                      </S.Text>
-                    </S.Button>
-                  </S.Row>
-                </>
-              )}
+            {status === 'Success' && (
+              <Success
+                modalColors={modalColors}
+                onOk={onOk}
+                sucessMessage={messages?.message}
+              />
+            )}
 
-              {status === 'Loading' && (
-                <>
-                  <ActivityIndicator
-                    size="large"
-                    color={modalColors().primary}
-                  />
-                  <S.Text
-                    fontSize={2}
-                    fontWeight="SemiBold"
-                    color={modalColors().main_text}>
-                    {texts?.loadingText}
-                  </S.Text>
-                </>
-              )}
+            {status === 'Error' && (
+              <Error
+                modalColors={modalColors}
+                onOk={onOk}
+                errorMessage={messages?.message}
+              />
+            )}
 
-              {status === 'Success' && (
-                <>
-                  <Icons
-                    name="checkmark-circle"
-                    size={36}
-                    color={modalColors().success}
-                  />
-                  <S.Text
-                    fontSize={2}
-                    fontWeight="SemiBold"
-                    color={modalColors().main_text}>
-                    {messages?.message}
-                  </S.Text>
+            {status === 'Colors' && handleSelectColor && (
+              <Colors
+                handleSelectColor={handleSelectColor}
+                modalColors={modalColors}
+              />
+            )}
 
-                  <S.Button
-                    backgroundColor={modalColors().primary}
-                    onPress={onOk}>
-                    <S.Text
-                      fontSize={2}
-                      fontWeight="SemiBold"
-                      color={modalColors().primary_button_text}>
-                      Ok
-                    </S.Text>
-                  </S.Button>
-                </>
-              )}
-
-              {status === 'Error' && (
-                <>
-                  <Icons
-                    name="alert-circle"
-                    size={36}
-                    color={modalColors().error}
-                  />
-                  <S.Text
-                    fontSize={2}
-                    fontWeight="SemiBold"
-                    color={modalColors().main_text}>
-                    {messages?.message}
-                  </S.Text>
-
-                  <S.Button
-                    backgroundColor={modalColors().primary}
-                    onPress={onOk}>
-                    <S.Text
-                      fontSize={2}
-                      fontWeight="SemiBold"
-                      color={modalColors().primary_button_text}>
-                      Ok
-                    </S.Text>
-                  </S.Button>
-                </>
-              )}
-
-              {status === 'Colors' && handleSelectColor && (
-                <>
-                  <S.Text
-                    fontSize={2}
-                    fontWeight="SemiBold"
-                    color={modalColors().main_text}>
-                    Selecione a cor do cartão
-                  </S.Text>
-
-                  <S.SelectContent>
-                    {ColorsList &&
-                      ColorsList.map(color => (
-                        <S.SelectItem key={color.id}>
-                          <TouchableOpacity
-                            onPress={() => handleSelectColor(color.color)}>
-                            <S.ColorItem backgroundColor={color.color} />
-                          </TouchableOpacity>
-                        </S.SelectItem>
-                      ))}
-                  </S.SelectContent>
-                </>
-              )}
-
-              {status === 'AccountConfirmation' && (
-                <>
-                  {accounts?.map(acc => (
-                    <S.AccountItem
-                      backgroundColor={
-                        accountSelected
-                          ? acc.id === accountSelected?.id
-                            ? modalColors().select
-                            : modalColors().unselect
-                          : acc.id === defaulAccount
-                          ? modalColors().select
-                          : modalColors().unselect
-                      }
-                      key={acc.id}
-                      selected={
-                        accountSelected
-                          ? acc.id === accountSelected?.id
-                          : acc.id === defaulAccount
-                      }
-                      borderColor={modalColors().select}
-                      onPress={() => handleSelectAccount(acc)}>
-                      <S.Text
-                        color={modalColors().main_text}
-                        fontWeight="Regular"
-                        fontSize={2}>
-                        {acc.name}
-                      </S.Text>
-                    </S.AccountItem>
-                  ))}
-
-                  <S.Row>
-                    <S.Button
-                      backgroundColor={modalColors().secondary_button_bg}
-                      style={{
-                        marginRight: RFPercentage(2.4),
-                      }}
-                      onPress={onClose}>
-                      <S.Text
-                        fontSize={2}
-                        fontWeight="SemiBold"
-                        color={modalColors().primary}>
-                        Cancelar
-                      </S.Text>
-                    </S.Button>
-
-                    <S.Button
-                      backgroundColor={modalColors().error}
-                      onPress={onConfirmRequest}>
-                      <S.Text
-                        fontSize={2}
-                        fontWeight="SemiBold"
-                        color={modalColors().primary_button_text}>
-                        Ok
-                      </S.Text>
-                    </S.Button>
-                  </S.Row>
-                </>
-              )}
-            </S.Content>
-          </TouchableWithoutFeedback>
-        </S.Wrapper>
-      </ReactNativeModal>
-    </S.Container>
+            {status === 'AccountConfirmation' && (
+              <AccountConfirmation
+                confirmationText={texts?.confirmationText}
+                accounts={accounts}
+                modalColors={modalColors}
+                defaulAccount={defaulAccount}
+                onCancel={onClose}
+                requestConfirm={onConfirmRequest}
+              />
+            )}
+          </S.Content>
+        </TouchableWithoutFeedback>
+      </S.Wrapper>
+    </ReactNativeModal>
   );
 }

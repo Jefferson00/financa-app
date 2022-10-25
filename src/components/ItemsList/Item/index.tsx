@@ -114,7 +114,9 @@ export function Item({
               ) : (
                 getCategoryIcon(item.category, colors.text, 20)
               )}
-              <S.TitleText color={colors.text}>
+              <S.TitleText
+                color={colors.text}
+                style={{ marginLeft: RFPercentage(1.3) }}>
                 {item.name} {item.recurrence && ` ${item.recurrence}`}
               </S.TitleText>
             </S.TitleContainer>

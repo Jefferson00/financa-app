@@ -8,6 +8,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import {
   addMonths,
+  isBefore,
   isSameMonth,
   isToday,
   lastDayOfMonth,
@@ -89,7 +90,11 @@ export function CreateExpanse(props: ExpanseProps) {
   );
   const [paid, setPaid] = useState(false);
   const [iteration, setIteration] = useState(1);
-  const [startDate, setStartDate] = useState(selectedDate);
+  const [startDate, setStartDate] = useState(
+    props?.route?.params?.expanse
+      ? new Date(props?.route?.params?.expanse?.startDate)
+      : selectedDate,
+  );
   const [selectStartDateModal, setSelectStartDateModal] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -180,7 +185,11 @@ export function CreateExpanse(props: ExpanseProps) {
     startDate: any,
     endDate: any,
   ) => {
-    const date = new Date(startDate);
+    let date = new Date(startDate);
+    if (isBefore(new Date(startDate), new Date())) {
+      const newStartDate = addMonths(new Date(startDate), 1);
+      date = newStartDate;
+    }
 
     await AsyncStorage.setItem(
       `@FinancaAppBeta:expanseEndDate:${expanseId}`,
@@ -255,8 +264,12 @@ export function CreateExpanse(props: ExpanseProps) {
         receiptDefault: data.receiptDefault,
       };
 
+      const creditCardType = !!creditCards.find(
+        card => card.id === data.receiptDefault,
+      );
+
       if (expanseState) {
-        dispatch(updateExpanse(expanseInput, expanseState.id, false));
+        dispatch(updateExpanse(expanseInput, expanseState.id, creditCardType));
         await updateExpanseNotification(
           expanseState.id,
           expanseInput.name,
@@ -264,7 +277,7 @@ export function CreateExpanse(props: ExpanseProps) {
           expanseInput.endDate,
         );
       } else {
-        dispatch(createExpanse(expanseInput, paid, false));
+        dispatch(createExpanse(expanseInput, paid, creditCardType));
       }
     }
   };
@@ -287,7 +300,7 @@ export function CreateExpanse(props: ExpanseProps) {
         userId: user.id,
         accountId: expanseCreated.receiptDefault,
         expanseId: expanseCreated.id,
-        month: new Date(),
+        month: new Date(expanseCreated.startDate), // new Date()
         value: expanseCreated.value,
         name: expanseCreated.name,
         recurrence: expanseCreated.iteration,

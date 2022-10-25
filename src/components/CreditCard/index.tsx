@@ -156,7 +156,6 @@ export function CreditCard() {
         color={colors.textColor}
         theme={theme}
       />
-
       <ModalComponent
         type="confirmation"
         visible={isDeleteModalVisible}
@@ -170,7 +169,6 @@ export function CreditCard() {
         color={colors.textColor}
         theme={theme}
       />
-
       <ModalComponent
         type="error"
         visible={hasError}

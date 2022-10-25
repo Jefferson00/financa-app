@@ -54,6 +54,7 @@ export interface IInvoice {
   creditCardId: string;
   accountId: string;
   updatedAt: string;
+  name?: string;
   ExpanseOnInvoice: IExpanseOnInvoice[];
 }
 

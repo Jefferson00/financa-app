@@ -14,7 +14,7 @@ const Estimate = () => {
     calculateEstimateBalances,
     estimates,
     handleSelectEstimate,
-    estimateValueSelected,
+    estimateMonthSelected,
   } = useAccount();
 
   const colors = getEstimateColors(theme);
@@ -30,7 +30,7 @@ const Estimate = () => {
 
   useEffect(() => {
     if (estimates.length > 0) {
-      handleSelectEstimate(estimates[0].valueFormated);
+      handleSelectEstimate(estimates[0].valueFormated, estimates[0].month);
     }
   }, [estimates]);
 
@@ -51,12 +51,13 @@ const Estimate = () => {
             <S.EstimateIndicator
               indicatorVelue={estimate.indicator}
               indicatorColor={
-                estimateValueSelected === estimate.valueFormated
-                  ? '#FF981E'
-                  : '#EFF6FF'
+                estimateMonthSelected === estimate.month ? '#FF981E' : '#EFF6FF'
               }
               onPress={() =>
-                handleSelectEstimate(getCurrencyFormat(estimate.value))
+                handleSelectEstimate(
+                  getCurrencyFormat(estimate.value),
+                  estimate.month,
+                )
               }
             />
             <S.EstimateMonthText monthTextColor={colors.estimateColors.month}>

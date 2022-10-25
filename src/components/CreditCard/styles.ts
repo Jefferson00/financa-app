@@ -1,6 +1,7 @@
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import styled, { css } from 'styled-components/native';
 import Animated from 'react-native-reanimated';
+import { ScrollView as GestureHandlerScrollView } from 'react-native-gesture-handler';
 
 interface TextProps {
   color: string;
@@ -19,7 +20,7 @@ export const ButtonContainer = styled.View`
 `;
 
 export const EmptyContainer = styled.View`
-  padding: 0 ${RFPercentage(3.2)}px;
+  margin-top: ${RFPercentage(4.4)}px;
   width: 100%;
   flex: 1;
 `;
@@ -33,11 +34,12 @@ export const Empty = styled.View`
 export const EmptyContent = styled.View`
   flex-direction: row;
   justify-content: center;
+  align-items: center;
 `;
 
 export const EmptyText = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.5)}px;
+  font-size: ${RFPercentage(2)}px;
   margin-left: 8px;
 
   color: ${props => (props.color ? props.color : '#000')};

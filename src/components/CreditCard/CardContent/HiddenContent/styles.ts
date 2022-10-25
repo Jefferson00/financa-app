@@ -35,11 +35,11 @@ export const Text = styled.Text<TextProps>`
 `;
 
 export const ItemCard = styled.Pressable`
-  height: ${RFPercentage(13)}px;
+  height: ${RFPercentage(10)}px;
 
-  border-radius: 20px;
-  background-color: #ffffff5a;
-  margin: ${RFPercentage(2)}px 0;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin-bottom: ${RFPercentage(2)}px;
 
   flex-direction: row;
   justify-content: space-between;
@@ -57,19 +57,21 @@ export const DeleteButton = styled(RectButton)`
 
   position: relative;
 
-  margin-top: ${RFPercentage(6.5)}px;
-  border-radius: 20px;
+  margin-top: ${RFPercentage(1.1)}px;
+  border-radius: 8px;
+
+  background-color: #fff;
 
   padding-left: ${RFPercentage(6)}px;
 
-  right: ${RFPercentage(1)}px;
+  right: ${RFPercentage(2)}px;
 `;
 
 export const DollarSign = styled.View`
-  height: ${RFPercentage(8)}px;
-  width: ${RFPercentage(8)}px;
+  height: ${RFPercentage(6)}px;
+  width: ${RFPercentage(6)}px;
   background-color: #fff;
-  border-radius: ${RFPercentage(4)}px;
+  border-radius: ${RFPercentage(3)}px;
 
   justify-content: center;
   align-items: center;

@@ -55,6 +55,7 @@ export const Button = styled.TouchableOpacity<ButtonProps>`
 export const Row = styled.View`
   flex-direction: row;
   align-items: center;
+  margin-top: ${RFPercentage(4.4)}px;
 `;
 
 interface AccountItemProps {

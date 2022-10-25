@@ -19,6 +19,9 @@ import { Colors } from '../../styles/global';
 import { useNotification } from '../../hooks/NotificationContext';
 import { getFullDayOfTheMounth } from '../../utils/dateFormats';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
+import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
+import { colors } from '../../styles/colors';
+import { getCategoryIcon } from '../../utils/getCategoryIcon';
 
 export default function Notifications() {
   const { user, signOut } = useAuth();
@@ -30,46 +33,99 @@ export default function Notifications() {
 
   const backgroundColor =
     theme === 'dark' ? Colors.BACKGROUND_DARKER : Colors.BACKGROUND_LIGTHER;
-  const titleColor = theme === 'dark' ? '#4876AC' : '#2673CE';
-  const red = theme === 'dark' ? '#AB5249' : '#CC3728';
-  const redBackground = theme === 'dark' ? '#AB5249' : '#F3E6E5';
-  const green = theme === 'dark' ? '#1A8289' : '#1A8289';
-  const greenBackground = theme === 'dark' ? '#1A8289' : '#C7DDE1';
-  const emptyBackground =
-    theme === 'dark' ? Colors.BLUE_SOFT_DARKER : Colors.BLUE_SOFT_LIGHTER;
+
+  const notificationsColor = () => {
+    if (theme === 'dark') {
+      return {
+        text: {
+          title: colors.blue[100],
+          subtitle: colors.blue[100],
+        },
+        icon: {
+          primary: colors.blue[100],
+          secondary: colors.dark[700],
+        },
+        expanse: {
+          primary: colors.red.dark[500],
+          secondary: colors.dark[700],
+        },
+        income: {
+          primary: colors.green.dark[500],
+          secondary: colors.dark[700],
+        },
+        default: {
+          primary: colors.blue.dark[500],
+          secondary: colors.dark[700],
+        },
+      };
+    } else {
+      return {
+        text: {
+          title: colors.gray[600],
+          subtitle: colors.gray[300],
+        },
+        icon: {
+          primary: colors.blue[600],
+          secondary: colors.blue[200],
+        },
+        expanse: {
+          primary: colors.red[500],
+          secondary: colors.red[100],
+        },
+        income: {
+          primary: colors.green[500],
+          secondary: colors.green[100],
+        },
+        default: {
+          primary: colors.blue[500],
+          secondary: colors.blue[100],
+        },
+      };
+    }
+  };
+
+  const showDate = (item: any) => {
+    return (
+      lateDaysState.filter(ltd => ltd === new Date(item.receiptDate).getDate())
+        .length <= 1
+    );
+  };
 
   return (
     <>
-      <Header reduced showMonthSelector={false} />
+      <ReducedHeader title="Notificações" />
       <S.Container backgroundColor={backgroundColor}>
         <ScrollView
-          style={{ width: '100%', padding: 24 }}
+          style={{ width: '100%', padding: RFPercentage(3.4) }}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
-            paddingBottom: 150,
+            paddingBottom: RFPercentage(20),
             alignItems: 'center',
             justifyContent: 'center',
           }}>
-          <S.Title color={titleColor}>Notificações</S.Title>
-
           <S.RemindView>
             <S.Header>
-              <Icon
-                name="exclamation-circle"
-                color={red}
-                size={30}
-                style={{
-                  marginRight: 8,
-                }}
-              />
-              <S.Title color={red}>Atrasados</S.Title>
+              <S.IconContainer
+                backgroundColor={notificationsColor().icon.secondary}>
+                <Icon
+                  name="exclamation"
+                  color={notificationsColor().icon.primary}
+                  size={RFPercentage(2.5)}
+                />
+              </S.IconContainer>
+              <S.Text
+                color={notificationsColor().text.title}
+                fontSize={2.3}
+                fontWeight="SemiBold">
+                Atrasados
+              </S.Text>
             </S.Header>
 
             {lateItems.length === 0 && (
               <S.Item
-                style={{ marginTop: 32, justifyContent: 'center' }}
-                backgroundColor={emptyBackground}
-                borderColor={titleColor}>
+                style={{ justifyContent: 'center' }}
+                backgroundColor={notificationsColor().default.secondary}
+                borderColor={notificationsColor().default.primary}>
                 <S.Text>Nada por enquanto</S.Text>
               </S.Item>
             )}
@@ -78,12 +134,12 @@ export default function Notifications() {
               lateDaysState.push(new Date(item.receiptDate).getDate());
               return (
                 <View key={index}>
-                  {lateDaysState.filter(
-                    ltd => ltd === new Date(item.receiptDate).getDate(),
-                  ).length <= 1 && (
-                    <S.DateText>
+                  {showDate(item) && (
+                    <S.Text
+                      color={notificationsColor().text.title}
+                      style={{ marginBottom: RFPercentage(2) }}>
                       {getFullDayOfTheMounth(new Date(item.receiptDate))}
-                    </S.DateText>
+                    </S.Text>
                   )}
                   <TouchableOpacity
                     onPress={() =>
@@ -94,28 +150,37 @@ export default function Notifications() {
                     <S.Item
                       backgroundColor={
                         item.type === 'EXPANSE'
-                          ? redBackground
-                          : greenBackground
+                          ? notificationsColor().expanse.secondary
+                          : notificationsColor().income.secondary
                       }
-                      borderColor={item.type === 'EXPANSE' ? red : green}>
+                      borderColor={
+                        item.type === 'EXPANSE'
+                          ? notificationsColor().expanse.primary
+                          : notificationsColor().income.primary
+                      }>
                       <S.ItemTitle>
-                        <Icon
-                          name="dollar"
-                          size={24}
-                          color={
-                            item.type === 'EXPANSE'
-                              ? Colors.EXPANSE_PRIMARY_LIGTHER
-                              : Colors.INCOME_PRIMARY_LIGTHER
-                          }
-                          style={{
-                            marginRight: 16,
-                          }}
-                        />
+                        {getCategoryIcon(
+                          item.category,
+                          notificationsColor().text.title,
+                          RFPercentage(3.2),
+                        )}
 
-                        <S.Text>{item.name}</S.Text>
+                        <S.Text
+                          color={notificationsColor().text.title}
+                          style={{ marginLeft: RFPercentage(1.3) }}>
+                          {item.name}
+                        </S.Text>
                       </S.ItemTitle>
 
-                      <S.Text>{getCurrencyFormat(item.value)}</S.Text>
+                      <S.Text
+                        fontWeight="SemiBold"
+                        color={
+                          item.type === 'EXPANSE'
+                            ? notificationsColor().expanse.primary
+                            : notificationsColor().income.primary
+                        }>
+                        {getCurrencyFormat(item.value)}
+                      </S.Text>
                     </S.Item>
                   </TouchableOpacity>
                 </View>
@@ -125,22 +190,27 @@ export default function Notifications() {
 
           <S.RemindView>
             <S.Header>
-              <Icon
-                name="calendar"
-                color={titleColor}
-                size={30}
-                style={{
-                  marginRight: 8,
-                }}
-              />
-              <S.Title color={titleColor}>Nos próximos dias</S.Title>
+              <S.IconContainer
+                backgroundColor={notificationsColor().icon.secondary}>
+                <Icon
+                  name="calendar"
+                  color={notificationsColor().icon.primary}
+                  size={RFPercentage(2.5)}
+                />
+              </S.IconContainer>
+              <S.Text
+                color={notificationsColor().text.title}
+                fontSize={2.3}
+                fontWeight="SemiBold">
+                Nos próximos dias
+              </S.Text>
             </S.Header>
 
             {nextDaysItems.length === 0 && (
               <S.Item
-                style={{ marginTop: 32, justifyContent: 'center' }}
-                backgroundColor={emptyBackground}
-                borderColor={titleColor}>
+                style={{ justifyContent: 'center' }}
+                backgroundColor={notificationsColor().default.secondary}
+                borderColor={notificationsColor().default.primary}>
                 <S.Text>Nada por enquanto</S.Text>
               </S.Item>
             )}
@@ -148,7 +218,9 @@ export default function Notifications() {
             {nextDaysItems.map((item, index) => {
               return (
                 <View key={index}>
-                  <S.DateText>{getFullDayOfTheMounth(item.day)}</S.DateText>
+                  <S.Text style={{ marginBottom: RFPercentage(2) }}>
+                    {getFullDayOfTheMounth(item.day)}
+                  </S.Text>
                   {item.items.map((i, index) => {
                     return (
                       <TouchableOpacity
@@ -159,23 +231,38 @@ export default function Notifications() {
                           )
                         }>
                         <S.Item
-                          backgroundColor={i.type === 'EXPANSE' ? red : green}
-                          borderColor={i.type === 'EXPANSE' ? red : green}>
-                          <View>
-                            <Icon
-                              name="dollar"
-                              size={24}
-                              color={
-                                i.type === 'EXPANSE'
-                                  ? Colors.EXPANSE_PRIMARY_LIGTHER
-                                  : Colors.INCOME_PRIMARY_LIGTHER
-                              }
-                            />
+                          backgroundColor={
+                            i.type === 'EXPANSE'
+                              ? notificationsColor().expanse.secondary
+                              : notificationsColor().income.secondary
+                          }
+                          borderColor={
+                            i.type === 'EXPANSE'
+                              ? notificationsColor().expanse.primary
+                              : notificationsColor().income.primary
+                          }>
+                          <S.ItemTitle>
+                            {getCategoryIcon(
+                              i.category,
+                              notificationsColor().text.title,
+                              RFPercentage(3.2),
+                            )}
+                            <S.Text
+                              color={notificationsColor().text.title}
+                              style={{ marginLeft: RFPercentage(1.3) }}>
+                              {i.name}
+                            </S.Text>
+                          </S.ItemTitle>
 
-                            <S.Text>{i.name}</S.Text>
-                          </View>
-
-                          <S.Text>{getCurrencyFormat(i.value)}</S.Text>
+                          <S.Text
+                            fontWeight="SemiBold"
+                            color={
+                              i.type === 'EXPANSE'
+                                ? notificationsColor().expanse.primary
+                                : notificationsColor().income.primary
+                            }>
+                            {getCurrencyFormat(i.value)}
+                          </S.Text>
                         </S.Item>
                       </TouchableOpacity>
                     );

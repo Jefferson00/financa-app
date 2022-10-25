@@ -5,11 +5,6 @@ import styled from 'styled-components/native';
 interface ContainerProps {
   backgroundColor: string;
 }
-
-interface TextProps {
-  color: string;
-}
-
 interface ButtonProps {
   color?: string;
   backgroundColor?: string;
@@ -33,24 +28,6 @@ export const EmptyAvatar = styled.View`
 export const Avatar = styled.Image`
   margin-top: ${RFPercentage(8)}px;
   margin-bottom: ${RFPercentage(4)}px;
-`;
-
-export const Title = styled.Text<TextProps>`
-  color: ${props => props.color};
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.8)}px;
-`;
-
-export const Alert = styled.Text<TextProps>`
-  color: ${props => props.color};
-  font-family: 'Poppins-SemiBold';
-  font-size: ${RFPercentage(2.5)}px;
-`;
-
-export const Subtitle = styled.Text<TextProps>`
-  color: ${props => props.color};
-  font-family: 'Poppins-Regular';
-  font-size: ${RFPercentage(2)}px;
 `;
 
 export const Button = styled.TouchableOpacity<ButtonProps>`
@@ -99,14 +76,23 @@ export const RemindView = styled.View`
 export const Header = styled.View`
   flex-direction: row;
   justify-content: flex-start;
+  align-items: center;
   width: 100%;
+  margin-bottom: ${RFPercentage(2)}px;
 `;
 
-export const DateText = styled.Text`
-  flex: 1;
-  margin-bottom: ${RFPercentage(2)}px;
-  font-family: 'Poppins-Regular';
-  font-size: ${RFPercentage(2.4)}px;
+interface IconContainerProps {
+  backgroundColor: string;
+}
+
+export const IconContainer = styled.View<IconContainerProps>`
+  background-color: ${props => props.backgroundColor};
+  width: ${RFPercentage(4)}px;
+  height: ${RFPercentage(4)}px;
+  border-radius: ${RFPercentage(2)}px;
+  justify-content: center;
+  align-items: center;
+  margin-right: ${RFPercentage(1.3)}px;
 `;
 
 interface ItemProps {
@@ -118,10 +104,10 @@ export const Item = styled.View<ItemProps>`
   flex-direction: row;
 
   background-color: ${props => props.backgroundColor};
-  border-width: 1px;
+  border-bottom-width: 1px;
   border-style: solid;
   border-color: ${props => props.borderColor};
-  border-radius: 20px;
+  border-radius: 8px;
   width: 100%;
   justify-content: space-between;
   align-items: center;
@@ -130,9 +116,24 @@ export const Item = styled.View<ItemProps>`
   padding: ${RFPercentage(2.4)}px;
 `;
 
-export const Text = styled.Text`
+interface TextProps {
+  fontWeight?: 'SemiBold' | 'Medium' | 'Regular';
+  fontSize?: number;
+  color?: string;
+}
+
+export const Text = styled.Text<TextProps>`
+  font-family: ${props =>
+    `Poppins-${props.fontWeight ? props.fontWeight : `Regular`}`};
+  font-size: ${props => RFPercentage(props.fontSize ? props.fontSize : 2)}px;
+  color: ${props => (props.color ? props.color : '#000')};
+`;
+
+export const DateText = styled.Text`
+  flex: 1;
+  margin-bottom: ${RFPercentage(2)}px;
   font-family: 'Poppins-Regular';
-  font-size: ${RFPercentage(2)}px;
+  font-size: ${RFPercentage(2.4)}px;
 `;
 
 export const ItemTitle = styled.View`

@@ -141,7 +141,7 @@ export default function Incomes() {
         userId: user.id,
         accountId: accountIdSelected || incomeSelected.receiptDefault,
         incomeId: incomeSelected.id,
-        month: new Date(),
+        month: new Date(incomeSelected.startDate),
         value: incomeSelected.value,
         name: incomeSelected.name,
         recurrence:

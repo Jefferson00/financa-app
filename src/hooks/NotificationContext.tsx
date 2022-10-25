@@ -17,12 +17,14 @@ import {
   addDays,
   addMonths,
   differenceInMonths,
+  isAfter,
   isBefore,
   isSameDay,
   isSameMonth,
 } from 'date-fns';
 import { IIncomes } from '../interfaces/Income';
 import { IExpanses } from '../interfaces/Expanse';
+import { IInvoice } from '../interfaces/CreditCards';
 import { useSelector } from 'react-redux';
 import State from '../interfaces/State';
 import {
@@ -64,6 +66,9 @@ export const NotificationProvider: React.FC = ({ children }) => {
   const { accounts, loading: loadingAccounts } = useSelector(
     (state: State) => state.accounts,
   );
+  const { creditCards, loading: loadingCreditCards } = useSelector(
+    (state: State) => state.creditCards,
+  );
   const { incomes, incomesOnAccount } = useSelector(
     (state: State) => state.incomes,
   );
@@ -83,6 +88,22 @@ export const NotificationProvider: React.FC = ({ children }) => {
     );
   }, [accounts, expanses]);
 
+  const invoicesThisMonth = useMemo(() => {
+    const invoices: IInvoice[] = [];
+    creditCards.map(cred => {
+      const invoice = cred.Invoice.find(
+        inv => isSameMonth(new Date(inv.month), new Date()) && !inv.paid,
+      );
+      if (invoice) {
+        invoices.push({
+          ...invoice,
+          name: `Fatura cartão ${cred.name}`,
+        });
+      }
+    });
+    return invoices;
+  }, [creditCards]);
+
   const getItemsNextDays = useCallback(() => {
     setLoadingNextItems(true);
     const incomesInThisMonth = getItemsInThisMonth(incomes, new Date());
@@ -90,7 +111,10 @@ export const NotificationProvider: React.FC = ({ children }) => {
       incomesOnAccount,
       new Date(),
     );
-    const expansesInThisMonth = getItemsInThisMonth(expanses, new Date());
+    const expansesInThisMonth = getItemsInThisMonth(
+      expansesWithoutInvoice,
+      new Date(),
+    );
     const expansesOnAccountInThisMonth = getItemsOnAccountThisMonth(
       expansesOnAccount,
       new Date(),
@@ -126,13 +150,28 @@ export const NotificationProvider: React.FC = ({ children }) => {
           nextDay,
         ),
       );
+      const invoiceNextDay = invoicesThisMonth.filter(invoice =>
+        isSameDay(
+          new Date().setDate(new Date(invoice.paymentDate).getDate()),
+          nextDay,
+        ),
+      );
 
       const incomes = incomesNextDay.map(i => ({ ...i, type: 'INCOME' }));
       const expanses = expansesNextDay.map(i => ({ ...i, type: 'EXPANSE' }));
+      const invoice = invoiceNextDay.map(i => ({
+        ...i,
+        category: 'cartão',
+        receiptDate: i.paymentDate,
+        startDate: i.paymentDate,
+        iteration: 'Mensal',
+        value: i.value,
+        type: 'EXPANSE',
+      }));
 
       nextDays.push({
         day: nextDay,
-        items: [...incomes, ...expanses],
+        items: [...incomes, ...expanses, ...invoice],
       });
     }
 
@@ -140,7 +179,13 @@ export const NotificationProvider: React.FC = ({ children }) => {
 
     setNextDaysItems(nextDaysWithItems);
     setLoadingNextItems(false);
-  }, [expanses, expansesOnAccount, incomes, incomesOnAccount]);
+  }, [
+    expansesWithoutInvoice,
+    expansesOnAccount,
+    incomes,
+    incomesOnAccount,
+    invoicesThisMonth,
+  ]);
 
   const getLateItems = useCallback(() => {
     setLoadingLateItems(true);
@@ -228,6 +273,10 @@ export const NotificationProvider: React.FC = ({ children }) => {
         ).length < i.numberOfMonths,
     );
 
+    const lateInvoices = invoicesThisMonth.filter(invoice =>
+      isBefore(new Date(invoice.paymentDate), new Date()),
+    );
+
     const lateIncomes = incomesWithoutAccount.map(i => ({
       ...i,
       type: 'INCOME',
@@ -236,15 +285,30 @@ export const NotificationProvider: React.FC = ({ children }) => {
       ...i,
       type: 'EXPANSE',
     }));
+    const invoice = lateInvoices.map(i => ({
+      ...i,
+      category: 'cartão',
+      receiptDate: i.paymentDate,
+      startDate: i.paymentDate,
+      iteration: 'Mensal',
+      value: i.value,
+      type: 'EXPANSE',
+    }));
 
     setLateItems(
-      [...lateIncomes, ...lateExpanses].sort(
+      [...lateIncomes, ...lateExpanses, ...invoice].sort(
         (a, b) =>
           new Date(a.receiptDate).getDate() - new Date(b.receiptDate).getDate(),
       ) as ItemProps[],
     );
     setLoadingLateItems(false);
-  }, [incomes, expansesWithoutInvoice, incomesOnAccount, expansesOnAccount]);
+  }, [
+    incomes,
+    expansesWithoutInvoice,
+    incomesOnAccount,
+    expansesOnAccount,
+    invoicesThisMonth,
+  ]);
 
   async function onCreateTriggerNotification(
     title: string,

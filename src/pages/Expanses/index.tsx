@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Dimensions } from 'react-native';
+import { Dimensions, View } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
@@ -13,7 +13,7 @@ import Button, { ButtonColors } from '../../components/Button';
 import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import { Nav } from '../../routes';
-import { differenceInCalendarMonths, isBefore } from 'date-fns';
+import { addMonths, differenceInCalendarMonths, isBefore } from 'date-fns';
 import { useAuth } from '../../hooks/AuthContext';
 import { ICreateExpanseOnAccount } from '../../interfaces/ExpanseOnAccount';
 import { IExpanses } from '../../interfaces/Expanse';
@@ -82,6 +82,7 @@ export default function Expanses() {
   const [totalEstimateExpanses, setTotalEstimateExpanses] = useState(
     getCurrencyFormat(0),
   );
+  const [cardsHeight, setCardsHeight] = useState(0);
 
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [calcExpanseList, setCalcExpanseList] = useState(true);
@@ -168,7 +169,7 @@ export default function Expanses() {
         userId: user.id,
         accountId: accountIdSelected || expanseSelected.receiptDefault,
         expanseId: expanseSelected.id,
-        month: new Date(),
+        month: new Date(expanseSelected.startDate), // new Date()
         value: expanseSelected.value,
         name: expanseSelected.name,
         recurrence:
@@ -205,9 +206,33 @@ export default function Expanses() {
 
   useEffect(() => {
     setCalcExpanseList(true);
+
     const expansesWithoutInvoice = expanses.filter(exp =>
       accounts.find(acc => acc.id === exp.receiptDefault),
     );
+
+    const expansesWithInvoice = expanses.filter(
+      exp => !accounts.find(acc => acc.id === exp.receiptDefault),
+    );
+
+    const expansesWithInvoiceInThisMonth = getItemsInThisMonth(
+      expansesWithInvoice,
+      selectedDate,
+    );
+    const expansesWithInvoiceInNextMonth = getItemsInThisMonth(
+      expansesWithInvoice,
+      addMonths(new Date(), 1),
+    );
+
+    setCardsHeight(
+      (expansesWithInvoiceInThisMonth.length +
+        expansesWithInvoiceInNextMonth.length) *
+        25,
+    );
+
+    /* console.log(inThisMonth.length);
+    console.log(inNextMonth.length); */
+
     const expansesList = listByDate(
       expansesWithoutInvoice,
       expansesOnAccount,
@@ -232,6 +257,7 @@ export default function Expanses() {
     const paidInvoices = getPaidInvoicesThisMonth(creditCards, selectedDate);
 
     const currentExpanses = getItemsInThisMonth(expanses, selectedDate);
+
     const currentExpansesOnAccount = getItemsOnAccountThisMonth(
       expansesOnAccount,
       selectedDate,
@@ -345,7 +371,7 @@ export default function Expanses() {
         scrollEventThrottle={16}
         contentContainerStyle={{
           minHeight:
-            expanseByDate.length === 0 ? RFPercentage(110) : RFPercentage(140),
+            expanseByDate.length === 0 ? RFPercentage(110) : RFPercentage(30),
           paddingTop: RFPercentage(36),
           paddingBottom: RFPercentage(15),
           paddingHorizontal: RFPercentage(3.2),
@@ -420,35 +446,34 @@ export default function Expanses() {
           </S.RowButton>
         </S.Row>
 
-        {loadingExpanses || calcExpanseList ? (
-          <ContentLoader
-            viewBox={`0 0 ${width} 325`}
-            height={325}
-            style={{
-              marginTop: RFPercentage(1),
-            }}
-            backgroundColor={loadingColors().background}
-            foregroundColor={loadingColors().foreground}>
-            <Rect x="0" y="0" rx="8" ry="8" width={width} height="65" />
-            <Rect x="0" y="80" rx="8" ry="8" width={width} height="65" />
-            <Rect x="0" y="160" rx="8" ry="8" width={width} height="65" />
-            <Rect x="0" y="240" rx="8" ry="8" width={width} height="65" />
-          </ContentLoader>
-        ) : (
-          <Swipeable
-            ref={swipeableRef}
-            containerStyle={{
-              flex: 1,
-              backgroundColor:
-                theme === 'dark' ? colors.dark[900] : colors.white,
-            }}
-            childrenContainerStyle={{
-              backgroundColor:
-                theme === 'dark' ? colors.dark[900] : colors.white,
-            }}
-            renderRightActions={() => <CreditCard />}
-            onSwipeableRightOpen={() => setTabSelected('Cards')}
-            onSwipeableClose={() => setTabSelected('Expanses')}>
+        <Swipeable
+          ref={swipeableRef}
+          containerStyle={{
+            backgroundColor: theme === 'dark' ? colors.dark[900] : colors.white,
+            minHeight: RFPercentage(tabSelected === 'Cards' ? cardsHeight : 30),
+          }}
+          childrenContainerStyle={{
+            backgroundColor: theme === 'dark' ? colors.dark[900] : colors.white,
+            flex: 1,
+          }}
+          renderRightActions={() => <CreditCard />}
+          onSwipeableRightOpen={() => setTabSelected('Cards')}
+          onSwipeableClose={() => setTabSelected('Expanses')}>
+          {loadingExpanses || calcExpanseList ? (
+            <ContentLoader
+              viewBox={`0 0 ${width} 325`}
+              height={325}
+              style={{
+                marginTop: RFPercentage(1),
+              }}
+              backgroundColor={loadingColors().background}
+              foregroundColor={loadingColors().foreground}>
+              <Rect x="0" y="0" rx="8" ry="8" width={width} height="65" />
+              <Rect x="0" y="80" rx="8" ry="8" width={width} height="65" />
+              <Rect x="0" y="160" rx="8" ry="8" width={width} height="65" />
+              <Rect x="0" y="240" rx="8" ry="8" width={width} height="65" />
+            </ContentLoader>
+          ) : (
             <ItemsList
               showTitle={false}
               onDelete={openDeleteModal}
@@ -459,35 +484,33 @@ export default function Expanses() {
               itemsByDate={expanseByDate}
               type="Expanses"
             />
+          )}
 
-            {!loadingExpanses &&
-              !calcExpanseList &&
-              expanseByDate.length === 0 && (
-                <S.EmptyContainer
+          {!loadingExpanses && !calcExpanseList && expanseByDate.length === 0 && (
+            <S.EmptyContainer
+              style={{
+                backgroundColor:
+                  theme === 'dark' ? colors.dark[900] : colors.white,
+              }}>
+              <S.EmptyRow>
+                <Icon
+                  name="close-circle"
+                  size={RFPercentage(4)}
+                  color={emptyColors().icon}
+                />
+                <S.Text
                   style={{
-                    backgroundColor:
-                      theme === 'dark' ? colors.dark[900] : colors.white,
-                  }}>
-                  <S.EmptyRow>
-                    <Icon
-                      name="close-circle"
-                      size={RFPercentage(4)}
-                      color={emptyColors().icon}
-                    />
-                    <S.Text
-                      style={{
-                        marginLeft: 8,
-                      }}
-                      color={emptyColors().text}
-                      fontWeight="SemiBold"
-                      fontSize={2}>
-                      Nenhuma despesa nesse mês
-                    </S.Text>
-                  </S.EmptyRow>
-                </S.EmptyContainer>
-              )}
-          </Swipeable>
-        )}
+                    marginLeft: 8,
+                  }}
+                  color={emptyColors().text}
+                  fontWeight="SemiBold"
+                  fontSize={2}>
+                  Nenhuma despesa nesse mês
+                </S.Text>
+              </S.EmptyRow>
+            </S.EmptyContainer>
+          )}
+        </Swipeable>
       </Animated.ScrollView>
 
       <Header

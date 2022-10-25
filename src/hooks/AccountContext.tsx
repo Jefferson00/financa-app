@@ -20,7 +20,7 @@ interface AccountContextData {
   handleSelectAccount: (account: IAccount) => void;
   listAccountCards: () => Promise<void>;
   calculateEstimateBalances: () => void;
-  handleSelectEstimate: (value: string) => void;
+  handleSelectEstimate: (value: string, month: string) => void;
   estimates: IEstimate[];
   accountSelected: IAccount | undefined;
   accountCards: IAccountCard[];
@@ -28,6 +28,7 @@ interface AccountContextData {
   totalEstimateBalance: string;
   totalCurrentBalance: string;
   estimateValueSelected: string;
+  estimateMonthSelected: string;
 }
 
 export const AccountContext = createContext<AccountContextData>(
@@ -84,6 +85,7 @@ export const AccountProvider: React.FC = ({ children }) => {
   const [estimateValueSelected, setEstimateValueSelected] = useState(
     getCurrencyFormat(0),
   );
+  const [estimateMonthSelected, setEstimateMonthSelected] = useState('');
 
   const controller = new AbortController();
 
@@ -91,8 +93,9 @@ export const AccountProvider: React.FC = ({ children }) => {
     setAccountSelected(account);
   }, []);
 
-  const handleSelectEstimate = (value: string) => {
+  const handleSelectEstimate = (value: string, month: string) => {
     setEstimateValueSelected(value);
+    setEstimateMonthSelected(month);
   };
 
   const listAccountCards = async () => {
@@ -350,6 +353,7 @@ export const AccountProvider: React.FC = ({ children }) => {
         totalEstimateBalance,
         estimates,
         estimateValueSelected,
+        estimateMonthSelected,
       }}>
       {children}
     </AccountContext.Provider>
