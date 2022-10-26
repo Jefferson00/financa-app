@@ -71,7 +71,7 @@ export function ItemsList({
           type === 'Incomes' ? colors.green.dark[500] : colors.red.dark[500],
         secondary:
           type === 'Incomes' ? colors.green.dark[400] : colors.red.dark[400],
-        title: colors.gray[600],
+        title: colors.gray[200],
         text: colors.gray[600],
         icon_circle: colors.dark[700],
       };

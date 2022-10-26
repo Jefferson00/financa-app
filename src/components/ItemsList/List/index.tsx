@@ -1,28 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import Icon from 'react-native-vector-icons/Ionicons';
 import { colors } from '../../../styles/colors';
 import { useTheme } from '../../../hooks/ThemeContext';
 import * as S from './styles';
 import { getDayOfTheMounth, getMonthName } from '../../../utils/dateFormats';
-import { IncomesItemsByDate } from '../../../pages/Incomes';
 import { useDate } from '../../../hooks/DateContext';
-import ItemCard, { SwitchColors } from '../../../components/ItemCard';
+import { SwitchColors } from '../../../components/ItemCard';
 import { reduceString } from '../../../utils/reduceString';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import State from '../../../interfaces/State';
 import { differenceInCalendarMonths } from 'date-fns';
 import { getCurrentIteration } from '../../../utils/getCurrentIteration';
 import { useNavigation } from '@react-navigation/native';
 import { Nav } from '../../../routes';
 import { Item } from '../Item';
-import { Modal } from '../../../components/NewModal';
-import { useAuth } from '../../../hooks/AuthContext';
-import { ICreateIncomeOnAccount } from '../../../interfaces/IncomeOnAccount';
-import {
-  createIncomeOnAccount,
-  deleteIncomeOnAccount,
-} from '../../../store/modules/Incomes/fetchActions';
 import { ItemsByDate } from '..';
 import { ViewProps } from 'react-native';
 
@@ -44,17 +35,7 @@ export function List({
   style,
 }: ListProps) {
   const { theme } = useTheme();
-  const { user } = useAuth();
-  const dispatch = useDispatch<any>();
   const { selectedDate } = useDate();
-  const [incomeSelected, setIncomeSelected] = useState<any>();
-  const [isConfirmReceiveModalVisible, setIsConfirmReceiveModalVisible] =
-    useState(false);
-  const [isConfirmUnreceiveModalVisible, setIsConfirmUnreceiveModalVisible] =
-    useState(false);
-  const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
-    null,
-  );
   const { accounts } = useSelector((state: State) => state.accounts);
   const { incomes } = useSelector((state: State) => state.incomes);
   const { expanses } = useSelector((state: State) => state.expanses);
@@ -121,7 +102,7 @@ export function List({
         secondary:
           type === 'Incomes' ? colors.green.dark[400] : colors.red.dark[400],
         background: colors.dark[700],
-        title: colors.gray[600],
+        title: colors.gray[200],
         text: colors.blue[200],
       };
     }

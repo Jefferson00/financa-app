@@ -126,14 +126,15 @@ export function Modal({
   const modalColors = () => {
     if (theme === 'dark') {
       return {
-        primary: colors.blue[500],
+        primary: colors.blue[100],
         main_text: colors.blue[200],
         primary_button_text: colors.blue[200],
-        secondary_button_bg: colors.blue[200],
+        secondary_button_bg: colors.dark[700],
         success: colors.green.dark[500],
         error: colors.red.dark[500],
         select: colors.dark[700],
-        unselect: colors.blue[100],
+        unselect: colors.gray[300],
+        content_bg: colors.dark[800],
       };
     }
     return {
@@ -145,6 +146,7 @@ export function Modal({
       error: colors.red[500],
       select: colors.blue[300],
       unselect: colors.blue[100],
+      content_bg: colors.white,
     };
   };
 
@@ -156,7 +158,7 @@ export function Modal({
       onRequestClose={onClose}>
       <S.Wrapper onPress={onClose}>
         <TouchableWithoutFeedback>
-          <S.Content>
+          <S.Content backgroundColor={modalColors().content_bg}>
             {status === 'Confirmation' && (
               <Confirmation
                 modalColors={modalColors}

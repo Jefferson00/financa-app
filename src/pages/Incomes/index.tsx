@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { differenceInCalendarMonths, isBefore } from 'date-fns';
 import { Header } from '../../components/NewHeader';
 import Menu from '../../components/Menu';
-import Button, { ButtonColors } from '../../components/Button';
+import Button from '../../components/Button';
 import { useDate } from '../../hooks/DateContext';
 import { useTheme } from '../../hooks/ThemeContext';
 import { useAuth } from '../../hooks/AuthContext';
@@ -32,7 +32,6 @@ import Animated, {
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
-import { colors } from '../../styles/colors';
 import { getCurrencyFormat } from '../../utils/getCurrencyFormat';
 import { ItemsList } from '../../components/ItemsList';
 import { Modal } from '../../components/NewModal';
@@ -158,6 +157,36 @@ export default function Incomes() {
     }
   };
 
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [itemSelected, setItemSelected] = useState<any | null>(null);
+
+  const openDeleteModal = (income: ItemType) => {
+    setIsDeleteModalVisible(true);
+    setItemSelected(income.income ? income.income : income);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalVisible(false);
+    setItemSelected(null);
+  };
+
+  const handleDelete = useCallback(async () => {
+    if (user && itemSelected) {
+      dispatch(deleteIncome(itemSelected.id, user.id));
+      setItemSelected(null);
+    }
+  }, [user, itemSelected]);
+
+  const headerValue = useSharedValue(0);
+
+  const scrollHandler = useAnimatedScrollHandler(event => {
+    headerValue.value = event.contentOffset.y;
+  });
+
+  const colors = S.incomesColors(theme);
+
+  const width = Dimensions.get('screen').width;
+
   useEffect(() => {
     setCalcIncomesList(true);
     const incomesListPromise: Promise<IncomesItemsByDate[]> = new Promise(
@@ -208,82 +237,6 @@ export default function Incomes() {
     }
   }, [incomes, incomesOnAccount, selectedDate]);
 
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [itemSelected, setItemSelected] = useState<any | null>(null);
-
-  const openDeleteModal = (income: ItemType) => {
-    setIsDeleteModalVisible(true);
-    setItemSelected(income.income ? income.income : income);
-  };
-
-  const closeDeleteModal = () => {
-    setIsDeleteModalVisible(false);
-    setItemSelected(null);
-  };
-
-  const handleDelete = useCallback(async () => {
-    if (user && itemSelected) {
-      dispatch(deleteIncome(itemSelected.id, user.id));
-      setItemSelected(null);
-    }
-  }, [user, itemSelected]);
-
-  const headerValue = useSharedValue(0);
-
-  const scrollHandler = useAnimatedScrollHandler(event => {
-    headerValue.value = event.contentOffset.y;
-  });
-
-  const headerColors = () => {
-    if (theme === 'dark') {
-      return [colors.dark[800], colors.dark[800]];
-    }
-    return [colors.green[500], colors.green[600]];
-  };
-
-  const loadingColors = () => {
-    if (theme === 'dark') {
-      return {
-        background: colors.dark[700],
-        foreground: colors.gray[600],
-      };
-    }
-    return {
-      background: colors.green[100],
-      foreground: colors.white,
-    };
-  };
-
-  const emptyColors = () => {
-    if (theme === 'dark') {
-      return {
-        icon: colors.dark[700],
-        text: colors.blue[200],
-      };
-    }
-    return {
-      icon: colors.green[500],
-      text: colors.gray[600],
-    };
-  };
-
-  const buttonColors = (): ButtonColors => {
-    if (theme === 'dark') {
-      return {
-        PRIMARY_BACKGROUND: colors.green.dark[500],
-        SECOND_BACKGROUND: colors.green.dark[400],
-        TEXT: colors.white,
-      };
-    }
-    return {
-      PRIMARY_BACKGROUND: colors.green[500],
-      SECOND_BACKGROUND: colors.green[400],
-      TEXT: colors.white,
-    };
-  };
-
-  const width = Dimensions.get('screen').width;
-
   return (
     <>
       <Animated.ScrollView
@@ -300,7 +253,7 @@ export default function Incomes() {
           <Button
             title="Nova Entrada"
             icon={PlusIcon}
-            colors={buttonColors()}
+            colors={colors.button}
             onPress={() =>
               navigation.navigate('CreateIncome', {
                 income: null,
@@ -316,8 +269,8 @@ export default function Incomes() {
             style={{
               marginTop: RFPercentage(1),
             }}
-            backgroundColor={loadingColors().background}
-            foregroundColor={loadingColors().foreground}>
+            backgroundColor={colors.loading.background}
+            foregroundColor={colors.loading.foreground}>
             <Rect x="0" y="0" rx="8" ry="8" width={width} height="65" />
             <Rect x="0" y="80" rx="8" ry="8" width={width} height="65" />
             <Rect x="0" y="160" rx="8" ry="8" width={width} height="65" />
@@ -341,9 +294,9 @@ export default function Incomes() {
               <Icon
                 name="close-circle"
                 size={RFPercentage(4)}
-                color={emptyColors().icon}
+                color={colors.empty.icon}
               />
-              <S.EmptyText color={emptyColors().text}>
+              <S.EmptyText color={colors.empty.text}>
                 Nenhuma entrada nesse mês
               </S.EmptyText>
             </S.EmptyRow>
@@ -354,7 +307,7 @@ export default function Incomes() {
       <Header
         variant="income"
         headerValue={headerValue}
-        colors={headerColors()}
+        colors={colors.header}
         titles={{
           current: 'Entradas',
           estimate: 'Previsto',

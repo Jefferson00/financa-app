@@ -20,8 +20,12 @@ export const Wrapper = styled.Pressable`
   padding: 0 ${RFPercentage(3)}px;
 `;
 
-export const Content = styled.View`
-  background: #fff;
+interface ContentProps {
+  backgroundColor: string;
+}
+
+export const Content = styled.View<ContentProps>`
+  background: ${props => props.backgroundColor};
   align-items: center;
   padding: 34px 22px;
   border-radius: 8px;

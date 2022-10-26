@@ -12,11 +12,15 @@ export const LastTransactions = styled.View`
   margin-top: ${RFPercentage(4.4)}px;
 `;
 
-export const BalanceText = styled.Text`
+interface TextProps {
+  color?: string;
+}
+
+export const Title = styled.Text<TextProps>`
   font-family: 'Poppins-Medium';
   font-size: ${RFPercentage(2)}px;
   margin-bottom: ${RFPercentage(3)}px;
-  color: #5e5e5e;
+  color: ${props => (props.color ? props.color : '#5e5e5e')};
 `;
 
 export const LastTransactionsView = styled.View<LastTransactionsProps>`

@@ -124,7 +124,7 @@ export default function Menu() {
         background: colors.dark[800],
         border: colors.dark[800],
         active: colors.blue[200],
-        inactive: colors.dark[700],
+        inactive: colors.gray[300],
       };
     }
     return {

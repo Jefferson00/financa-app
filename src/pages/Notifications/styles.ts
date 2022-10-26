@@ -10,9 +10,8 @@ interface ButtonProps {
   backgroundColor?: string;
 }
 
-export const Container = styled.View<ContainerProps>`
+export const Container = styled.View`
   flex: 1;
-  background-color: ${props => props.backgroundColor};
 
   align-items: center;
 `;

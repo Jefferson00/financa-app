@@ -37,30 +37,38 @@ export function Estimates() {
     );
   };
 
-  const loadingColors = () => {
+  const estimatesColors = () => {
     if (theme === 'dark') {
       return {
-        background: colors.dark[700],
-        foreground: colors.gray[600],
+        loading: {
+          background: colors.dark[700],
+          foreground: colors.gray[600],
+        },
+        title: colors.gray[200],
+        value: colors.blue[100],
       };
     }
     return {
-      background: colors.blue[200],
-      foreground: colors.white,
+      loading: {
+        background: colors.blue[200],
+        foreground: colors.white,
+      },
+      title: colors.gray[600],
+      value: colors.gray[900],
     };
   };
 
   return (
     <S.Container>
-      <S.BalanceText>Estimativas</S.BalanceText>
+      <S.BalanceText color={estimatesColors().title}>Estimativas</S.BalanceText>
 
       {loadingAll() ? (
         <ContentLoader
           viewBox={`0 0 ${width} 200`}
           height={200}
           width={width}
-          backgroundColor={loadingColors().background}
-          foregroundColor={loadingColors().foreground}>
+          backgroundColor={estimatesColors().loading.background}
+          foregroundColor={estimatesColors().loading.foreground}>
           <Rect x="0" y="0" rx="4" ry="4" width="150" height="20" />
           <Rect x="0" y="40" rx="8" ry="8" width="60" height="150" />
           <Rect x="80" y="40" rx="8" ry="8" width="60" height="150" />
@@ -69,7 +77,9 @@ export function Estimates() {
         </ContentLoader>
       ) : (
         <>
-          <S.BalanceValue>{estimateValueSelected}</S.BalanceValue>
+          <S.BalanceValue color={estimatesColors().value}>
+            {estimateValueSelected}
+          </S.BalanceValue>
           <Estimate />
         </>
       )}

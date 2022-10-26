@@ -1,7 +1,6 @@
 import React from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SharedElement } from 'react-navigation-shared-element';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 
@@ -40,6 +39,7 @@ export default function Notifications() {
         text: {
           title: colors.blue[100],
           subtitle: colors.blue[100],
+          date: colors.gray[200],
         },
         icon: {
           primary: colors.blue[100],
@@ -63,6 +63,7 @@ export default function Notifications() {
         text: {
           title: colors.gray[600],
           subtitle: colors.gray[300],
+          date: colors.gray[600],
         },
         icon: {
           primary: colors.blue[600],
@@ -94,7 +95,7 @@ export default function Notifications() {
   return (
     <>
       <ReducedHeader title="Notificações" />
-      <S.Container backgroundColor={backgroundColor}>
+      <S.Container>
         <ScrollView
           style={{ width: '100%', padding: RFPercentage(3.4) }}
           showsVerticalScrollIndicator={false}
@@ -126,7 +127,9 @@ export default function Notifications() {
                 style={{ justifyContent: 'center' }}
                 backgroundColor={notificationsColor().default.secondary}
                 borderColor={notificationsColor().default.primary}>
-                <S.Text>Nada por enquanto</S.Text>
+                <S.Text color={notificationsColor().text.subtitle}>
+                  Nada por enquanto
+                </S.Text>
               </S.Item>
             )}
 
@@ -136,7 +139,7 @@ export default function Notifications() {
                 <View key={index}>
                   {showDate(item) && (
                     <S.Text
-                      color={notificationsColor().text.title}
+                      color={notificationsColor().text.date}
                       style={{ marginBottom: RFPercentage(2) }}>
                       {getFullDayOfTheMounth(new Date(item.receiptDate))}
                     </S.Text>
@@ -211,14 +214,18 @@ export default function Notifications() {
                 style={{ justifyContent: 'center' }}
                 backgroundColor={notificationsColor().default.secondary}
                 borderColor={notificationsColor().default.primary}>
-                <S.Text>Nada por enquanto</S.Text>
+                <S.Text color={notificationsColor().text.subtitle}>
+                  Nada por enquanto
+                </S.Text>
               </S.Item>
             )}
 
             {nextDaysItems.map((item, index) => {
               return (
                 <View key={index}>
-                  <S.Text style={{ marginBottom: RFPercentage(2) }}>
+                  <S.Text
+                    style={{ marginBottom: RFPercentage(2) }}
+                    color={notificationsColor().text.date}>
                     {getFullDayOfTheMounth(item.day)}
                   </S.Text>
                   {item.items.map((i, index) => {

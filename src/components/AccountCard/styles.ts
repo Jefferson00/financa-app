@@ -16,10 +16,10 @@ export const accountCardColors = (theme: ColorSchemeName) => {
     return {
       card: {
         primary: [colors.orange.dark[500], colors.orange.dark[400]],
-        secondary: [colors.blue.dark[600], colors.blue.dark[500]],
+        secondary: [colors.dark[700], colors.gray[300]],
         icon: {
           primary: colors.orange.dark[500],
-          secondary: colors.blue.dark[600],
+          secondary: colors.dark[700],
         },
       },
       loading: {

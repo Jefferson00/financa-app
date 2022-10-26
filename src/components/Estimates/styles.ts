@@ -8,16 +8,20 @@ export const Container = styled.View`
   margin-top: ${RFPercentage(4.4)}px;
 `;
 
-export const BalanceText = styled.Text`
+interface TextProps {
+  color?: string;
+}
+
+export const BalanceText = styled.Text<TextProps>`
   font-family: 'Poppins-Medium';
   font-size: ${RFPercentage(2)}px;
 
-  color: #5e5e5e;
+  color: ${props => (props.color ? props.color : '#5e5e5e')};
 `;
 
-export const BalanceValue = styled.Text`
+export const BalanceValue = styled.Text<TextProps>`
   font-family: 'Poppins-SemiBold';
   font-size: ${RFPercentage(2.5)}px;
 
-  color: #09192d;
+  color: ${props => (props.color ? props.color : '#09192d')};
 `;

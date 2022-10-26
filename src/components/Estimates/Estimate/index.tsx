@@ -4,9 +4,9 @@ import { ScrollView } from 'react-native';
 import * as S from './styles';
 
 import { useTheme } from '../../../hooks/ThemeContext';
-import { getEstimateColors } from '../../../utils/colors/home';
 import { useAccount } from '../../../hooks/AccountContext';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
+import { colors } from '../../../styles/colors';
 
 const Estimate = () => {
   const { theme } = useTheme();
@@ -17,8 +17,33 @@ const Estimate = () => {
     estimateMonthSelected,
   } = useAccount();
 
-  const colors = getEstimateColors(theme);
   const controller = new AbortController();
+
+  const estimateColors = () => {
+    if (theme === 'dark') {
+      return {
+        indicator: {
+          selected: colors.orange.dark[500],
+          unselected: colors.dark[700],
+        },
+        text: colors.blue[100],
+      };
+    }
+    return {
+      indicator: {
+        selected: colors.orange[500],
+        unselected: colors.blue[100],
+      },
+      text: colors.gray[900],
+    };
+  };
+
+  const getIndicatorColor = (month: string) => {
+    if (estimateMonthSelected === month) {
+      return estimateColors().indicator.selected;
+    }
+    return estimateColors().indicator.unselected;
+  };
 
   useEffect(() => {
     calculateEstimateBalances();
@@ -35,9 +60,7 @@ const Estimate = () => {
   }, [estimates]);
 
   return (
-    <S.EstimateView
-      backgroundColor={colors.backgroundColor}
-      isEmpty={!estimates.find(est => est.value > 0)}>
+    <S.EstimateView isEmpty={!estimates.find(est => est.value > 0)}>
       <ScrollView
         horizontal
         contentContainerStyle={{
@@ -50,9 +73,7 @@ const Estimate = () => {
           <S.EstimateInMonth key={estimate.id}>
             <S.EstimateIndicator
               indicatorVelue={estimate.indicator}
-              indicatorColor={
-                estimateMonthSelected === estimate.month ? '#FF981E' : '#EFF6FF'
-              }
+              indicatorColor={getIndicatorColor(estimate.month)}
               onPress={() =>
                 handleSelectEstimate(
                   getCurrencyFormat(estimate.value),
@@ -60,7 +81,7 @@ const Estimate = () => {
                 )
               }
             />
-            <S.EstimateMonthText monthTextColor={colors.estimateColors.month}>
+            <S.EstimateMonthText monthTextColor={estimateColors().text}>
               {estimate.month}
             </S.EstimateMonthText>
           </S.EstimateInMonth>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { Animated, Switch, View } from 'react-native';
 import { getCurrencyFormat } from '../../../utils/getCurrencyFormat';
 import FeatherIcons from 'react-native-vector-icons/Feather';
@@ -8,10 +8,7 @@ import { isSameMonth } from 'date-fns';
 import { useDate } from '../../../hooks/DateContext';
 import { getCategoryIcon } from '../../../utils/getCategoryIcon';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { Modal } from '../../../components/NewModal';
-import { useAuth } from '../../../hooks/AuthContext';
-import { useDispatch } from 'react-redux';
-import { deleteIncome } from '../../../store/modules/Incomes/fetchActions';
+import { useTheme } from '../../../hooks/ThemeContext';
 
 export interface SwitchColors {
   background: string;
@@ -63,30 +60,25 @@ export function Item({
   onRedirect,
   onDelete,
 }: ItemCardProps) {
-  const dispatch = useDispatch<any>();
-
+  const { theme } = useTheme();
   const { selectedDate } = useDate();
-  const { user } = useAuth();
 
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [itemSelected, setItemSelected] = useState<Item | null>(null);
-
-  const openModal = (item: Item) => {
-    setIsDeleteModalVisible(true);
-    setItemSelected(item);
-  };
-
-  const closeModal = () => {
-    setIsDeleteModalVisible(false);
-    setItemSelected(null);
-  };
-
-  const handleDelete = useCallback(async () => {
-    if (user && itemSelected) {
-      dispatch(deleteIncome(itemSelected.id, user.id));
-      setItemSelected(null);
+  const itemColors = () => {
+    if (theme === 'dark') {
+      return {
+        action_container: {
+          background: '#121212',
+          text: '#5E5E5E',
+        },
+      };
     }
-  }, [user, itemSelected]);
+    return {
+      action_container: {
+        background: '#fff',
+        text: '#5E5E5E',
+      },
+    };
+  };
 
   return (
     <>
@@ -129,11 +121,11 @@ export function Item({
           </S.Main>
 
           <S.ActionContainer
-            backgroundColor="#fff"
+            backgroundColor={itemColors().action_container.background}
             borderColor={colors.secondary}>
             {isSameMonth(new Date(), selectedDate) && (
               <>
-                <S.SubtitleText color={colors.text}>
+                <S.SubtitleText color={itemColors().action_container.text}>
                   {received ? receivedMessage : 'Receber'}
                 </S.SubtitleText>
 

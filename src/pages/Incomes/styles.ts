@@ -1,4 +1,6 @@
+import { ColorSchemeName } from 'react-native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
+import { colors } from '../../styles/colors';
 import styled from 'styled-components/native';
 
 interface TextProps {
@@ -30,3 +32,40 @@ export const EmptyText = styled.Text<TextProps>`
 
   color: ${props => (props.color ? props.color : '#000')};
 `;
+
+export const incomesColors = (theme: ColorSchemeName) => {
+  if (theme === 'dark') {
+    return {
+      header: [colors.dark[800], colors.dark[800]],
+      loading: {
+        background: colors.dark[700],
+        foreground: colors.gray[600],
+      },
+      empty: {
+        icon: colors.dark[700],
+        text: colors.blue[200],
+      },
+      button: {
+        PRIMARY_BACKGROUND: colors.green.dark[500],
+        SECOND_BACKGROUND: colors.green.dark[400],
+        TEXT: colors.white,
+      },
+    };
+  }
+  return {
+    header: [colors.green[500], colors.green[600]],
+    loading: {
+      background: colors.green[100],
+      foreground: colors.white,
+    },
+    empty: {
+      icon: colors.green[500],
+      text: colors.gray[600],
+    },
+    button: {
+      PRIMARY_BACKGROUND: colors.green[500],
+      SECOND_BACKGROUND: colors.green[400],
+      TEXT: colors.white,
+    },
+  };
+};
