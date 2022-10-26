@@ -3,7 +3,6 @@ import styled from 'styled-components/native';
 
 export const Container = styled.ScrollView`
   margin-top: ${RFPercentage(2.5)}px;
-  min-height: ${RFPercentage(50)}px;
 `;
 
 export const Row = styled.View`

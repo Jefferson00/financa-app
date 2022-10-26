@@ -224,14 +224,18 @@ export default function Expanses() {
       addMonths(new Date(), 1),
     );
 
-    setCardsHeight(
-      (expansesWithInvoiceInThisMonth.length +
-        expansesWithInvoiceInNextMonth.length) *
-        25,
-    );
-
-    /* console.log(inThisMonth.length);
-    console.log(inNextMonth.length); */
+    if (
+      expansesWithInvoiceInThisMonth.length === 0 &&
+      expansesWithInvoiceInNextMonth.length === 0
+    ) {
+      setCardsHeight(100);
+    } else {
+      setCardsHeight(
+        (expansesWithInvoiceInThisMonth.length +
+          expansesWithInvoiceInNextMonth.length) *
+          25,
+      );
+    }
 
     const expansesList = listByDate(
       expansesWithoutInvoice,
@@ -370,8 +374,7 @@ export default function Expanses() {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         contentContainerStyle={{
-          minHeight:
-            expanseByDate.length === 0 ? RFPercentage(110) : RFPercentage(30),
+          minHeight: expanseByDate.length === 0 ? 0 : RFPercentage(30),
           paddingTop: RFPercentage(36),
           paddingBottom: RFPercentage(15),
           paddingHorizontal: RFPercentage(3.2),
@@ -454,7 +457,6 @@ export default function Expanses() {
           }}
           childrenContainerStyle={{
             backgroundColor: theme === 'dark' ? colors.dark[900] : colors.white,
-            flex: 1,
           }}
           renderRightActions={() => <CreditCard />}
           onSwipeableRightOpen={() => setTabSelected('Cards')}

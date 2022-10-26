@@ -13,6 +13,8 @@ export const EmptyContainer = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
+  padding-top: ${RFPercentage(10)}px;
+  height: ${RFPercentage(30)}px;
 `;
 
 export const EmptyRow = styled.View`

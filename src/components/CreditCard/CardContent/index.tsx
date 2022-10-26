@@ -18,7 +18,14 @@ import {
 
 import { useEffect } from 'react';
 import { useState } from 'react';
-import { addMonths, isAfter, isBefore, isSameMonth, subMonths } from 'date-fns';
+import {
+  addDays,
+  addMonths,
+  isAfter,
+  isBefore,
+  isSameMonth,
+  subMonths,
+} from 'date-fns';
 import { useDate } from '../../../hooks/DateContext';
 import { useSelector } from 'react-redux';
 import State from '../../../interfaces/State';
@@ -92,23 +99,15 @@ export default function CardContent({
   }, []);
 
   const getEstimateInvoice = useCallback(() => {
-    const closingReferenceThisMonth = new Date(creditCard.invoiceClosing);
-    let closingReferencePrevMonth = new Date(creditCard.invoiceClosing);
-
-    closingReferenceThisMonth.setMonth(selectedDate.getMonth());
-    closingReferencePrevMonth.setMonth(selectedDate.getMonth());
-
-    closingReferencePrevMonth = subMonths(closingReferencePrevMonth, 1);
-
     const expansesInThisMonth = expanses.filter(i =>
       i.endDate
-        ? (isBefore(closingReferencePrevMonth, new Date(i.endDate)) ||
-            isSameMonth(new Date(i.endDate), closingReferencePrevMonth)) &&
-          (isAfter(closingReferenceThisMonth, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), closingReferenceThisMonth))
+        ? (isBefore(selectedDate, new Date(i.endDate)) ||
+            isSameMonth(new Date(i.endDate), selectedDate)) &&
+          (isAfter(selectedDate, new Date(i.startDate)) ||
+            isSameMonth(new Date(i.startDate), selectedDate))
         : i.endDate === null &&
-          (isAfter(closingReferenceThisMonth, new Date(i.startDate)) ||
-            isSameMonth(new Date(i.startDate), closingReferenceThisMonth)),
+          (isAfter(selectedDate, new Date(i.startDate)) ||
+            isSameMonth(new Date(i.startDate), selectedDate)),
     );
 
     const expansesInThisCard = expansesInThisMonth.filter(

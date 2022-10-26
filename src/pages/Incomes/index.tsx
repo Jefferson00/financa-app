@@ -290,8 +290,7 @@ export default function Incomes() {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         contentContainerStyle={{
-          minHeight:
-            incomesByDate.length === 0 ? RFPercentage(110) : RFPercentage(140),
+          minHeight: incomesByDate.length === 0 ? 0 : RFPercentage(140),
           paddingTop: RFPercentage(36),
           paddingBottom: RFPercentage(15),
           paddingHorizontal: RFPercentage(3.2),

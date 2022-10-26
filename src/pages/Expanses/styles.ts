@@ -62,7 +62,7 @@ export const EmptyContainer = styled.View`
   flex: 1;
   align-items: center;
   justify-content: flex-start;
-  width: 100%;
+  padding-top: ${RFPercentage(10)}px;
   height: ${RFPercentage(30)}px;
 `;
 

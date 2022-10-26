@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { useTheme } from '../../hooks/ThemeContext';
 import { accountCardColors } from './styles';
 import { Loader } from './Loader';
+import { AccountTypes } from '../../interfaces/Account';
 import * as S from './styles';
 
 export function AccountCard() {
@@ -34,13 +35,21 @@ export function AccountCard() {
     return colors.card.secondary;
   };
 
-  const getCardIcon = (index: number) => {
+  const getCardIcon = (index: number, type: AccountTypes) => {
+    type IconTypes = {
+      [key: string]: string;
+    };
+    const iconTypes: IconTypes = {
+      'Conta Corrente': 'business',
+      'Conta Poupança': 'md-cash',
+      Carteira: 'wallet',
+    };
     const iconColor =
       cardIndex === index + 1 || index === 0
         ? colors.card.icon.primary
         : colors.card.icon.secondary;
     return () => (
-      <Icon name="business" size={RFPercentage(2.5)} color={iconColor} />
+      <Icon name={iconTypes[type]} size={RFPercentage(2.5)} color={iconColor} />
     );
   };
 
@@ -65,7 +74,10 @@ export function AccountCard() {
             key={String(Math.random())}
             colors={getCardGradientColors(index)}
             item={item}
-            icon={getCardIcon(index)}
+            icon={getCardIcon(
+              index,
+              item.account ? item.account.type : AccountTypes['Conta Corrente'],
+            )}
             handleNavigate={() => handleNavigate(item)}
           />
         ))}
