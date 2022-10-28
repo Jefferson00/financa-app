@@ -15,11 +15,17 @@ interface BalanceProps {
   value: string;
   isEstimate?: boolean;
   variant?: 'income' | 'expanse';
+  loading?: boolean;
 }
 
-function Balance({ title, value, isEstimate = false, variant }: BalanceProps) {
+function Balance({
+  title,
+  value,
+  isEstimate = false,
+  variant,
+  loading,
+}: BalanceProps) {
   const { theme } = useTheme();
-  const { loadingCards } = useAccount();
 
   const { loading: loadingAccounts } = useSelector(
     (state: State) => state.accounts,
@@ -76,7 +82,7 @@ function Balance({ title, value, isEstimate = false, variant }: BalanceProps) {
       loadingIncomes ||
       loadingExpanses ||
       loadingCreditCards ||
-      loadingCards
+      loading
     );
   };
 
@@ -125,6 +131,7 @@ interface BalancesProps {
     estimate: string;
   };
   variant?: 'income' | 'expanse';
+  loading?: boolean;
 }
 
 export function Balances({
@@ -133,6 +140,7 @@ export function Balances({
   values,
   titles,
   variant,
+  loading,
 }: BalancesProps) {
   return (
     <>
@@ -148,6 +156,7 @@ export function Balances({
           variant={variant}
           title={titles.current}
           value={values.current}
+          loading={loading}
         />
         <View
           style={{
@@ -158,6 +167,7 @@ export function Balances({
             title={titles.estimate}
             value={values.estimate}
             isEstimate
+            loading={loading}
           />
         </View>
       </Animated.View>
@@ -178,6 +188,7 @@ export function Balances({
           title={titles.current}
           value={values.current}
           isEstimate
+          loading={loading}
         />
         <View
           style={{
@@ -188,6 +199,7 @@ export function Balances({
             title={titles.estimate}
             value={values.estimate}
             isEstimate
+            loading={loading}
           />
         </View>
       </Animated.View>

@@ -158,7 +158,7 @@ export const AccountProvider: React.FC = ({ children }) => {
           estimateBalance:
             isTheSameMonth || !currentMonthEstimateBalance
               ? getCurrencyFormat(estimateBalance)
-              : currentMonthEstimateBalance,
+              : getCurrencyFormat(Number(currentMonthEstimateBalance)),
           account,
         });
       }),

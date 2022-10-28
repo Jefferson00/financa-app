@@ -18,6 +18,7 @@ import { useSecurity } from '../../hooks/SecurityContext';
 import ModalComponent from '../../components/Modal';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { getSecurityColors } from '../../utils/colors/security';
+import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
 
 export default function SecurityScreen() {
   const { theme } = useTheme();
@@ -111,13 +112,11 @@ export default function SecurityScreen() {
 
   return (
     <>
-      <Header reduced showMonthSelector={false} />
+      <ReducedHeader title="Segurança" />
       <S.Container style={[colorAnimated]}>
         <ScrollView
           style={{ flex: 1, width: '100%' }}
           showsVerticalScrollIndicator={false}>
-          <S.MainTitle color={colors.titleColor}>Selecionar tema</S.MainTitle>
-
           <S.ConfigCard color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
             <S.TextContainer>
               <S.Title color={colors.textColor}>Proteção do aplicativo</S.Title>

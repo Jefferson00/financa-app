@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { RFPercentage } from 'react-native-responsive-fontsize';
 import { useDispatch, useSelector } from 'react-redux';
 import { Header } from '../../components/NewHeader';
@@ -29,7 +29,7 @@ import { useTheme } from '../../hooks/ThemeContext';
 import { colors } from '../../styles/colors';
 import { useDate } from '../../hooks/DateContext';
 import State from '../../interfaces/State';
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { RefreshControl } from 'react-native';
 
 export default function Home() {
@@ -43,8 +43,12 @@ export default function Home() {
 
   const { user } = useAuth();
   const { theme } = useTheme();
-  const { listAccountCards, totalEstimateBalance, totalCurrentBalance } =
-    useAccount();
+  const {
+    listAccountCards,
+    totalEstimateBalance,
+    totalCurrentBalance,
+    loadingCards,
+  } = useAccount();
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -82,11 +86,19 @@ export default function Home() {
     }
   }, [dispatch, user]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (routeName === 'Home') {
+      console.log(routeName);
       listAccountCards();
     }
-  }, [selectedDate, accounts, incomes, expanses]);
+  }, [selectedDate, accounts, incomes, expanses]); */
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('listou cartões na home');
+      listAccountCards();
+    }, [selectedDate, accounts, incomes, expanses]),
+  );
 
   return (
     <>
@@ -114,6 +126,7 @@ export default function Home() {
         </S.Container>
       </Animated.ScrollView>
       <Header
+        loading={loadingCards}
         headerValue={headerValue}
         colors={headerColors()}
         titles={{

@@ -20,8 +20,8 @@ interface KeyboardContainerProps {
 export const Container = styled(Animated.View)`
   flex: 1;
   align-items: center;
-  padding: 16px 24px;
-  padding-bottom: ${RFPercentage(20)}px;
+  padding: ${RFPercentage(4.4)}px ${RFPercentage(3.2)}px;
+  padding-bottom: ${RFPercentage(15)}px;
 
   transition: all 0.5s;
 `;
@@ -109,7 +109,7 @@ export const TextContainer = styled.View``;
 export const Switch = styled.Switch``;
 
 export const KeyboardContainer = styled.View<KeyboardContainerProps>`
-  margin-top: ${RFPercentage(6)}px;
+  margin-top: ${RFPercentage(3.4)}px;
   border: 1px solid ${props => props.color};
 
   padding: ${RFPercentage(2.1)}px;

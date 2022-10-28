@@ -13,6 +13,7 @@ interface TextProps {
 interface ButtonProps {
   color?: string;
   backgroundColor?: string;
+  border?: string;
 }
 
 export const Container = styled.View<ContainerProps>`
@@ -22,18 +23,25 @@ export const Container = styled.View<ContainerProps>`
   align-items: center;
 `;
 
+export const AvatarContainer = styled.View`
+  position: absolute;
+  top: 10%;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+`;
+
 export const EmptyAvatar = styled.View`
   background-color: #d2d2d2;
-  margin-top: ${RFPercentage(8)}px;
-  margin-bottom: ${RFPercentage(4)}px;
+  // margin-top: ${RFPercentage(8)}px;
+  // margin-bottom: ${RFPercentage(4)}px;
   align-items: center;
   justify-content: center;
 `;
 
-export const Avatar = styled.Image`
-  margin-top: ${RFPercentage(8)}px;
-  margin-bottom: ${RFPercentage(4)}px;
-`;
+export const Avatar = styled.Image``;
 
 export const Title = styled.Text<TextProps>`
   color: ${props => props.color};
@@ -62,12 +70,16 @@ export const Button = styled.TouchableOpacity<ButtonProps>`
   color: ${props => (props.color ? props.color : '#09192D')};
 
   width: 100%;
-  height: ${RFPercentage(8)}px;
+  height: ${RFPercentage(6)}px;
   border-radius: 10px;
   padding: 0 ${RFPercentage(1.5)}px;
   margin: 8px 0;
 
   position: relative;
+
+  border-width: 1px;
+  border-style: solid;
+  border-color: ${props => (props.border ? props.border : 'transparent')}; ;
 `;
 
 export const MainButtonContainer = styled.View`
@@ -78,6 +90,7 @@ export const LogoutContainer = styled.View`
   flex: 1;
   justify-content: flex-end;
   align-items: flex-end;
+  margin-top: ${RFPercentage(4.4)}px;
 `;
 
 export const ButtonText = styled.Text<ButtonProps>`
@@ -86,7 +99,7 @@ export const ButtonText = styled.Text<ButtonProps>`
   align-items: center;
   text-align: center;
   font-family: 'Poppins-Regular';
-  font-size: ${RFPercentage(2.4)}px;
+  font-size: ${RFPercentage(2.3)}px;
 
   color: ${props => (props.color ? props.color : '#09192D')};
 `;

@@ -1,7 +1,8 @@
-import React from 'react';
-import { Dimensions } from 'react-native';
+import { ColorSchemeName, Dimensions } from 'react-native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import styled, { css } from 'styled-components/native';
+import { colors } from '../../styles/colors';
+import styled from 'styled-components/native';
+import Animated from 'react-native-reanimated';
 const width = Dimensions.get('screen').width;
 
 interface TextProps {
@@ -116,3 +117,50 @@ export const Text = styled.Text<TextProps>`
   font-size: ${props => RFPercentage(props.fontSize)}px;
   color: ${props => (props.color ? props.color : '#000')};
 `;
+
+export const expansesColors = (theme: ColorSchemeName) => {
+  if (theme === 'dark') {
+    return {
+      primary: colors.red.dark[500],
+      secondary: colors.red.dark[400],
+      title: colors.gray[600],
+      text: colors.gray[600],
+      icon_circle: colors.dark[700],
+      header: [colors.dark[800], colors.dark[800]],
+      loading: {
+        background: colors.dark[700],
+        foreground: colors.gray[600],
+      },
+      empty: {
+        icon: colors.dark[700],
+        text: colors.blue[200],
+      },
+      button: {
+        PRIMARY_BACKGROUND: colors.red.dark[500],
+        SECOND_BACKGROUND: colors.red.dark[400],
+        TEXT: colors.white,
+      },
+    };
+  }
+  return {
+    primary: colors.red[500],
+    secondary: colors.red[400],
+    title: colors.gray[600],
+    text: colors.gray[600],
+    icon_circle: colors.red[100],
+    header: [colors.red[500], colors.red[600]],
+    loading: {
+      background: colors.red[100],
+      foreground: colors.white,
+    },
+    empty: {
+      icon: colors.red[500],
+      text: colors.gray[600],
+    },
+    button: {
+      PRIMARY_BACKGROUND: colors.red[500],
+      SECOND_BACKGROUND: colors.red[400],
+      TEXT: colors.white,
+    },
+  };
+};

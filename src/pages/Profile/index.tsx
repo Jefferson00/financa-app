@@ -13,7 +13,8 @@ import Menu from '../../components/Menu';
 import * as S from './styles';
 import { Nav } from '../../routes';
 import { maskPhone } from '../../utils/masks';
-import { getProfileColors } from '../../utils/colors/profile';
+import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
+import { colors } from '../../styles/colors';
 
 interface ProfileProps {
   id: string;
@@ -24,18 +25,35 @@ export default function Profile({ id }: ProfileProps) {
   const { theme } = useTheme();
   const navigation = useNavigation<Nav>();
 
-  const colors = getProfileColors(theme);
+  const profileColors = () => {
+    if (theme === 'dark') {
+      return {
+        text: {
+          title: colors.blue[100],
+          subtitle: colors.gray[200],
+        },
+        sign_out: colors.red.dark[500],
+        alert: colors.red.dark[500],
+        border: colors.gray[600],
+        empty_avatar: colors.dark[700],
+      };
+    }
+    return {
+      text: {
+        title: colors.gray[900],
+        subtitle: colors.gray[600],
+      },
+      sign_out: colors.red[500],
+      alert: colors.red[500],
+      border: colors.blue[200],
+      empty_avatar: colors.gray[600],
+    };
+  };
 
   return (
-    <S.Container backgroundColor={colors.backgroundColor}>
-      <ScrollView
-        style={{ width: '100%', padding: 24 }}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 150,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
+    <>
+      <ReducedHeader title="" showAvatar={false} />
+      <S.AvatarContainer>
         {user?.avatar ? (
           <SharedElement id="avatar">
             <S.Avatar
@@ -55,82 +73,106 @@ export default function Profile({ id }: ProfileProps) {
                 borderRadius: RFPercentage(8),
                 width: RFPercentage(16),
                 height: RFPercentage(16),
-                backgroundColor: '#d2d2d2',
+                backgroundColor: profileColors().empty_avatar,
               }}
             />
           </SharedElement>
         )}
-
+      </S.AvatarContainer>
+      <ScrollView
+        style={{ width: '100%', padding: RFPercentage(3.4) }}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: RFPercentage(15),
+          paddingTop: RFPercentage(4.4),
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
         {(!user?.name || !user?.email) && (
-          <S.Alert color={colors.alertColor}>Atualize seus dados</S.Alert>
+          <S.Alert color={profileColors().alert}>Atualize seus dados</S.Alert>
         )}
 
         {user?.name && (
-          <S.Title color={colors.textColor}>Olá, {user?.name}</S.Title>
+          <S.Title color={profileColors().text.title}>
+            Olá, {user?.name}
+          </S.Title>
         )}
 
-        <S.Subtitle color={colors.textColor}>{user?.email}</S.Subtitle>
+        <S.Subtitle color={profileColors().text.subtitle}>
+          {user?.email}
+        </S.Subtitle>
         {user?.phone && (
-          <S.Subtitle color={colors.textColor}>
+          <S.Subtitle color={profileColors().text.subtitle}>
             {maskPhone(user.phone)}
           </S.Subtitle>
         )}
 
         <S.MainButtonContainer>
           <S.Button
-            backgroundColor={colors.btnBackgroundColor}
-            color={colors.btnColor}
+            backgroundColor="transparent"
+            color={profileColors().text.subtitle}
+            border={profileColors().border}
             onPress={() => navigation.navigate('EditProfile')}>
             <Icon
               name="create"
-              size={RFPercentage(5)}
-              color={colors.btnIconColor}
-              style={{ position: 'absolute', left: 18 }}
+              size={RFPercentage(3)}
+              color={profileColors().text.title}
+              style={{ position: 'absolute', left: 8 }}
             />
-            <S.ButtonText color={colors.btnColor}>Editar Perfil</S.ButtonText>
+            <S.ButtonText color={profileColors().text.title}>
+              Editar Perfil
+            </S.ButtonText>
           </S.Button>
 
           <S.Button
-            backgroundColor={colors.btnBackgroundColor}
-            color={colors.btnColor}
+            backgroundColor="transparent"
+            color={profileColors().text.subtitle}
+            border={profileColors().border}
             onPress={() => navigation.navigate('ThemeScreen')}>
             <Icon
               name="contrast"
-              size={RFPercentage(5)}
-              color={colors.btnIconColor}
-              style={{ position: 'absolute', left: 18 }}
+              size={RFPercentage(3)}
+              color={profileColors().text.title}
+              style={{ position: 'absolute', left: 8 }}
             />
-            <S.ButtonText color={colors.btnColor}>Tema</S.ButtonText>
+            <S.ButtonText color={profileColors().text.title}>Tema</S.ButtonText>
           </S.Button>
 
           <S.Button
-            backgroundColor={colors.btnBackgroundColor}
+            backgroundColor="transparent"
+            border={profileColors().border}
             onPress={() => navigation.navigate('SecurityScreen')}>
             <Icon
               name="lock-closed"
-              size={RFPercentage(5)}
-              color={colors.btnIconColor}
-              style={{ position: 'absolute', left: 18 }}
+              size={RFPercentage(3)}
+              color={profileColors().text.title}
+              style={{ position: 'absolute', left: 8 }}
             />
-            <S.ButtonText color={colors.btnColor}>Segurança</S.ButtonText>
+            <S.ButtonText color={profileColors().text.title}>
+              Segurança
+            </S.ButtonText>
           </S.Button>
         </S.MainButtonContainer>
 
         <S.LogoutContainer>
           <S.Button
-            backgroundColor={colors.signOutBtnColor}
+            backgroundColor={profileColors().sign_out}
             onPress={() => signOut()}>
             <Icon
               name="log-out"
-              size={RFPercentage(5)}
+              size={RFPercentage(3)}
               color="#fff"
-              style={{ position: 'absolute', left: 18 }}
+              style={{ position: 'absolute', left: 8 }}
             />
             <S.ButtonText color="#fff">Sair</S.ButtonText>
           </S.Button>
         </S.LogoutContainer>
       </ScrollView>
+      {/*    <S.Container backgroundColor={colors.backgroundColor}>
+        
+      </S.Container> */}
+
       <Menu />
-    </S.Container>
+    </>
   );
 }

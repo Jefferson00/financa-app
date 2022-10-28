@@ -1,9 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
+import { addMonths, subMonths } from 'date-fns';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 
 interface DateContextData {
   selectedDate: Date;
-  changeMonth(order: 'PREV' | 'NEXT'): Promise<unknown>;
+  loadingChangeMonth: boolean;
+  changeDate: (date: Date) => void;
+  changeMonth(order: 'PREV' | 'NEXT'): void;
   setCurrentMonth: () => void;
+  setLoadingChangeMonth: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const DateContext = createContext<DateContextData>(
@@ -12,22 +16,27 @@ export const DateContext = createContext<DateContextData>(
 
 export const DateProvider: React.FC = ({ children }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [loadingChangeMonth, setLoadingChangeMonth] = useState(false);
+
+  const changeDate = useCallback((date: Date) => {
+    setSelectedDate(date);
+  }, []);
 
   function changeMonth(order: 'PREV' | 'NEXT') {
-    return new Promise((resolve, reject) => {
-      const currentMonth = selectedDate.getMonth();
-      setSelectedDate(
-        new Date(
-          selectedDate.setMonth(
-            order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
-          ),
+    console.log('change');
+    if (order === 'NEXT') {
+      setSelectedDate(addMonths(selectedDate, 1));
+    } else {
+      setSelectedDate(subMonths(selectedDate, 1));
+    }
+    /*   const currentMonth = selectedDate.getMonth();
+    setSelectedDate(
+      new Date(
+        selectedDate.setMonth(
+          order === 'NEXT' ? currentMonth + 1 : currentMonth - 1,
         ),
-      );
-      resolve(true);
-      /*      setTimeout(() => {
-       
-      }, 50); */
-    });
+      ),
+    ); */
   }
 
   const setCurrentMonth = () => {
@@ -36,7 +45,14 @@ export const DateProvider: React.FC = ({ children }) => {
 
   return (
     <DateContext.Provider
-      value={{ selectedDate, changeMonth, setCurrentMonth }}>
+      value={{
+        selectedDate,
+        loadingChangeMonth,
+        setLoadingChangeMonth,
+        changeDate,
+        changeMonth,
+        setCurrentMonth,
+      }}>
       {children}
     </DateContext.Provider>
   );

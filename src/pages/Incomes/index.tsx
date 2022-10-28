@@ -3,7 +3,7 @@ import { Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import ContentLoader, { Rect } from 'react-content-loader/native';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { differenceInCalendarMonths, isBefore } from 'date-fns';
 import { Header } from '../../components/NewHeader';
 import Menu from '../../components/Menu';
@@ -56,15 +56,17 @@ export default function Incomes() {
   } = useSelector((state: State) => state.incomes);
 
   const { user } = useAuth();
-  const { selectedDate } = useDate();
+  const { selectedDate, setLoadingChangeMonth, loadingChangeMonth } = useDate();
   const { theme } = useTheme();
-  const [incomesByDate, setIncomesByDate] = useState<IncomesItemsByDate[]>([]);
+  const [incomesByDate, setIncomesByDate] = useState<
+    IncomesItemsByDate[] | null
+  >(null);
+  const [incomesCached, setIncomesCached] = useState<any | null>(null);
   const [incomeSelected, setIncomeSelected] = useState<any>();
   const [isConfirmReceiveModalVisible, setIsConfirmReceiveModalVisible] =
     useState(false);
   const [isConfirmUnreceiveModalVisible, setIsConfirmUnreceiveModalVisible] =
     useState(false);
-  const [calcIncomesList, setCalcIncomesList] = useState(true);
   const [totalCurrentIncomes, setTotalCurrentIncomes] = useState(
     getCurrencyFormat(0),
   );
@@ -74,6 +76,8 @@ export default function Incomes() {
   const [accountIdSelected, setAccountIdSelected] = useState<string | null>(
     null,
   );
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [itemSelected, setItemSelected] = useState<any | null>(null);
 
   const PlusIcon = () => {
     return <Icon name="add" size={RFPercentage(6)} color="#fff" />;
@@ -157,9 +161,6 @@ export default function Incomes() {
     }
   };
 
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [itemSelected, setItemSelected] = useState<any | null>(null);
-
   const openDeleteModal = (income: ItemType) => {
     setIsDeleteModalVisible(true);
     setItemSelected(income.income ? income.income : income);
@@ -187,55 +188,65 @@ export default function Incomes() {
 
   const width = Dimensions.get('screen').width;
 
-  useEffect(() => {
-    setCalcIncomesList(true);
-    const incomesListPromise: Promise<IncomesItemsByDate[]> = new Promise(
-      (resolve, reject) => {
+  useFocusEffect(
+    useCallback(() => {
+      if (incomesCached && incomesCached[String(selectedDate)]) {
+        console.log('cache incomes');
+        setIncomesByDate(incomesCached[String(selectedDate)]);
+      } else {
+        console.log('not cache incomes');
         const list = listByDate(incomes, incomesOnAccount, selectedDate);
-        setTimeout(() => resolve(list), 200);
-      },
-    );
-    incomesListPromise
-      .then(list => {
         setIncomesByDate(list);
-      })
-      .finally(() => {
-        setCalcIncomesList(false);
-      });
-  }, [incomes, incomesOnAccount, selectedDate]);
+        setIncomesCached({
+          ...incomesCached,
+          [String(selectedDate)]: list,
+        });
+      }
+    }, [incomes, incomesOnAccount, selectedDate]),
+  );
 
-  useEffect(() => {
-    const currentMonth = new Date();
-    currentMonth.setDate(1);
-    currentMonth.setUTCHours(0, 0, 0, 0);
+  useFocusEffect(
+    useCallback(() => {
+      const currentMonth = new Date();
+      currentMonth.setDate(1);
+      currentMonth.setUTCHours(0, 0, 0, 0);
 
-    const currentIncomes = getItemsInThisMonth(incomes, selectedDate);
-    const currentIncomesOnAccount = getItemsOnAccountThisMonth(
-      incomesOnAccount,
-      selectedDate,
-    );
-    const currentTotal = currentIncomesOnAccount.reduce(
-      (a, b) => a + (b['value'] || 0),
-      0,
-    );
-    setTotalCurrentIncomes(getCurrencyFormat(currentTotal));
-
-    if (isBefore(selectedDate, currentMonth)) {
-      setTotalEstimateIncomes(getCurrencyFormat(currentTotal));
-    } else {
-      const incomesWithoutAccount = currentIncomes.filter(
-        i =>
-          !currentIncomesOnAccount.find(
-            inOnAccount => inOnAccount.incomeId === i.id,
-          ),
+      const currentIncomes = getItemsInThisMonth(incomes, selectedDate);
+      const currentIncomesOnAccount = getItemsOnAccountThisMonth(
+        incomesOnAccount,
+        selectedDate,
       );
-      const estimateIncomes = [
-        ...incomesWithoutAccount,
-        ...currentIncomesOnAccount,
-      ].reduce((a, b) => a + (b['value'] || 0), 0);
-      setTotalEstimateIncomes(getCurrencyFormat(estimateIncomes));
-    }
-  }, [incomes, incomesOnAccount, selectedDate]);
+      const currentTotal = currentIncomesOnAccount.reduce(
+        (a, b) => a + (b['value'] || 0),
+        0,
+      );
+      setTotalCurrentIncomes(getCurrencyFormat(currentTotal));
+
+      if (isBefore(selectedDate, currentMonth)) {
+        setTotalEstimateIncomes(getCurrencyFormat(currentTotal));
+      } else {
+        const incomesWithoutAccount = currentIncomes.filter(
+          i =>
+            !currentIncomesOnAccount.find(
+              inOnAccount => inOnAccount.incomeId === i.id,
+            ),
+        );
+        const estimateIncomes = [
+          ...incomesWithoutAccount,
+          ...currentIncomesOnAccount,
+        ].reduce((a, b) => a + (b['value'] || 0), 0);
+        setTotalEstimateIncomes(getCurrencyFormat(estimateIncomes));
+      }
+    }, [incomes, incomesOnAccount, selectedDate]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (incomesByDate) {
+        setLoadingChangeMonth(false);
+      }
+    }, [incomesByDate]),
+  );
 
   return (
     <>
@@ -243,7 +254,7 @@ export default function Incomes() {
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
         contentContainerStyle={{
-          minHeight: incomesByDate.length === 0 ? 0 : RFPercentage(140),
+          minHeight: incomesByDate?.length === 0 ? 0 : RFPercentage(140),
           paddingTop: RFPercentage(36),
           paddingBottom: RFPercentage(15),
           paddingHorizontal: RFPercentage(3.2),
@@ -262,7 +273,7 @@ export default function Incomes() {
           />
         </S.ButtonContainer>
 
-        {loadingIncomes || calcIncomesList ? (
+        {loadingIncomes || loadingChangeMonth ? (
           <ContentLoader
             viewBox={`0 0 ${width} 325`}
             height={325}
@@ -283,12 +294,12 @@ export default function Incomes() {
               onSelect: handleOpenConfirmReceiveModal,
               onUnselect: handleOpenConfirmUnreceiveModal,
             }}
-            itemsByDate={incomesByDate}
+            itemsByDate={incomesByDate || []}
             type="Incomes"
           />
         )}
 
-        {!loadingIncomes && !calcIncomesList && incomesByDate.length === 0 && (
+        {!loadingIncomes && !loadingChangeMonth && incomesByDate?.length === 0 && (
           <S.EmptyContainer>
             <S.EmptyRow>
               <Icon
@@ -305,6 +316,7 @@ export default function Incomes() {
       </Animated.ScrollView>
 
       <Header
+        loading={loadingChangeMonth}
         variant="income"
         headerValue={headerValue}
         colors={colors.header}

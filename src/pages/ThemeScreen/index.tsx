@@ -3,7 +3,6 @@ import Menu from '../../components/Menu';
 import * as S from './styles';
 
 import Icon from 'react-native-vector-icons/Ionicons';
-import Header from '../../components/Header';
 import { useTheme } from '../../hooks/ThemeContext';
 
 import {
@@ -16,7 +15,8 @@ import {
   interpolateColor,
 } from 'react-native-reanimated';
 import { RFPercentage } from 'react-native-responsive-fontsize';
-import { getThemeScreenColors } from '../../utils/colors/theme';
+import { ReducedHeader } from '../../components/NewHeader/ReducedHeader';
+import { colors } from '../../styles/colors';
 
 interface ProfileProps {
   id: string;
@@ -29,8 +29,6 @@ export default function ThemeScreen({ id }: ProfileProps) {
     defaultDeviceThemeEnable,
     handleToggleDefaultThemeEnable,
   } = useTheme();
-
-  const colors = getThemeScreenColors(theme);
 
   const iconAnimateX = useSharedValue(theme === 'dark' ? -2000 : 0);
   const iconAnimateY = useSharedValue(theme === 'dark' ? 2000 : 0);
@@ -79,7 +77,7 @@ export default function ThemeScreen({ id }: ProfileProps) {
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
-      ['#fff', '#1C1C1C'],
+      [colors.white, colors.dark[900]],
     );
 
     return { backgroundColor };
@@ -89,20 +87,24 @@ export default function ThemeScreen({ id }: ProfileProps) {
     const backgroundColor = interpolateColor(
       progress.value,
       [0, 1],
-      ['#fff', '#262626'],
+      [colors.white, colors.dark[700]],
     );
 
     const borderColor = interpolateColor(
       progress.value,
       [0, 1],
-      ['#3C93F9', '#4876AC'],
+      [colors.blue[600], colors.blue.dark[600]],
     );
 
     return { backgroundColor, borderColor };
   });
 
   const buttonTextColorAnimated = useAnimatedStyle(() => {
-    const color = interpolateColor(progress.value, [0, 1], ['#3C93F9', '#fff']);
+    const color = interpolateColor(
+      progress.value,
+      [0, 1],
+      [colors.blue[600], colors.blue[100]],
+    );
 
     return { color };
   });
@@ -142,17 +144,55 @@ export default function ThemeScreen({ id }: ProfileProps) {
     }
   };
 
+  const themeColors = () => {
+    if (theme === 'dark') {
+      return {
+        text: colors.blue[100],
+        switch: {
+          thumb: {
+            true: colors.blue.dark[600],
+            false: colors.blue.dark[500],
+          },
+          track: {
+            true: colors.blue.dark[500],
+            false: colors.gray[600],
+          },
+        },
+      };
+    }
+    return {
+      text: colors.gray[900],
+      switch: {
+        thumb: {
+          true: colors.blue[600],
+          false: colors.blue[500],
+        },
+        track: {
+          true: colors.blue[500],
+          false: colors.blue[200],
+        },
+      },
+    };
+  };
+
   return (
     <>
-      <Header reduced showMonthSelector={false} />
+      <ReducedHeader title="Selecionar tema" />
       <S.Container style={[colorAnimated]}>
-        <S.MainTitle color={colors.titleColor}>Selecionar tema</S.MainTitle>
         <S.ThemeMainContainer>
           <S.ThemeIconContainer style={iconAnimated}>
-            <Icon name="sunny" size={RFPercentage(20)} color="#FF981E" />
+            <Icon
+              name="sunny"
+              size={RFPercentage(20)}
+              color={colors.orange[400]}
+            />
           </S.ThemeIconContainer>
           <S.ThemeIconContainer style={iconMoonAnimated}>
-            <Icon name="moon" size={RFPercentage(20)} color="#ffffff" />
+            <Icon
+              name="moon"
+              size={RFPercentage(20)}
+              color={colors.blue[100]}
+            />
           </S.ThemeIconContainer>
           <S.ButtonContainer style={[buttonColorAnimated]}>
             {theme === 'dark' ? (
@@ -177,20 +217,20 @@ export default function ThemeScreen({ id }: ProfileProps) {
 
         <S.ConfigCard color={theme === 'dark' ? '#c5c5c5' : '#d2d2d2'}>
           <S.TextContainer>
-            <S.Title color={colors.textColor}>Padrão do sistema</S.Title>
-            <S.Subtitle color={colors.textColor}>
+            <S.Title color={themeColors().text}>Padrão do sistema</S.Title>
+            <S.Subtitle color={themeColors().text}>
               Usar o tema padrão do dispositivo?
             </S.Subtitle>
           </S.TextContainer>
           <S.Switch
             trackColor={{
-              true: colors.trackColor,
-              false: colors.falseTrackColor,
+              true: themeColors().switch.track.true,
+              false: themeColors().switch.track.false,
             }}
             thumbColor={
               defaultDeviceThemeEnable
-                ? colors.thumbColor
-                : colors.falseThumbColor
+                ? themeColors().switch.thumb.true
+                : themeColors().switch.thumb.false
             }
             value={defaultDeviceThemeEnable}
             onChange={handleToggleDefaultThemeEnable}

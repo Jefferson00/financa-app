@@ -8,8 +8,8 @@ interface TextProps {
 export const Container = styled.View`
   flex: 1;
   align-items: center;
-  padding: 16px 24px;
-  padding-bottom: 96px;
+  padding: ${RFPercentage(4.4)}px ${RFPercentage(3.2)}px;
+  padding-bottom: ${RFPercentage(16)}px;
 `;
 
 export const EmptyAvatar = styled.View`
@@ -17,14 +17,9 @@ export const EmptyAvatar = styled.View`
   width: ${RFPercentage(16)}px;
   border-radius: ${RFPercentage(8)}px;
   background-color: #d2d2d2;
-  margin-top: 32px;
-  margin-bottom: 32px;
 `;
 
-export const Avatar = styled.Image`
-  margin-top: 32px;
-  margin-bottom: 32px;
-`;
+export const Avatar = styled.Image``;
 
 export const Title = styled.Text<TextProps>`
   color: ${props => props.color};
@@ -34,6 +29,7 @@ export const Title = styled.Text<TextProps>`
 
 export const AvatarContainer = styled.View`
   position: relative;
+  margin-bottom: ${RFPercentage(4.4)}px;
 `;
 
 export const UpdateAvatarButton = styled.TouchableOpacity`

@@ -12,9 +12,14 @@ import { colors } from '../../../styles/colors';
 interface HeaderProps {
   title: string;
   variant?: 'income' | 'expanse';
+  showAvatar?: boolean;
 }
 
-export function ReducedHeader({ title, variant }: HeaderProps) {
+export function ReducedHeader({
+  title,
+  variant,
+  showAvatar = true,
+}: HeaderProps) {
   const navigation = useNavigation<Nav>();
   const { theme } = useTheme();
 
@@ -52,7 +57,7 @@ export function ReducedHeader({ title, variant }: HeaderProps) {
             </S.GoBack>
           </Pressable>
 
-          <Avatar />
+          {showAvatar && <Avatar />}
         </S.Row>
 
         <S.Title>{title}</S.Title>
